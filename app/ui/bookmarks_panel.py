@@ -7,6 +7,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QFont
 
 from app import config
+from app.i18n import t
 from app.git.repo import GitRepo
 
 
@@ -28,11 +29,12 @@ class BookmarksPanel(QWidget):
         header.setObjectName("panelHeader")
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(8, 6, 4, 6)
-        label = QLabel("Repositories")
+        label = QLabel(t("bookmarks.title"))
         label.setStyleSheet("font-weight: bold; color: #d4d4d4;")
         self._add_btn = QPushButton("+")
+        self._add_btn.setObjectName("iconBtn")
         self._add_btn.setFixedSize(22, 22)
-        self._add_btn.setToolTip("Add repository")
+        self._add_btn.setToolTip(t("bookmarks.add_tooltip"))
         header_layout.addWidget(label)
         header_layout.addStretch()
         header_layout.addWidget(self._add_btn)
@@ -65,7 +67,7 @@ class BookmarksPanel(QWidget):
     def _on_add(self):
         path = QFileDialog.getExistingDirectory(
             self,
-            "Select Git Repository",
+            t("bookmarks.select_dir"),
             os.path.expanduser("~"),
         )
         if path:
@@ -75,8 +77,8 @@ class BookmarksPanel(QWidget):
         if not GitRepo.is_git_repo(path):
             QMessageBox.warning(
                 self,
-                "Not a Git Repository",
-                f"'{path}' is not a valid git repository.",
+                t("bookmarks.not_git.title"),
+                t("bookmarks.not_git.text", path=path),
             )
             return
         config.add_bookmark(path)
@@ -100,8 +102,8 @@ class BookmarksPanel(QWidget):
             return
         path = item.data(Qt.ItemDataRole.UserRole)
         menu = QMenu(self)
-        open_action = menu.addAction("Open")
-        remove_action = menu.addAction("Remove Bookmark")
+        open_action = menu.addAction(t("bookmarks.open"))
+        remove_action = menu.addAction(t("bookmarks.remove"))
         action = menu.exec(self._list.mapToGlobal(pos))
         if action == open_action:
             self.repo_selected.emit(path)

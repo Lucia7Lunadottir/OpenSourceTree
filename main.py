@@ -5,6 +5,8 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtCore import Qt
 
+from app.config import get_language
+from app.i18n import load_language
 from app.ui.main_window import MainWindow
 
 
@@ -46,7 +48,10 @@ def apply_dark_palette(app: QApplication) -> None:
 
 
 def load_stylesheet(app: QApplication) -> None:
-    qss_path = os.path.join(os.path.dirname(__file__), "style.qss")
+    base = os.path.dirname(os.path.abspath(__file__))
+    qss_path = os.path.join(base, "style.qss")
+    # Make url() paths in QSS resolve relative to project root
+    os.chdir(base)
     try:
         with open(qss_path, "r") as f:
             app.setStyleSheet(f.read())
@@ -59,6 +64,7 @@ def main():
     app.setApplicationName("OpenSourceTree")
     app.setApplicationVersion("0.1.0")
 
+    load_language(get_language())
     apply_dark_palette(app)
     load_stylesheet(app)
 

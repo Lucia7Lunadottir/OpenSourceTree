@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal, QSize
 from PyQt6.QtGui import QIcon, QFont, QColor, QAction
 
+from app.i18n import t
 from app.git.repo import GitRepo
 from app.git.models import CommitRecord, FileStatusEntry
 from app.git.runner import GitCommandError
@@ -86,10 +87,10 @@ class RepoTab(QWidget):
         self._file_stack.setDocumentMode(True)
 
         self._commit_files_list = QListWidget()
-        self._file_stack.addTab(self._commit_files_list, "Files")
+        self._file_stack.addTab(self._commit_files_list, t("tab.files"))
 
         self._working_copy_widget = WorkingCopyWidget(self._repo)
-        self._file_stack.addTab(self._working_copy_widget, "Working Copy")
+        self._file_stack.addTab(self._working_copy_widget, t("tab.working_copy"))
 
         self._bottom_splitter.addWidget(self._file_stack)
 
@@ -113,31 +114,33 @@ class RepoTab(QWidget):
         tb.setIconSize(QSize(16, 16))
         tb.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
-        tb.addAction("Fetch", self._on_fetch)
-        tb.addAction("Pull", self._on_pull)
-        tb.addAction("Push", self._on_push)
+        tb.addAction(t("toolbar.fetch"), self._on_fetch)
+        tb.addAction(t("toolbar.pull"), self._on_pull)
+        tb.addAction(t("toolbar.push"), self._on_push)
         tb.addSeparator()
 
         branch_btn = QToolButton()
-        branch_btn.setText("Branch")
+        branch_btn.setText(t("toolbar.branch"))
         branch_btn.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         branch_menu = QMenu()
-        branch_menu.addAction("Create Branch...", self._on_create_branch)
-        branch_menu.addAction("Merge...", self._on_merge)
-        branch_menu.addAction("Rebase...", self._on_rebase)
+        branch_menu.addAction(t("toolbar.branch.create"), self._on_create_branch)
+        branch_menu.addAction(t("toolbar.branch.merge"), self._on_merge)
+        branch_menu.addAction(t("toolbar.branch.rebase"), self._on_rebase)
         branch_btn.setMenu(branch_menu)
         tb.addWidget(branch_btn)
 
-        tb.addAction("Stash", self._on_stash)
-        tb.addAction("Tag", self._on_tag)
+        tb.addAction(t("toolbar.stash"), self._on_stash)
+        tb.addAction(t("toolbar.tag"), self._on_tag)
         tb.addSeparator()
-        tb.addAction("Refresh", self._refresh_all)
+        tb.addAction(t("toolbar.refresh"), self._refresh_all)
 
         return tb
 
     def _connect_signals(self):
         self._commit_list.commit_selected.connect(self._on_commit_selected)
         self._commit_list.working_copy_selected.connect(self._on_working_copy_selected)
+        self._commit_list.refresh_requested.connect(self._refresh_all)
+        self._commit_list.status_message.connect(self.status_message)
         self._commit_files_list.currentItemChanged.connect(self._on_commit_file_selected)
         self._branch_panel.refresh_requested.connect(self._refresh_all)
         self._branch_panel.branch_checked_out.connect(self._on_branch_checked_out)
@@ -207,19 +210,19 @@ class RepoTab(QWidget):
         dlg = RemoteDialog(self._repo, mode="fetch", parent=self)
         if dlg.exec():
             self._refresh_all()
-            self.status_message.emit("Fetch complete.")
+            self.status_message.emit(t("status.fetch_done"))
 
     def _on_pull(self):
         dlg = RemoteDialog(self._repo, mode="pull", parent=self)
         if dlg.exec():
             self._refresh_all()
-            self.status_message.emit("Pull complete.")
+            self.status_message.emit(t("status.pull_done"))
 
     def _on_push(self):
         dlg = RemoteDialog(self._repo, mode="push", parent=self)
         if dlg.exec():
             self._refresh_all()
-            self.status_message.emit("Push complete.")
+            self.status_message.emit(t("status.push_done"))
 
     def _on_create_branch(self):
         dlg = BranchDialog(self._repo, mode="create", parent=self)
@@ -240,13 +243,13 @@ class RepoTab(QWidget):
         dlg = StashDialog(self._repo, parent=self)
         if dlg.exec():
             self._refresh_all()
-            self.status_message.emit("Stash saved.")
+            self.status_message.emit(t("status.stash_done"))
 
     def _on_tag(self):
         dlg = TagDialog(self._repo, parent=self)
         if dlg.exec():
             self._refresh_all()
-            self.status_message.emit("Tag created.")
+            self.status_message.emit(t("status.tag_done"))
 
     def _on_error(self, error: str):
         lines = [l for l in error.splitlines() if l.strip()]

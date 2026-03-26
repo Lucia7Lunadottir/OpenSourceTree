@@ -344,6 +344,21 @@ QPushButton:disabled {
     color: rgb(100, 90, 130);
 }
 
+/* ── Icon / square buttons (e.g. "+" add repo) ───────────────────────────── */
+QPushButton#iconBtn {
+    padding: 0px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 5px;
+    min-width: 0;
+}
+
+/* ── Small utility buttons (filter bar clear, etc.) ─────────────────────── */
+QPushButton#smallBtn {
+    padding: 3px 8px;
+    font-size: 12px;
+}
+
 QPushButton#primaryButton {
     background-color: rgb(100, 50, 140);
     border-color: rgb(120, 70, 160);
@@ -375,8 +390,9 @@ QCheckBox::indicator {
 }
 
 QCheckBox::indicator:checked {
-    background: rgb(100, 50, 140);
-    border-color: rgb(140, 70, 190);
+    background-color: rgb(100, 50, 140);
+    border-color: rgb(160, 100, 210);
+    image: url(assets/checkmark.svg);
 }
 
 QCheckBox::indicator:hover {

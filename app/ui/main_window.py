@@ -7,10 +7,15 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QIcon, QKeySequence, QAction
 
+from app.i18n import t
+
 from .bookmarks_panel import BookmarksPanel
 from .repo_tab import RepoTab
 from .dialogs.clone_dialog import CloneDialog
 from .dialogs.ssh_dialog import SSHSettingsDialog
+from .dialogs.accounts_dialog import AccountsDialog
+from .dialogs.identity_dialog import IdentityDialog
+from .dialogs.language_dialog import LanguageDialog
 
 
 class MainWindow(QMainWindow):
@@ -67,39 +72,47 @@ class MainWindow(QMainWindow):
         menubar = self.menuBar()
 
         # File menu
-        file_menu = menubar.addMenu("&File")
-        open_action = file_menu.addAction("&Open Repository...")
+        file_menu = menubar.addMenu(t("menu.file"))
+        open_action = file_menu.addAction(t("menu.file.open"))
         open_action.setShortcut(QKeySequence.StandardKey.Open)
         open_action.triggered.connect(self._on_open)
 
-        clone_action = file_menu.addAction("&Clone...")
+        clone_action = file_menu.addAction(t("menu.file.clone"))
         clone_action.triggered.connect(self._on_clone)
 
         file_menu.addSeparator()
-        quit_action = file_menu.addAction("&Quit")
+        quit_action = file_menu.addAction(t("menu.file.quit"))
         quit_action.setShortcut(QKeySequence.StandardKey.Quit)
         quit_action.triggered.connect(QApplication.instance().quit)
 
         # Settings menu
-        settings_menu = menubar.addMenu("&Settings")
-        ssh_action = settings_menu.addAction("SSH Settings...")
+        settings_menu = menubar.addMenu(t("menu.settings"))
+        acc_action = settings_menu.addAction(t("menu.settings.accounts"))
+        acc_action.triggered.connect(self._on_accounts)
+        settings_menu.addSeparator()
+        ssh_action = settings_menu.addAction(t("menu.settings.ssh"))
         ssh_action.triggered.connect(self._on_ssh_settings)
+        id_action = settings_menu.addAction(t("menu.settings.identity"))
+        id_action.triggered.connect(self._on_identity)
+        settings_menu.addSeparator()
+        lang_action = settings_menu.addAction(t("menu.settings.language"))
+        lang_action.triggered.connect(self._on_language)
 
         # View menu
-        view_menu = menubar.addMenu("&View")
-        refresh_action = view_menu.addAction("&Refresh")
+        view_menu = menubar.addMenu(t("menu.view"))
+        refresh_action = view_menu.addAction(t("menu.view.refresh"))
         refresh_action.setShortcut(QKeySequence("F5"))
         refresh_action.triggered.connect(self._refresh_current)
 
         # Help menu
-        help_menu = menubar.addMenu("&Help")
-        about_action = help_menu.addAction("&About")
+        help_menu = menubar.addMenu(t("menu.help"))
+        about_action = help_menu.addAction(t("menu.help.about"))
         about_action.triggered.connect(self._show_about)
 
     def _setup_statusbar(self):
         self._status = QStatusBar()
         self.setStatusBar(self._status)
-        self._status.showMessage("Ready")
+        self._status.showMessage(t("status.ready"))
 
     def _open_repo(self, path: str):
         if path in self._repo_tabs:
@@ -178,14 +191,19 @@ class MainWindow(QMainWindow):
         if isinstance(current, RepoTab):
             current._refresh_all()
 
+    def _on_accounts(self):
+        AccountsDialog(self).exec()
+
     def _on_ssh_settings(self):
         SSHSettingsDialog(self).exec()
 
+    def _on_identity(self):
+        current = self._tabs.currentWidget()
+        repo = current._repo if isinstance(current, RepoTab) else None
+        IdentityDialog(repo, self).exec()
+
+    def _on_language(self):
+        LanguageDialog(self).exec()
+
     def _show_about(self):
-        QMessageBox.about(
-            self,
-            "About OpenSourceTree",
-            "<b>OpenSourceTree</b><br>"
-            "A SourceTree-inspired Git GUI built with PyQt6.<br><br>"
-            "Version 0.1.0",
-        )
+        QMessageBox.about(self, t("about.title"), t("about.text"))

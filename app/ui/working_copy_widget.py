@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal, QPoint
 from PyQt6.QtGui import QColor, QFont
 
+from app.i18n import t
 from app.git.repo import GitRepo
 from app.git.models import FileStatusEntry
 from app.constants import STATUS_COLORS
@@ -90,9 +91,9 @@ class WorkingCopyWidget(QWidget):
         staged_layout.setSpacing(2)
 
         staged_header = QHBoxLayout()
-        staged_label = QLabel("Staged Files")
+        staged_label = QLabel(t("working_copy.staged"))
         staged_label.setStyleSheet("color: #4ec9b0; font-weight: bold;")
-        self._unstage_all_btn = QPushButton("Unstage All")
+        self._unstage_all_btn = QPushButton(t("working_copy.unstage_all"))
         self._unstage_all_btn.setFixedHeight(22)
         staged_header.addWidget(staged_label)
         staged_header.addStretch()
@@ -110,9 +111,9 @@ class WorkingCopyWidget(QWidget):
         unstaged_layout.setSpacing(2)
 
         unstaged_header = QHBoxLayout()
-        unstaged_label = QLabel("Unstaged Files")
+        unstaged_label = QLabel(t("working_copy.unstaged"))
         unstaged_label.setStyleSheet("color: #dcdcaa; font-weight: bold;")
-        self._stage_all_btn = QPushButton("Stage All")
+        self._stage_all_btn = QPushButton(t("working_copy.stage_all"))
         self._stage_all_btn.setFixedHeight(22)
         unstaged_header.addWidget(unstaged_label)
         unstaged_header.addStretch()
@@ -136,15 +137,15 @@ class WorkingCopyWidget(QWidget):
         commit_layout.setSpacing(4)
 
         self._commit_edit = QTextEdit()
-        self._commit_edit.setPlaceholderText("Commit message...")
+        self._commit_edit.setPlaceholderText(t("working_copy.commit_placeholder"))
         self._commit_edit.setFixedHeight(80)
         font = QFont("Monospace", 11)
         self._commit_edit.setFont(font)
         commit_layout.addWidget(self._commit_edit)
 
         btn_row = QHBoxLayout()
-        self._amend_check = QCheckBox("Amend last commit")
-        self._commit_btn = QPushButton("Commit")
+        self._amend_check = QCheckBox(t("working_copy.amend"))
+        self._commit_btn = QPushButton(t("working_copy.commit_btn"))
         self._commit_btn.setObjectName("primaryButton")
         self._commit_btn.setFixedHeight(28)
         btn_row.addWidget(self._amend_check)
@@ -176,7 +177,7 @@ class WorkingCopyWidget(QWidget):
         if not entries:
             return
         menu = QMenu(self)
-        unstage_action = menu.addAction("Unstage")
+        unstage_action = menu.addAction(t("working_copy.unstage"))
         action = menu.exec(self._staged_list.mapToGlobal(pos))
         if action == unstage_action:
             for entry in entries:
@@ -187,8 +188,8 @@ class WorkingCopyWidget(QWidget):
         if not entries:
             return
         menu = QMenu(self)
-        stage_action = menu.addAction("Stage")
-        discard_action = menu.addAction("Discard Changes")
+        stage_action = menu.addAction(t("working_copy.stage"))
+        discard_action = menu.addAction(t("working_copy.discard"))
         action = menu.exec(self._unstaged_list.mapToGlobal(pos))
         if action == stage_action:
             for entry in entries:
@@ -216,7 +217,7 @@ class WorkingCopyWidget(QWidget):
     def _on_commit(self):
         message = self._commit_edit.toPlainText().strip()
         if not message and not self._amend_check.isChecked():
-            QMessageBox.warning(self, "Commit", "Please enter a commit message.")
+            QMessageBox.warning(self, t("working_copy.commit_btn"), t("error.no_commit_message"))
             return
         amend = self._amend_check.isChecked()
         worker = GitWorker(self._repo.commit, message, amend)
@@ -229,7 +230,7 @@ class WorkingCopyWidget(QWidget):
         self._amend_check.setChecked(False)
         self.refresh()
         self.committed.emit()
-        self.status_message.emit("Committed successfully.")
+        self.status_message.emit(t("status.committed"))
 
     def _run_op(self, fn, *args):
         worker = GitWorker(fn, *args)
