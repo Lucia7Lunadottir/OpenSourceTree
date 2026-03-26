@@ -29,6 +29,7 @@
     "toolbar.stash": "Stash",
     "toolbar.tag": "Тег",
     "toolbar.lfs": "LFS",
+    "toolbar.remotes": "Удалённые",
     "toolbar.refresh": "Обновить",
 
     "tab.files": "Файлы",
@@ -125,6 +126,8 @@
     "tag.message": "Сообщение:",
     "tag.message_placeholder": "(оставьте пустым для лёгкого тега)",
     "tag.btn": "Создать тег",
+    "tag.creating": "Создание тега...",
+    "tag.pushing": "Отправка тега на удалённый...",
     "tag.push_after": "Запушить тег на remote после создания",
     "tag.push_error": "Ошибка отправки тега",
     "tag.push_error_msg": "Тег создан локально, но не удалось отправить:\n{error}",
@@ -224,5 +227,24 @@
     "lfs.prune_tooltip":        "git lfs prune — удалить кэшированные LFS объекты, которые больше не нужны",
     "lfs.not_enabled":          "Git LFS не установлен или не инициализирован в этом репозитории.",
     "lfs.track_prompt":         "Паттерн для отслеживания (например *.psd):",
-    "lfs.error":                "Ошибка LFS"
+    "lfs.error":                "Ошибка LFS",
+
+    "remotes.title":            "Управление удалёнными",
+    "remotes.hint":             "HTTPS-удалённые требуют токен при каждом push. Переключитесь на SSH, чтобы использовать ключ.",
+    "remotes.col_name":         "Имя",
+    "remotes.col_url":          "URL",
+    "remotes.col_type":         "Тип",
+    "remotes.col_action":       "Действия",
+    "remotes.add_name":         "Имя:",
+    "remotes.add_url":          "URL:",
+    "remotes.add_btn":          "Добавить",
+    "remotes.switch_ssh":       "Переключить на SSH",
+    "remotes.switch_ssh_tip":   "Конвертировать HTTPS URL в SSH, чтобы использовать SSH-ключ вместо токена",
+    "remotes.switch_ssh_confirm": "Переключить удалённый '{name}' на SSH?\n\nБыло: {old}\nСтало: {new}",
+    "remotes.save_url":         "Сохранить",
+    "remotes.save_url_tip":     "Сохранить изменённый URL",
+    "remotes.remove_tip":       "Удалить этот удалённый репозиторий",
+    "remotes.remove_confirm":   "Удалить удалённый '{name}'?",
+    "remotes.empty_url":        "URL не может быть пустым.",
+    "remotes.add_empty":        "Укажите имя и URL."
 }

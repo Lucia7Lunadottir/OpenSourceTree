@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QFormLayout, QLineEdit, QCheckBox,
-    QDialogButtonBox, QMessageBox
+    QDialogButtonBox, QMessageBox, QLabel
 )
 from PyQt6.QtCore import QThreadPool
 
@@ -38,13 +38,21 @@ class TagDialog(QDialog):
         self._push_check.setChecked(True)
         layout.addWidget(self._push_check)
 
-        buttons = QDialogButtonBox(
+        self._status_label = QLabel("")
+        self._status_label.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
+        layout.addWidget(self._status_label)
+
+        self._buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
-        buttons.button(QDialogButtonBox.StandardButton.Ok).setText(t("tag.btn"))
-        buttons.accepted.connect(self._on_accept)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
+        self._buttons.button(QDialogButtonBox.StandardButton.Ok).setText(t("tag.btn"))
+        self._buttons.accepted.connect(self._on_accept)
+        self._buttons.rejected.connect(self.reject)
+        layout.addWidget(self._buttons)
+
+    def _set_busy(self, text: str):
+        self._status_label.setText(text)
+        self._buttons.setEnabled(False)
 
     def _on_accept(self):
         name = self._name_edit.text().strip()
@@ -55,6 +63,7 @@ class TagDialog(QDialog):
         message = self._message_edit.text().strip()
         push    = self._push_check.isChecked()
 
+        self._set_busy(t("tag.creating"))
         worker = GitWorker(self._repo.create_tag, name, ref, message)
         worker.signals.result.connect(lambda _: self._after_create(name, push))
         worker.signals.error.connect(self._on_error)
@@ -62,6 +71,7 @@ class TagDialog(QDialog):
 
     def _after_create(self, name: str, push: bool):
         if push:
+            self._set_busy(t("tag.pushing"))
             worker = GitWorker(self._repo.push_tag, name)
             worker.signals.result.connect(lambda _: self.accept())
             worker.signals.error.connect(self._on_push_error)

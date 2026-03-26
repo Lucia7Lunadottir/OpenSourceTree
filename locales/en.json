@@ -29,6 +29,7 @@
     "toolbar.stash": "Stash",
     "toolbar.tag": "Tag",
     "toolbar.lfs": "LFS",
+    "toolbar.remotes": "Remotes",
     "toolbar.refresh": "Refresh",
 
     "tab.files": "Files",
@@ -125,6 +126,8 @@
     "tag.message": "Message:",
     "tag.message_placeholder": "(leave empty for lightweight tag)",
     "tag.btn": "Create Tag",
+    "tag.creating": "Creating tag...",
+    "tag.pushing": "Pushing tag to remote...",
     "tag.push_after": "Push tag to remote after creating",
     "tag.push_error": "Tag Push Failed",
     "tag.push_error_msg": "Tag was created locally but could not be pushed:\n{error}",
@@ -224,5 +227,24 @@
     "lfs.prune_tooltip":        "Run 'git lfs prune' — delete locally cached LFS objects that are no longer needed",
     "lfs.not_enabled":          "Git LFS is not installed or not initialized in this repo.",
     "lfs.track_prompt":         "Pattern to track (e.g. *.psd):",
-    "lfs.error":                "LFS Error"
+    "lfs.error":                "LFS Error",
+
+    "remotes.title":            "Manage Remotes",
+    "remotes.hint":             "HTTPS remotes require a token on every push. Switch to SSH to avoid this.",
+    "remotes.col_name":         "Name",
+    "remotes.col_url":          "URL",
+    "remotes.col_type":         "Type",
+    "remotes.col_action":       "Actions",
+    "remotes.add_name":         "Name:",
+    "remotes.add_url":          "URL:",
+    "remotes.add_btn":          "Add Remote",
+    "remotes.switch_ssh":       "Switch to SSH",
+    "remotes.switch_ssh_tip":   "Convert HTTPS URL to SSH format so git uses your SSH key instead of a token",
+    "remotes.switch_ssh_confirm": "Switch remote '{name}' to SSH?\n\nFrom: {old}\nTo:   {new}",
+    "remotes.save_url":         "Save",
+    "remotes.save_url_tip":     "Save the edited URL",
+    "remotes.remove_tip":       "Remove this remote",
+    "remotes.remove_confirm":   "Remove remote '{name}'?",
+    "remotes.empty_url":        "URL cannot be empty.",
+    "remotes.add_empty":        "Please enter both a name and URL."
 }

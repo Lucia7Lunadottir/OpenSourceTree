@@ -188,6 +188,18 @@ class GitRepo:
         raw = self.runner.run(["remote", "-v"])
         return parse_remotes(raw)
 
+    def set_remote_url(self, name: str, url: str) -> None:
+        self.runner.run(["remote", "set-url", name, url])
+
+    def add_remote(self, name: str, url: str) -> None:
+        self.runner.run(["remote", "add", name, url])
+
+    def remove_remote(self, name: str) -> None:
+        self.runner.run(["remote", "remove", name])
+
+    def rename_remote(self, old: str, new: str) -> None:
+        self.runner.run(["remote", "rename", old, new])
+
     def fetch(self, remote: str = "", prune: bool = False) -> str:
         args = ["fetch"]
         if prune:

@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (
     QTabWidget, QListWidget, QListWidgetItem, QLabel,
     QToolBar, QToolButton, QMenu, QMessageBox
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QSize
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QTimer, QFileSystemWatcher
 from PyQt6.QtGui import QIcon, QFont, QColor, QAction
 
 from app.i18n import t
@@ -24,6 +24,7 @@ from .dialogs.stash_dialog import StashDialog
 from .dialogs.tag_dialog import TagDialog
 from .dialogs.branch_dialog import BranchDialog
 from .dialogs.lfs_dialog import LfsDialog
+from .dialogs.remotes_dialog import RemotesDialog
 
 
 STATUS_LABELS = {
@@ -133,6 +134,7 @@ class RepoTab(QWidget):
         tb.addAction(t("toolbar.stash"), self._on_stash)
         tb.addAction(t("toolbar.tag"), self._on_tag)
         tb.addAction(t("toolbar.lfs"), self._on_lfs)
+        tb.addAction(t("toolbar.remotes"), self._on_remotes)
         tb.addSeparator()
         tb.addAction(t("toolbar.refresh"), self._refresh_all)
 
@@ -151,10 +153,38 @@ class RepoTab(QWidget):
         self._working_copy_widget.committed.connect(self._refresh_all)
         self._working_copy_widget.file_selected.connect(self._on_working_file_selected)
         self._working_copy_widget.status_message.connect(self.status_message)
+        self._setup_fs_watcher()
+
+    def _setup_fs_watcher(self):
+        """Watch .git/index and .git/HEAD so the UI auto-updates on external changes."""
+        self._refresh_timer = QTimer(self)
+        self._refresh_timer.setSingleShot(True)
+        self._refresh_timer.setInterval(400)
+        self._refresh_timer.timeout.connect(self._on_fs_change)
+
+        self._fs_watcher = QFileSystemWatcher(self)
+        git_dir = os.path.join(self._repo_path, ".git")
+        for name in ("index", "HEAD"):
+            p = os.path.join(git_dir, name)
+            if os.path.exists(p):
+                self._fs_watcher.addPath(p)
+        self._fs_watcher.fileChanged.connect(self._schedule_fs_refresh)
+
+    def _schedule_fs_refresh(self, path: str):
+        # Re-add path in case git replaced the file atomically
+        if path not in self._fs_watcher.files():
+            self._fs_watcher.addPath(path)
+        self._refresh_timer.start()
+
+    def _on_fs_change(self):
+        self._working_copy_widget.refresh()
+        self._branch_panel.refresh()
+        self._commit_list.load_commits()
 
     def _refresh_all(self):
         self._commit_list.load_commits()
         self._branch_panel.refresh()
+        self._working_copy_widget.refresh()
         self.title_changed.emit(self._repo.get_repo_name())
         self._fetch_tags_bg()
 
@@ -266,6 +296,10 @@ class RepoTab(QWidget):
             QMessageBox.warning(self, t("toolbar.lfs"), t("lfs.not_enabled"))
             return
         dlg = LfsDialog(self._repo, parent=self)
+        dlg.exec()
+
+    def _on_remotes(self):
+        dlg = RemotesDialog(self._repo, parent=self)
         dlg.exec()
 
     def _on_error(self, error: str):
