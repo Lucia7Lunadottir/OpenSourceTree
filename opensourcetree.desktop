@@ -1,0 +1,56 @@
+[Desktop Entry]
+Name=OpenSourceTree
+Name[en]=OpenSourceTree
+Name[ru]=OpenSourceTree
+Name[de]=OpenSourceTree
+Name[fr]=OpenSourceTree
+Name[es]=OpenSourceTree
+Name[pt]=OpenSourceTree
+Name[pl]=OpenSourceTree
+Name[uk]=OpenSourceTree
+Name[zh]=OpenSourceTree
+Name[ja]=OpenSourceTree
+
+GenericName=Git Client
+GenericName[en]=Git Client
+GenericName[ru]=Git-клиент
+GenericName[de]=Git-Client
+GenericName[fr]=Client Git
+GenericName[es]=Cliente Git
+GenericName[pt]=Cliente Git
+GenericName[pl]=Klient Git
+GenericName[uk]=Git-клієнт
+GenericName[zh]=Git 客户端
+GenericName[ja]=Git クライアント
+
+Comment=SourceTree-inspired Git GUI built with PyQt6
+Comment[en]=SourceTree-inspired Git GUI built with PyQt6
+Comment[ru]=Git-клиент на PyQt6, вдохновлённый SourceTree
+Comment[de]=Ein SourceTree-inspirierter Git-Client auf PyQt6-Basis
+Comment[fr]=Un client Git PyQt6 inspiré de SourceTree
+Comment[es]=Un cliente Git PyQt6 inspirado en SourceTree
+Comment[pt]=Um cliente Git PyQt6 inspirado no SourceTree
+Comment[pl]=Klient Git PyQt6 inspirowany SourceTree
+Comment[uk]=Git-клієнт на PyQt6, натхнений SourceTree
+Comment[zh]=受 SourceTree 启发、基于 PyQt6 的 Git 客户端
+Comment[ja]=SourceTree にインスパイアされた PyQt6 製 Git クライアント
+
+Keywords=git;vcs;version control;repository;diff;commit;branch;
+Keywords[en]=git;vcs;version control;repository;diff;commit;branch;
+Keywords[ru]=git;система контроля версий;репозиторий;коммит;ветка;
+Keywords[de]=git;versionsverwaltung;repository;diff;commit;branch;
+Keywords[fr]=git;contrôle de version;dépôt;diff;commit;branche;
+Keywords[es]=git;control de versiones;repositorio;diff;commit;rama;
+Keywords[pt]=git;controle de versão;repositório;diff;commit;branch;
+Keywords[pl]=git;kontrola wersji;repozytorium;diff;commit;gałąź;
+Keywords[uk]=git;система контролю версій;репозиторій;коміт;гілка;
+Keywords[zh]=git;版本控制;仓库;提交;分支;
+Keywords[ja]=git;バージョン管理;リポジトリ;コミット;ブランチ;
+
+Exec=opensourcetree
+Icon=opensourcetree
+Terminal=false
+Type=Application
+Categories=Development;RevisionControl;
+StartupNotify=true
+StartupWMClass=OpenSourceTree

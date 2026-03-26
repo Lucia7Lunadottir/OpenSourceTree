@@ -156,6 +156,16 @@ QTreeWidget::branch {
     background-color: rgb(30, 28, 48);
 }
 
+QTreeWidget::branch:has-children:!has-siblings:closed,
+QTreeWidget::branch:closed:has-children:has-siblings {
+    image: url(assets/branch_closed.svg);
+}
+
+QTreeWidget::branch:open:has-children:!has-siblings,
+QTreeWidget::branch:open:has-children:has-siblings {
+    image: url(assets/branch_open.svg);
+}
+
 /* ── List Widget ──────────────────────────────────────────────────────────── */
 QListWidget {
     background-color: rgb(30, 28, 48);
