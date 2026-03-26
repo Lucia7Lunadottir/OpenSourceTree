@@ -1,3 +1,6 @@
+import os
+import fnmatch as _fnmatch
+
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
     QListWidget, QListWidgetItem, QLabel, QTextEdit,
@@ -13,6 +16,18 @@ from app.git.models import FileStatusEntry
 from app.constants import STATUS_COLORS
 from app.workers.git_worker import GitWorker
 from app.workers.batch_worker import BatchWorker
+
+LFS_ICON = "⬡"
+
+
+def _is_lfs(path: str, patterns: list[str]) -> bool:
+    name = os.path.basename(path)
+    for pat in patterns:
+        if _fnmatch.fnmatch(name, pat):
+            return True
+        if _fnmatch.fnmatch(path, pat.replace("**", "*")):
+            return True
+    return False
 
 
 STATUS_LABELS = {
@@ -37,18 +52,21 @@ class FileListWidget(QListWidget):
         self.setAlternatingRowColors(False)
         self.currentItemChanged.connect(self._on_item_changed)
 
-    def set_files(self, entries: list[FileStatusEntry]):
+    def set_files(self, entries: list[FileStatusEntry], lfs_patterns: list[str] = ()):
         self.clear()
         for entry in entries:
             status_char = entry.status
             label = STATUS_LABELS.get(status_char, status_char)
-            item = QListWidgetItem(f"{label}  {entry.path}")
+            lfs_mark = f" {LFS_ICON}" if lfs_patterns and _is_lfs(entry.path, lfs_patterns) else ""
+            item = QListWidgetItem(f"{label}  {entry.path}{lfs_mark}")
             item.setData(Qt.ItemDataRole.UserRole, entry)
             color = STATUS_COLORS.get(
                 next((s for s in STATUS_COLORS if s.value == status_char), None),
                 QColor("#d4d4d4")
             )
             item.setForeground(color)
+            if lfs_mark:
+                item.setToolTip(f"Git LFS tracked: {entry.path}")
             self.addItem(item)
 
     def selected_entries(self) -> list[FileStatusEntry]:
@@ -178,12 +196,31 @@ class WorkingCopyWidget(QWidget):
         self._stage_all_btn.clicked.connect(self._on_stage_all)
         self._unstage_all_btn.clicked.connect(self._on_unstage_all)
         self._commit_btn.clicked.connect(self._on_commit)
+        self._amend_check.toggled.connect(self._on_amend_toggled)
+
+    def _on_amend_toggled(self, checked: bool):
+        if checked:
+            self._pre_amend_text = self._commit_edit.toPlainText()
+            try:
+                msg = self._repo.get_last_commit_message()
+            except Exception:
+                msg = ""
+            self._commit_edit.setPlainText(msg)
+            # Move cursor to end
+            cursor = self._commit_edit.textCursor()
+            cursor.movePosition(cursor.MoveOperation.End)
+            self._commit_edit.setTextCursor(cursor)
+        else:
+            self._commit_edit.setPlainText(
+                getattr(self, "_pre_amend_text", "")
+            )
 
     def refresh(self):
         try:
             staged, unstaged = self._repo.get_working_copy_status()
-            self._staged_list.set_files(staged)
-            self._unstaged_list.set_files(unstaged)
+            lfs_patterns = self._repo.lfs_tracked_patterns()
+            self._staged_list.set_files(staged, lfs_patterns)
+            self._unstaged_list.set_files(unstaged, lfs_patterns)
         except Exception as e:
             self.status_message.emit(f"Error refreshing status: {e}")
 

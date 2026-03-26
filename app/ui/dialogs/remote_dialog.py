@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QFormLayout, QHBoxLayout, QComboBox, QLineEdit,
+    QDialog, QVBoxLayout, QFormLayout, QHBoxLayout, QComboBox,
     QCheckBox, QDialogButtonBox, QMessageBox, QProgressBar, QLabel,
     QPushButton, QPlainTextEdit
 )
@@ -36,12 +36,16 @@ class RemoteDialog(QDialog):
         form.addRow(t("remote.label"), self._remote_combo)
 
         if self._mode in ("pull", "push"):
-            self._branch_edit = QLineEdit()
-            self._branch_edit.setPlaceholderText(
-                t("remote.branch").rstrip(":").lower() + " " +
-                ("(текущая)" if t("remote.branch") == "Ветка:" else "(current branch)")
+            self._branch_placeholder = (
+                "(текущая)" if t("remote.branch") == "Ветка:" else "(current branch)"
             )
-            form.addRow(t("remote.branch"), self._branch_edit)
+            self._branch_combo = QComboBox()
+            self._branch_combo.setEditable(True)
+            self._branch_combo.addItem(self._branch_placeholder)
+            for b in self._get_branches():
+                self._branch_combo.addItem(b)
+            self._branch_combo.setCurrentIndex(0)
+            form.addRow(t("remote.branch"), self._branch_combo)
 
         layout.addLayout(form)
 
@@ -96,6 +100,19 @@ class RemoteDialog(QDialog):
         except Exception:
             return ["origin"]
 
+    def _branch_text(self) -> str:
+        """Return selected branch name, or '' if placeholder is selected."""
+        text = self._branch_combo.currentText().strip()
+        if text == self._branch_placeholder:
+            return ""
+        return text
+
+    def _get_branches(self) -> list[str]:
+        try:
+            return [b.name for b in self._repo.get_branches() if not b.is_remote]
+        except Exception:
+            return []
+
     def _build_fn(self):
         remote = self._remote_combo.currentText()
         if remote == t("remote.all"):
@@ -107,14 +124,14 @@ class RemoteDialog(QDialog):
             return lambda: self._repo.fetch_streaming(remote, prune)
 
         elif self._mode == "pull":
-            branch = self._branch_edit.text().strip()
+            branch = self._branch_text()
             rebase = self._rebase_check.isChecked()
             self._last_args = ["pull"] + (["--rebase"] if rebase else []) + (
                 [remote] if remote else []) + ([branch] if branch else [])
             return lambda: self._repo.pull_streaming(remote, branch, rebase)
 
         elif self._mode == "push":
-            branch = self._branch_edit.text().strip()
+            branch = self._branch_text()
             force  = self._force_check.isChecked()
             tags   = self._tags_check.isChecked()
             self._last_args = ["push"] + (["--force-with-lease"] if force else []) + (

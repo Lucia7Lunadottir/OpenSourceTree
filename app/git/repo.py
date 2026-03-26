@@ -313,6 +313,13 @@ class GitRepo:
         raw = self.runner.run(["status", "--porcelain"])
         return not raw.strip()
 
+    def get_last_commit_message(self) -> str:
+        """Return full commit message (subject + body) of HEAD."""
+        try:
+            return self.runner.run(["log", "-1", "--format=%B"]).strip()
+        except GitCommandError:
+            return ""
+
     def get_repo_name(self) -> str:
         return os.path.basename(self.path)
 

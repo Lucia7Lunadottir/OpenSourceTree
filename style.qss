@@ -306,7 +306,21 @@ QComboBox:focus, QComboBox:hover {
 
 QComboBox::drop-down {
     border: none;
-    width: 22px;
+    border-left: 1px solid rgb(70, 55, 100);
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    width: 24px;
+    background-color: rgb(50, 44, 72);
+}
+
+QComboBox::drop-down:hover {
+    background-color: rgb(70, 55, 100);
+}
+
+QComboBox::down-arrow {
+    image: url(assets/chevron_down.svg);
+    width: 12px;
+    height: 8px;
 }
 
 QComboBox QAbstractItemView {
