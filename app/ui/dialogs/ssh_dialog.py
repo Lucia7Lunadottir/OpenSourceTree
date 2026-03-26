@@ -84,6 +84,7 @@ class KeyGenerateDialog(QDialog):
         self._pass_edit.setPlaceholderText("Оставьте пустым — ключ без пароля")
         self._show_pass_btn = QPushButton("👁")
         self._show_pass_btn.setFixedWidth(32)
+        self._show_pass_btn.setStyleSheet("padding: 2px 5px; min-width: 0;")
         self._show_pass_btn.setCheckable(True)
         self._show_pass_btn.toggled.connect(
             lambda on: self._pass_edit.setEchoMode(
@@ -100,6 +101,7 @@ class KeyGenerateDialog(QDialog):
         self._confirm_edit.setPlaceholderText("Повторите пароль")
         self._show_confirm_btn = QPushButton("👁")
         self._show_confirm_btn.setFixedWidth(32)
+        self._show_confirm_btn.setStyleSheet("padding: 2px 5px; min-width: 0;")
         self._show_confirm_btn.setCheckable(True)
         self._show_confirm_btn.toggled.connect(
             lambda on: self._confirm_edit.setEchoMode(
@@ -457,6 +459,7 @@ class SSHSettingsDialog(QDialog):
         self._clear_agent_btn.clicked.connect(self._clear_agent)
         self._refresh_agent_btn = QPushButton("↻")
         self._refresh_agent_btn.setFixedWidth(30)
+        self._refresh_agent_btn.setStyleSheet("padding: 2px 4px; min-width: 0;")
         self._refresh_agent_btn.setToolTip("Обновить статус агента")
         self._refresh_agent_btn.clicked.connect(self._refresh_agent_status)
         agent_btn_row.addWidget(self._add_agent_btn)
@@ -864,6 +867,13 @@ class SSHSettingsDialog(QDialog):
             self._test_btn.setEnabled(True)
 
     # ── Save ──────────────────────────────────────────────────────────────────
+
+    def closeEvent(self, event):
+        """Always persist profiles — whether user clicks Save, Cancel, or X."""
+        if self._dirty and self._current_idx >= 0:
+            self._flush_editor_to_profile(self._current_idx)
+        save_ssh_profiles(self._profiles)
+        super().closeEvent(event)
 
     def _save_all(self):
         if self._dirty and self._current_idx >= 0:

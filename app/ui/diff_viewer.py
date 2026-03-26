@@ -2,6 +2,8 @@ from PyQt6.QtWidgets import QTextBrowser
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 
+from app.i18n import t
+
 try:
     from pygments import highlight
     from pygments.lexers import get_lexer_for_filename, TextLexer
@@ -42,7 +44,7 @@ class DiffViewer(QTextBrowser):
     def _show_placeholder(self):
         self.setHtml(
             '<html><body style="background:#1e1e1e;color:#666;font-family:monospace;'
-            'padding:16px;">Select a file to view diff</body></html>'
+            f'padding:16px;">{t("diff.placeholder")}</body></html>'
         )
 
     def show_diff(self, diff_text: str, filename: str = ""):

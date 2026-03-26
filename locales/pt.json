@@ -24,7 +24,7 @@
     "toolbar.stash": "Stash",
     "toolbar.tag": "Tag",
     "toolbar.lfs": "LFS",
-    "toolbar.remotes": "Remotos",
+    "toolbar.remotes": "Remotes",
     "toolbar.refresh": "Atualizar",
     "tab.files": "Arquivos",
     "tab.working_copy": "Cópia de Trabalho",
@@ -222,5 +222,7 @@
     "remotes.remove_tip": "Remover este remoto",
     "remotes.remove_confirm": "Remover remoto '{name}'?",
     "remotes.empty_url": "O URL não pode estar vazio.",
-    "remotes.add_empty": "Introduza um nome e URL."
+    "remotes.add_empty": "Introduza um nome e URL.",
+    "diff.placeholder": "Selecione um ficheiro para ver o diff",
+    "main.placeholder": "Abra um repositório no painel de favoritos\nou use Ficheiro → Abrir / Clonar."
 }

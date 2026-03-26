@@ -24,7 +24,7 @@
     "toolbar.stash": "Stash",
     "toolbar.tag": "Tag",
     "toolbar.lfs": "LFS",
-    "toolbar.remotes": "Distants",
+    "toolbar.remotes": "Remotes",
     "toolbar.refresh": "Actualiser",
     "tab.files": "Fichiers",
     "tab.working_copy": "Copie de travail",
@@ -222,5 +222,7 @@
     "remotes.remove_tip": "Supprimer ce distant",
     "remotes.remove_confirm": "Supprimer le distant '{name}' ?",
     "remotes.empty_url": "L'URL ne peut pas être vide.",
-    "remotes.add_empty": "Veuillez saisir un nom et une URL."
+    "remotes.add_empty": "Veuillez saisir un nom et une URL.",
+    "diff.placeholder": "Sélectionnez un fichier pour afficher le diff",
+    "main.placeholder": "Ouvrez un dépôt depuis le panneau de favoris\nou utilisez Fichier → Ouvrir / Cloner."
 }

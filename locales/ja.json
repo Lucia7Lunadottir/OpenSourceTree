@@ -24,7 +24,7 @@
     "toolbar.stash": "スタッシュ (Stash)",
     "toolbar.tag": "タグ",
     "toolbar.lfs": "LFS",
-    "toolbar.remotes": "リモート",
+    "toolbar.remotes": "Remotes",
     "toolbar.refresh": "更新",
     "tab.files": "ファイル",
     "tab.working_copy": "作業コピー",
@@ -222,5 +222,7 @@
     "remotes.remove_tip": "このリモートを削除",
     "remotes.remove_confirm": "リモート '{name}' を削除しますか？",
     "remotes.empty_url": "URLを入力してください。",
-    "remotes.add_empty": "名前とURLを入力してください。"
+    "remotes.add_empty": "名前とURLを入力してください。",
+    "diff.placeholder": "差分を表示するファイルを選択してください",
+    "main.placeholder": "ブックマークパネルからリポジトリを開くか、\nファイル → 開く / クローンを使用してください。"
 }

@@ -222,5 +222,7 @@
     "remotes.remove_tip": "Diesen Remote entfernen",
     "remotes.remove_confirm": "Remote '{name}' entfernen?",
     "remotes.empty_url": "URL darf nicht leer sein.",
-    "remotes.add_empty": "Bitte Name und URL eingeben."
+    "remotes.add_empty": "Bitte Name und URL eingeben.",
+    "diff.placeholder": "Datei auswählen, um Diff anzuzeigen",
+    "main.placeholder": "Repository über das Lesezeichen-Panel öffnen\noder Datei → Öffnen / Klonen verwenden."
 }

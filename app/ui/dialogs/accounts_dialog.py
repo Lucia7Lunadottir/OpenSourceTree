@@ -153,6 +153,7 @@ class AccountsDialog(QDialog):
         self._token_edit.setEchoMode(QLineEdit.EchoMode.Password)
         self._show_token_btn = QPushButton("👁")
         self._show_token_btn.setFixedWidth(32)
+        self._show_token_btn.setStyleSheet("padding: 2px 5px; min-width: 0;")
         self._show_token_btn.setCheckable(True)
         self._show_token_btn.toggled.connect(
             lambda on: self._token_edit.setEchoMode(

@@ -3,7 +3,7 @@ import re
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QTableWidget, QTableWidgetItem, QHeaderView,
-    QMessageBox, QAbstractItemView
+    QMessageBox, QAbstractItemView, QWidget
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
@@ -29,7 +29,7 @@ class RemotesDialog(QDialog):
         super().__init__(parent)
         self._repo = repo
         self.setWindowTitle(t("remotes.title"))
-        self.setMinimumSize(640, 340)
+        self.setMinimumSize(680, 340)
         self._setup_ui()
         self._load()
 
@@ -49,10 +49,13 @@ class RemotesDialog(QDialog):
             t("remotes.col_type"),
             t("remotes.col_action"),
         ])
-        self._table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        self._table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        self._table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-        self._table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        hh = self._table.horizontalHeader()
+        hh.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        hh.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        hh.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        hh.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
+        self._table.setColumnWidth(3, 140)
+        self._table.verticalHeader().setDefaultSectionSize(30)
         self._table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self._table.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
         self._table.verticalHeader().setVisible(False)
@@ -109,29 +112,35 @@ class RemotesDialog(QDialog):
         action_widget = self._make_action_cell(row, name, url)
         self._table.setCellWidget(row, 3, action_widget)
 
+    # Compact inline style that overrides the global "padding: 5px 14px" from style.qss
+    _ICON_BTN  = "padding: 2px 5px; min-width: 0;"
+    _DEL_STYLE = "padding: 2px 5px; min-width: 0; color: rgb(243,139,168);"
+    _SSH_STYLE = "padding: 2px 8px; min-width: 0; color: #f5a623; font-weight: bold;"
+
     def _make_action_cell(self, row: int, name: str, url: str):
-        w = QHBoxLayout()
+        container = QWidget()
+        w = QHBoxLayout(container)
         w.setContentsMargins(4, 2, 4, 2)
         w.setSpacing(4)
-        container = __import__('PyQt6.QtWidgets', fromlist=['QWidget']).QWidget()
-        container.setLayout(w)
 
         if _is_https(url):
-            ssh_btn = QPushButton(t("remotes.switch_ssh"))
+            ssh_btn = QPushButton("→ SSH")
+            ssh_btn.setStyleSheet(self._SSH_STYLE)
             ssh_btn.setToolTip(t("remotes.switch_ssh_tip") + f"\n→ {_https_to_ssh(url)}")
-            ssh_btn.setStyleSheet("color: #f5a623; font-weight: bold;")
             ssh_btn.clicked.connect(lambda _, n=name, u=url: self._on_switch_ssh(n, u))
             w.addWidget(ssh_btn)
 
-        save_btn = QPushButton(t("remotes.save_url"))
+        save_btn = QPushButton("✓")
+        save_btn.setFixedWidth(30)
+        save_btn.setStyleSheet(self._ICON_BTN)
         save_btn.setToolTip(t("remotes.save_url_tip"))
         save_btn.clicked.connect(lambda _, r=row, n=name: self._on_save_url(r, n))
         w.addWidget(save_btn)
 
         del_btn = QPushButton("✕")
-        del_btn.setFixedWidth(28)
+        del_btn.setFixedWidth(30)
+        del_btn.setStyleSheet(self._DEL_STYLE)
         del_btn.setToolTip(t("remotes.remove_tip"))
-        del_btn.setStyleSheet("color: rgb(243,139,168);")
         del_btn.clicked.connect(lambda _, n=name: self._on_remove(n))
         w.addWidget(del_btn)
 

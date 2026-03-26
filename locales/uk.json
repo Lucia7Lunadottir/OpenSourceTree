@@ -24,7 +24,7 @@
     "toolbar.stash": "Stash",
     "toolbar.tag": "Тег",
     "toolbar.lfs": "LFS",
-    "toolbar.remotes": "Віддалені",
+    "toolbar.remotes": "Remotes",
     "toolbar.refresh": "Оновити",
     "tab.files": "Файли",
     "tab.working_copy": "Робоча копія",
@@ -222,5 +222,7 @@
     "remotes.remove_tip": "Видалити це сховище",
     "remotes.remove_confirm": "Видалити сховище '{name}'?",
     "remotes.empty_url": "URL не може бути порожнім.",
-    "remotes.add_empty": "Введіть назву та URL."
+    "remotes.add_empty": "Введіть назву та URL.",
+    "diff.placeholder": "Оберіть файл для перегляду diff",
+    "main.placeholder": "Відкрийте репозиторій через панель закладок\nабо Файл → Відкрити / Клонувати."
 }
