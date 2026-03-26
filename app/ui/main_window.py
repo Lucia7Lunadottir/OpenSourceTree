@@ -56,10 +56,7 @@ class MainWindow(QMainWindow):
         self._placeholder = QWidget()
         ph_layout = QHBoxLayout(self._placeholder)
         from PyQt6.QtWidgets import QLabel
-        ph_label = QLabel(
-            "Open a repository from the bookmarks panel,\n"
-            "or use File → Open / Clone to get started."
-        )
+        ph_label = QLabel(t("main.placeholder"))
         ph_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         ph_label.setStyleSheet("color: #666; font-size: 14px;")
         ph_layout.addWidget(ph_label)

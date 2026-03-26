@@ -24,7 +24,7 @@
     "toolbar.stash": "暂存 (Stash)",
     "toolbar.tag": "标签",
     "toolbar.lfs": "LFS",
-    "toolbar.remotes": "远程",
+    "toolbar.remotes": "Remotes",
     "toolbar.refresh": "刷新",
     "tab.files": "文件",
     "tab.working_copy": "工作副本",
@@ -222,5 +222,7 @@
     "remotes.remove_tip": "删除此远程",
     "remotes.remove_confirm": "删除远程 '{name}'？",
     "remotes.empty_url": "URL 不能为空。",
-    "remotes.add_empty": "请输入名称和 URL。"
+    "remotes.add_empty": "请输入名称和 URL。",
+    "diff.placeholder": "选择文件以查看差异",
+    "main.placeholder": "从书签面板打开仓库，\n或使用 文件 → 打开 / 克隆。"
 }

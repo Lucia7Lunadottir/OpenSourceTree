@@ -24,7 +24,7 @@
     "toolbar.stash": "Schowek (Stash)",
     "toolbar.tag": "Tag",
     "toolbar.lfs": "LFS",
-    "toolbar.remotes": "Zdalne",
+    "toolbar.remotes": "Remotes",
     "toolbar.refresh": "Odśwież",
     "tab.files": "Pliki",
     "tab.working_copy": "Kopia robocza",
@@ -222,5 +222,7 @@
     "remotes.remove_tip": "Usuń to zdalne",
     "remotes.remove_confirm": "Usunąć zdalne '{name}'?",
     "remotes.empty_url": "URL nie może być pusty.",
-    "remotes.add_empty": "Wprowadź nazwę i URL."
+    "remotes.add_empty": "Wprowadź nazwę i URL.",
+    "diff.placeholder": "Wybierz plik, aby zobaczyć diff",
+    "main.placeholder": "Otwórz repozytorium z panelu zakładek\nlub użyj Plik → Otwórz / Klonuj."
 }
