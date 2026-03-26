@@ -4,17 +4,12 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QIcon, QColor
 
+from app.i18n import t
 from app.git.repo import GitRepo
 from app.git.models import BranchInfo, TagInfo, StashInfo
 from app.constants import BranchType
 from app.workers.git_worker import GitWorker
 from PyQt6.QtCore import QThreadPool
-
-
-SECTION_LOCAL = "LOCAL BRANCHES"
-SECTION_REMOTE = "REMOTE BRANCHES"
-SECTION_TAGS = "TAGS"
-SECTION_STASHES = "STASHES"
 
 
 class BranchPanel(QTreeWidget):
@@ -47,7 +42,7 @@ class BranchPanel(QTreeWidget):
             return
 
         # LOCAL BRANCHES
-        local_root = self._make_section(SECTION_LOCAL)
+        local_root = self._make_section(t("branch_panel.local"))
         for b in branches:
             if not b.is_remote:
                 item = QTreeWidgetItem([b.name])
@@ -60,7 +55,7 @@ class BranchPanel(QTreeWidget):
                 local_root.addChild(item)
 
         # REMOTE BRANCHES
-        remote_root = self._make_section(SECTION_REMOTE)
+        remote_root = self._make_section(t("branch_panel.remote"))
         for b in branches:
             if b.is_remote:
                 item = QTreeWidgetItem([b.name])
@@ -69,15 +64,15 @@ class BranchPanel(QTreeWidget):
                 remote_root.addChild(item)
 
         # TAGS
-        tags_root = self._make_section(SECTION_TAGS)
-        for t in tags:
-            item = QTreeWidgetItem([t.name])
-            item.setData(0, Qt.ItemDataRole.UserRole, ("tag", t))
+        tags_root = self._make_section(t("branch_panel.tags"))
+        for tag in tags:
+            item = QTreeWidgetItem([tag.name])
+            item.setData(0, Qt.ItemDataRole.UserRole, ("tag", tag))
             item.setForeground(0, QColor("#dcdcaa"))
             tags_root.addChild(item)
 
         # STASHES
-        stash_root = self._make_section(SECTION_STASHES)
+        stash_root = self._make_section(t("branch_panel.stashes"))
         for s in stashes:
             label = f"{s.name}: {s.message}" if s.message else s.name
             item = QTreeWidgetItem([label])
@@ -116,27 +111,27 @@ class BranchPanel(QTreeWidget):
 
         if kind == "branch":
             if not obj.is_remote:
-                menu.addAction("Checkout", lambda: self._checkout(obj.name))
-                menu.addAction("Merge into Current", lambda: self._merge(obj.name))
-                menu.addAction("Rebase onto", lambda: self._rebase(obj.name))
+                menu.addAction(t("branch.checkout"), lambda: self._checkout(obj.name))
+                menu.addAction(t("branch.merge_into"), lambda: self._merge(obj.name))
+                menu.addAction(t("branch.rebase_onto"), lambda: self._rebase(obj.name))
                 menu.addSeparator()
-                menu.addAction("Rename...", lambda: self._rename_branch(obj.name))
-                menu.addAction("Delete", lambda: self._delete_branch(obj.name, force=False))
-                menu.addAction("Force Delete", lambda: self._delete_branch(obj.name, force=True))
+                menu.addAction(t("branch.rename"), lambda: self._rename_branch(obj.name))
+                menu.addAction(t("branch.delete"), lambda: self._delete_branch(obj.name, force=False))
+                menu.addAction(t("branch.force_delete"), lambda: self._delete_branch(obj.name, force=True))
                 if obj.tracking:
                     menu.addSeparator()
-                    menu.addAction("Push", lambda: self._push_branch(obj.name))
-                    menu.addAction("Pull", lambda: self._pull_branch(obj.name))
+                    menu.addAction(t("branch.push"), lambda: self._push_branch(obj.name))
+                    menu.addAction(t("branch.pull"), lambda: self._pull_branch(obj.name))
             else:
-                menu.addAction("Checkout as Local Branch", lambda: self._checkout_remote(obj.name))
+                menu.addAction(t("branch.checkout_local"), lambda: self._checkout_remote(obj.name))
 
         elif kind == "tag":
-            menu.addAction("Delete Tag", lambda: self._delete_tag(obj.name))
+            menu.addAction(t("branch.delete_tag"), lambda: self._delete_tag(obj.name))
 
         elif kind == "stash":
-            menu.addAction("Apply", lambda: self._stash_apply(obj.index))
-            menu.addAction("Pop", lambda: self._stash_pop(obj.index))
-            menu.addAction("Drop", lambda: self._stash_drop(obj.index))
+            menu.addAction(t("branch.stash_apply"), lambda: self._stash_apply(obj.index))
+            menu.addAction(t("branch.stash_pop"), lambda: self._stash_pop(obj.index))
+            menu.addAction(t("branch.stash_drop"), lambda: self._stash_drop(obj.index))
 
         menu.exec(self.mapToGlobal(pos))
 

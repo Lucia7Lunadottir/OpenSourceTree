@@ -267,6 +267,40 @@ class GitRepo:
     def delete_tag(self, name: str) -> None:
         self.runner.run(["tag", "-d", name])
 
+    # ---------------------------------------------------------- Commit actions
+
+    def reset_to_commit(self, hash: str, mode: str = "mixed") -> None:
+        """Reset current branch HEAD to hash. mode: soft | mixed | hard."""
+        self.runner.run(["reset", f"--{mode}", hash])
+
+    def cherry_pick(self, hash: str) -> None:
+        self.runner.run(["cherry-pick", hash])
+
+    def revert_commit(self, hash: str) -> None:
+        self.runner.run(["revert", "--no-edit", hash])
+
+    def checkout_detached(self, hash: str) -> None:
+        self.runner.run(["checkout", hash])
+
+    # ---------------------------------------------------------- Git identity
+
+    def get_identity(self, global_: bool = True) -> tuple[str, str]:
+        """Return (user.name, user.email) from git config."""
+        scope = ["--global"] if global_ else []
+        def _get(key):
+            try:
+                return self.runner.run(["config"] + scope + [key]).strip()
+            except GitCommandError:
+                return ""
+        return _get("user.name"), _get("user.email")
+
+    def set_identity(self, name: str, email: str, global_: bool = True) -> None:
+        scope = ["--global"] if global_ else []
+        if name:
+            self.runner.run(["config"] + scope + ["user.name", name])
+        if email:
+            self.runner.run(["config"] + scope + ["user.email", email])
+
     # ----------------------------------------------------------------- Utils
 
     def get_head(self) -> str:

@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import QThreadPool
 
+from app.i18n import t
 from app.git.repo import GitRepo
 from app.workers.git_worker import GitWorker
 
@@ -12,7 +13,7 @@ class StashDialog(QDialog):
     def __init__(self, repo: GitRepo, parent=None):
         super().__init__(parent)
         self._repo = repo
-        self.setWindowTitle("Save Stash")
+        self.setWindowTitle(t("stash.title"))
         self.setMinimumWidth(360)
         self._setup_ui()
 
@@ -21,18 +22,18 @@ class StashDialog(QDialog):
         form = QFormLayout()
 
         self._message_edit = QLineEdit()
-        self._message_edit.setPlaceholderText("Optional stash message...")
-        form.addRow("Message:", self._message_edit)
+        self._message_edit.setPlaceholderText(t("stash.message_placeholder"))
+        form.addRow(t("stash.message"), self._message_edit)
         layout.addLayout(form)
 
-        self._untracked_check = QCheckBox("Include untracked files")
+        self._untracked_check = QCheckBox(t("stash.include_untracked"))
         self._untracked_check.setChecked(True)
         layout.addWidget(self._untracked_check)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
-        buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Stash")
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText(t("stash.btn"))
         buttons.accepted.connect(self._on_accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
@@ -46,4 +47,4 @@ class StashDialog(QDialog):
         QThreadPool.globalInstance().start(worker)
 
     def _on_error(self, error: str):
-        QMessageBox.critical(self, "Stash Error", error)
+        QMessageBox.critical(self, t("stash.error"), error)

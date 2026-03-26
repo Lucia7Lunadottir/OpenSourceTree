@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import QThreadPool
 
+from app.i18n import t
 from app.git.repo import GitRepo
 from app.workers.git_worker import GitWorker
 
@@ -12,7 +13,7 @@ class TagDialog(QDialog):
     def __init__(self, repo: GitRepo, parent=None):
         super().__init__(parent)
         self._repo = repo
-        self.setWindowTitle("Create Tag")
+        self.setWindowTitle(t("tag.title"))
         self.setMinimumWidth(360)
         self._setup_ui()
 
@@ -22,21 +23,21 @@ class TagDialog(QDialog):
 
         self._name_edit = QLineEdit()
         self._name_edit.setPlaceholderText("v1.0.0")
-        form.addRow("Tag Name:", self._name_edit)
+        form.addRow(t("tag.name"), self._name_edit)
 
         self._ref_edit = QLineEdit("HEAD")
-        form.addRow("From Ref:", self._ref_edit)
+        form.addRow(t("tag.from_ref"), self._ref_edit)
 
         self._message_edit = QLineEdit()
-        self._message_edit.setPlaceholderText("(leave empty for lightweight tag)")
-        form.addRow("Message:", self._message_edit)
+        self._message_edit.setPlaceholderText(t("tag.message_placeholder"))
+        form.addRow(t("tag.message"), self._message_edit)
 
         layout.addLayout(form)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
-        buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Create Tag")
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText(t("tag.btn"))
         buttons.accepted.connect(self._on_accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
@@ -44,14 +45,14 @@ class TagDialog(QDialog):
     def _on_accept(self):
         name = self._name_edit.text().strip()
         if not name:
-            QMessageBox.warning(self, "Error", "Tag name cannot be empty.")
+            QMessageBox.warning(self, t("tag.title"), t("tag.error.empty_name"))
             return
-        ref = self._ref_edit.text().strip() or "HEAD"
+        ref     = self._ref_edit.text().strip() or "HEAD"
         message = self._message_edit.text().strip()
-        worker = GitWorker(self._repo.create_tag, name, ref, message)
+        worker  = GitWorker(self._repo.create_tag, name, ref, message)
         worker.signals.result.connect(lambda _: self.accept())
         worker.signals.error.connect(self._on_error)
         QThreadPool.globalInstance().start(worker)
 
     def _on_error(self, error: str):
-        QMessageBox.critical(self, "Tag Error", error)
+        QMessageBox.critical(self, t("tag.error"), error)
