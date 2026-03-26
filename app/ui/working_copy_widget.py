@@ -1,9 +1,10 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
     QListWidget, QListWidgetItem, QLabel, QTextEdit,
-    QPushButton, QCheckBox, QMenu, QMessageBox, QAbstractItemView
+    QPushButton, QCheckBox, QMenu, QMessageBox, QAbstractItemView,
+    QProgressBar
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QPoint
+from PyQt6.QtCore import Qt, pyqtSignal, QPoint, QThreadPool
 from PyQt6.QtGui import QColor, QFont
 
 from app.i18n import t
@@ -11,7 +12,7 @@ from app.git.repo import GitRepo
 from app.git.models import FileStatusEntry
 from app.constants import STATUS_COLORS
 from app.workers.git_worker import GitWorker
-from PyQt6.QtCore import QThreadPool
+from app.workers.batch_worker import BatchWorker
 
 
 STATUS_LABELS = {
@@ -129,6 +130,20 @@ class WorkingCopyWidget(QWidget):
         splitter.setSizes([200, 200])
         layout.addWidget(splitter)
 
+        # Progress bar (shown during batch stage/unstage)
+        progress_row = QHBoxLayout()
+        progress_row.setContentsMargins(4, 2, 4, 0)
+        self._progress_bar = QProgressBar()
+        self._progress_bar.setFixedHeight(14)
+        self._progress_bar.setTextVisible(False)
+        self._progress_label = QLabel("")
+        self._progress_label.setStyleSheet("color: #9cdcfe; font-size: 11px;")
+        progress_row.addWidget(self._progress_bar)
+        progress_row.addWidget(self._progress_label)
+        self._progress_bar.setVisible(False)
+        self._progress_label.setVisible(False)
+        layout.addLayout(progress_row)
+
         # Commit area
         commit_area = QWidget()
         commit_area.setObjectName("commitArea")
@@ -209,10 +224,26 @@ class WorkingCopyWidget(QWidget):
                     )
 
     def _on_stage_all(self):
-        self._run_op(self._repo.stage_all)
+        try:
+            _, unstaged = self._repo.get_working_copy_status()
+        except Exception as e:
+            self.status_message.emit(str(e))
+            return
+        if not unstaged:
+            return
+        paths = [e.path for e in unstaged]
+        self._run_batch(self._repo.stage_file, paths, "staging")
 
     def _on_unstage_all(self):
-        self._run_op(self._repo.unstage_all)
+        try:
+            staged, _ = self._repo.get_working_copy_status()
+        except Exception as e:
+            self.status_message.emit(str(e))
+            return
+        if not staged:
+            return
+        paths = [e.path for e in staged]
+        self._run_batch(self._repo.unstage_file, paths, "unstaging")
 
     def _on_commit(self):
         message = self._commit_edit.toPlainText().strip()
@@ -238,8 +269,36 @@ class WorkingCopyWidget(QWidget):
         worker.signals.error.connect(self._on_error)
         QThreadPool.globalInstance().start(worker)
 
+    def _run_batch(self, fn, paths: list[str], op: str):
+        total = len(paths)
+        self._progress_bar.setMaximum(total)
+        self._progress_bar.setValue(0)
+        self._progress_bar.setVisible(True)
+        self._progress_label.setVisible(True)
+        key = "progress.staging" if op == "staging" else "progress.unstaging"
+        self._progress_label.setText(t(key, current=0, total=total))
+
+        worker = BatchWorker(fn, paths)
+        worker.signals.progress.connect(
+            lambda cur, tot: self._on_batch_progress(cur, tot, key)
+        )
+        worker.signals.result.connect(lambda _: self._on_batch_done())
+        worker.signals.error.connect(self._on_error)
+        QThreadPool.globalInstance().start(worker)
+
+    def _on_batch_progress(self, current: int, total: int, key: str):
+        self._progress_bar.setMaximum(total)
+        self._progress_bar.setValue(current)
+        self._progress_label.setText(t(key, current=current, total=total))
+
+    def _on_batch_done(self):
+        self._progress_bar.setVisible(False)
+        self._progress_label.setVisible(False)
+        self.refresh()
+
     def _on_error(self, error_msg: str):
-        # Extract last line for status bar
+        self._progress_bar.setVisible(False)
+        self._progress_label.setVisible(False)
         lines = [l for l in error_msg.splitlines() if l.strip()]
         self.status_message.emit(lines[-1] if lines else "Git error occurred")
         self.refresh()

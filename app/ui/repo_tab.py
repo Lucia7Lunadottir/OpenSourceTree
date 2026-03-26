@@ -23,6 +23,7 @@ from .dialogs.remote_dialog import RemoteDialog
 from .dialogs.stash_dialog import StashDialog
 from .dialogs.tag_dialog import TagDialog
 from .dialogs.branch_dialog import BranchDialog
+from .dialogs.lfs_dialog import LfsDialog
 
 
 STATUS_LABELS = {
@@ -131,6 +132,7 @@ class RepoTab(QWidget):
 
         tb.addAction(t("toolbar.stash"), self._on_stash)
         tb.addAction(t("toolbar.tag"), self._on_tag)
+        tb.addAction(t("toolbar.lfs"), self._on_lfs)
         tb.addSeparator()
         tb.addAction(t("toolbar.refresh"), self._refresh_all)
 
@@ -250,6 +252,13 @@ class RepoTab(QWidget):
         if dlg.exec():
             self._refresh_all()
             self.status_message.emit(t("status.tag_done"))
+
+    def _on_lfs(self):
+        if not self._repo.lfs_is_enabled():
+            QMessageBox.warning(self, t("toolbar.lfs"), t("lfs.not_enabled"))
+            return
+        dlg = LfsDialog(self._repo, parent=self)
+        dlg.exec()
 
     def _on_error(self, error: str):
         lines = [l for l in error.splitlines() if l.strip()]

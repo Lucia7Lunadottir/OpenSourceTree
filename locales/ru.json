@@ -28,6 +28,7 @@
     "toolbar.branch.rebase": "Rebase...",
     "toolbar.stash": "Stash",
     "toolbar.tag": "Тег",
+    "toolbar.lfs": "LFS",
     "toolbar.refresh": "Обновить",
 
     "tab.files": "Файлы",
@@ -157,5 +158,24 @@
     "bookmarks.not_git.title": "Не репозиторий Git",
     "bookmarks.not_git.text": "'{path}' не является git-репозиторием.",
     "bookmarks.open": "Открыть",
-    "bookmarks.remove": "Удалить из закладок"
+    "bookmarks.remove": "Удалить из закладок",
+
+    "progress.staging":   "Индексирование {current} / {total} файлов...",
+    "progress.unstaging": "Снятие с индекса {current} / {total} файлов...",
+
+    "lfs.title":        "LFS Менеджер",
+    "lfs.tracked":      "Отслеживаемые паттерны",
+    "lfs.track_btn":    "Добавить паттерн...",
+    "lfs.untrack_btn":  "Убрать выбранный",
+    "lfs.col_file":     "Файл",
+    "lfs.col_size":     "Размер",
+    "lfs.col_status":   "Статус",
+    "lfs.downloaded":   "✓ Загружен",
+    "lfs.pointer":      "⚠ Только указатель",
+    "lfs.download_all": "Загрузить все указатели",
+    "lfs.push_objs":    "Отправить LFS объекты",
+    "lfs.prune":        "Очистить локальный кэш",
+    "lfs.not_enabled":  "Git LFS не установлен или не инициализирован в этом репозитории.",
+    "lfs.track_prompt": "Паттерн для отслеживания (например *.psd):",
+    "lfs.error":        "Ошибка LFS"
 }

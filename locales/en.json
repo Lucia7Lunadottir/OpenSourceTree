@@ -28,6 +28,7 @@
     "toolbar.branch.rebase": "Rebase...",
     "toolbar.stash": "Stash",
     "toolbar.tag": "Tag",
+    "toolbar.lfs": "LFS",
     "toolbar.refresh": "Refresh",
 
     "tab.files": "Files",
@@ -157,5 +158,24 @@
     "bookmarks.not_git.title": "Not a Git Repository",
     "bookmarks.not_git.text": "'{path}' is not a valid git repository.",
     "bookmarks.open": "Open",
-    "bookmarks.remove": "Remove Bookmark"
+    "bookmarks.remove": "Remove Bookmark",
+
+    "progress.staging":   "Staging {current} / {total} files...",
+    "progress.unstaging": "Unstaging {current} / {total} files...",
+
+    "lfs.title":        "LFS Manager",
+    "lfs.tracked":      "Tracked Patterns",
+    "lfs.track_btn":    "Track Pattern...",
+    "lfs.untrack_btn":  "Untrack Selected",
+    "lfs.col_file":     "File",
+    "lfs.col_size":     "Size",
+    "lfs.col_status":   "Status",
+    "lfs.downloaded":   "✓ Downloaded",
+    "lfs.pointer":      "⚠ Pointer only",
+    "lfs.download_all": "Download All Pointers",
+    "lfs.push_objs":    "Push LFS Objects",
+    "lfs.prune":        "Prune Local Cache",
+    "lfs.not_enabled":  "Git LFS is not installed or not initialized in this repo.",
+    "lfs.track_prompt": "Pattern to track (e.g. *.psd):",
+    "lfs.error":        "LFS Error"
 }

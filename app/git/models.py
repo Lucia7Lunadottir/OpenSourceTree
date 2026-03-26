@@ -68,3 +68,11 @@ class RemoteInfo:
     name: str
     fetch_url: str
     push_url: str = ""
+
+
+@dataclass
+class LfsFileEntry:
+    oid: str          # SHA256 hash
+    size: int         # bytes
+    path: str
+    downloaded: bool  # True if full file, False if pointer only
