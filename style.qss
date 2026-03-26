@@ -437,6 +437,19 @@ QWidget#filterBar {
     border-bottom: 1px solid rgb(50, 45, 75);
 }
 
+/* ── Conflict Banner ─────────────────────────────────────────────────────── */
+QFrame#conflictBanner {
+    background-color: rgb(55, 25, 20);
+    border: 1px solid rgb(160, 60, 55);
+    border-radius: 4px;
+    margin: 2px 4px;
+}
+
+QFrame#conflictBanner QLabel {
+    color: rgb(255, 140, 110);
+    font-weight: bold;
+}
+
 /* ── Commit Area ─────────────────────────────────────────────────────────── */
 QWidget#commitArea {
     background-color: rgb(30, 28, 48);
