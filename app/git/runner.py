@@ -105,12 +105,16 @@ class GitRunner:
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             text=True, encoding="utf-8", errors="replace", env=env,
         )
+        collected: list[str] = []
         try:
             for line in proc.stdout:
+                collected.append(line)
                 yield line
         finally:
             proc.stdout.close()
             proc.wait()
+        if proc.returncode != 0:
+            raise GitCommandError(cmd, proc.returncode, "".join(collected))
 
     def run_in_terminal(self, args: list[str]) -> None:
         """Open a terminal window and run the git command interactively."""

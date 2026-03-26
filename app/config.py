@@ -1,6 +1,7 @@
 import json
 import os
 import stat
+import subprocess
 import uuid
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
@@ -158,6 +159,27 @@ def get_git_ssh_command() -> str | None:
         return None
     _write_openssh_config(profiles)
     return f"ssh -F {OPENSSH_CONFIG}"
+
+
+def ensure_agent_running() -> bool:
+    """Start ssh-agent if not running and inject SSH_AUTH_SOCK into os.environ.
+    Returns True if agent is running (or was just started successfully)."""
+    if os.environ.get("SSH_AUTH_SOCK"):
+        return True
+    try:
+        result = subprocess.run(
+            ["ssh-agent", "-s"], capture_output=True, text=True, timeout=10
+        )
+        if result.returncode != 0:
+            return False
+        for line in result.stdout.splitlines():
+            if "SSH_AUTH_SOCK=" in line:
+                os.environ["SSH_AUTH_SOCK"] = line.split("=", 1)[1].split(";")[0]
+            elif "SSH_AGENT_PID=" in line:
+                os.environ["SSH_AGENT_PID"] = line.split("=", 1)[1].split(";")[0]
+    except Exception:
+        return False
+    return bool(os.environ.get("SSH_AUTH_SOCK"))
 
 
 def scan_default_ssh_keys() -> list[str]:

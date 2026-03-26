@@ -126,6 +126,8 @@ class BranchPanel(QTreeWidget):
                 menu.addAction(t("branch.checkout_local"), lambda: self._checkout_remote(obj.name))
 
         elif kind == "tag":
+            menu.addAction(t("branch.push_tag"), lambda: self._push_tag(obj.name))
+            menu.addSeparator()
             menu.addAction(t("branch.delete_tag"), lambda: self._delete_tag(obj.name))
 
         elif kind == "stash":
@@ -183,9 +185,12 @@ class BranchPanel(QTreeWidget):
         if ret == QMessageBox.StandardButton.Yes:
             self._run(self._repo.delete_branch, name, force, success_msg=f"Deleted {name}")
 
+    def _push_tag(self, name: str):
+        self._run(self._repo.push_tag, name, success_msg=t("status.tag_pushed", name=name))
+
     def _delete_tag(self, name: str):
         ret = QMessageBox.question(
-            self, "Delete Tag", f"Delete tag '{name}'?",
+            self, t("branch_dialog.title.delete"), f"Delete tag '{name}'?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if ret == QMessageBox.StandardButton.Yes:

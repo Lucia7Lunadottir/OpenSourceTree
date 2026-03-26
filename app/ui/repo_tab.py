@@ -156,6 +156,14 @@ class RepoTab(QWidget):
         self._commit_list.load_commits()
         self._branch_panel.refresh()
         self.title_changed.emit(self._repo.get_repo_name())
+        self._fetch_tags_bg()
+
+    def _fetch_tags_bg(self):
+        """Silently fetch remote tags in background so the panel stays in sync."""
+        worker = GitWorker(self._repo.fetch_tags_silent)
+        worker.signals.result.connect(lambda _: self._branch_panel.refresh())
+        # Errors (e.g. offline) are silently ignored
+        QThreadPool.globalInstance().start(worker)
 
     def _on_commit_selected(self, commit: CommitRecord):
         self._current_commit = commit
