@@ -313,6 +313,76 @@ class GitRepo:
         raw = self.runner.run(["status", "--porcelain"])
         return not raw.strip()
 
+    # --------------------------------------------------------- Conflict resolution
+
+    def get_conflicted_files(self) -> list[str]:
+        """Return paths of all files with merge conflicts."""
+        raw = self.runner.run(["status", "--porcelain=v1", "-u"])
+        paths = []
+        for line in raw.splitlines():
+            if len(line) < 4:
+                continue
+            xy = line[:2]
+            path = line[3:]
+            if "U" in xy or xy in ("AA", "DD"):
+                if " -> " in path:
+                    path = path.split(" -> ", 1)[1]
+                paths.append(path.strip('"'))
+        return paths
+
+    def conflict_content(self, path: str) -> str:
+        """Read a conflicted file from the working tree."""
+        full = os.path.join(self.path, path)
+        try:
+            with open(full, "r", encoding="utf-8", errors="replace") as f:
+                return f.read()
+        except Exception:
+            return ""
+
+    def resolve_ours(self, path: str) -> None:
+        self.runner.run(["checkout", "--ours", "--", path])
+        self.runner.run(["add", "--", path])
+
+    def resolve_theirs(self, path: str) -> None:
+        self.runner.run(["checkout", "--theirs", "--", path])
+        self.runner.run(["add", "--", path])
+
+    def mark_resolved(self, path: str) -> None:
+        self.runner.run(["add", "--", path])
+
+    def is_merging(self) -> bool:
+        try:
+            self.runner.run(["rev-parse", "MERGE_HEAD"])
+            return True
+        except GitCommandError:
+            return False
+
+    def is_rebasing(self) -> bool:
+        try:
+            git_dir = self.runner.run(["rev-parse", "--git-dir"]).strip()
+            if not os.path.isabs(git_dir):
+                git_dir = os.path.join(self.path, git_dir)
+            return (os.path.isdir(os.path.join(git_dir, "rebase-merge")) or
+                    os.path.isdir(os.path.join(git_dir, "rebase-apply")))
+        except Exception:
+            return False
+
+    def is_cherry_picking(self) -> bool:
+        try:
+            self.runner.run(["rev-parse", "CHERRY_PICK_HEAD"])
+            return True
+        except GitCommandError:
+            return False
+
+    def abort_merge(self) -> None:
+        self.runner.run(["merge", "--abort"])
+
+    def abort_rebase(self) -> None:
+        self.runner.run(["rebase", "--abort"])
+
+    def abort_cherry_pick(self) -> None:
+        self.runner.run(["cherry-pick", "--abort"])
+
     def get_last_commit_message(self) -> str:
         """Return full commit message (subject + body) of HEAD."""
         try:
