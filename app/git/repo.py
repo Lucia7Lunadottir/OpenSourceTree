@@ -267,6 +267,9 @@ class GitRepo:
     def delete_tag(self, name: str) -> None:
         self.runner.run(["tag", "-d", name])
 
+    def push_tag(self, name: str, remote: str = "origin") -> None:
+        self.runner.run(["push", remote, f"refs/tags/{name}"])
+
     # ---------------------------------------------------------- Commit actions
 
     def reset_to_commit(self, hash: str, mode: str = "mixed") -> None:
@@ -403,10 +406,19 @@ class GitRepo:
 
     # ------------------------------------------------- Streaming remote ops
 
-    def fetch_streaming(self, remote: str = "", prune: bool = False) -> Iterator[str]:
+    def fetch_tags_silent(self) -> None:
+        """Fetch tags from all remotes quietly (no output, ignores errors)."""
+        try:
+            self.runner.run(["fetch", "--tags", "--quiet"], timeout=15)
+        except Exception:
+            pass
+
+    def fetch_streaming(self, remote: str = "", prune: bool = False, tags: bool = True) -> Iterator[str]:
         args = ["fetch", "--progress"]
         if prune:
             args.append("--prune")
+        if tags:
+            args.append("--tags")
         args.append(remote if remote else "--all")
         return self.runner.run_streaming(args)
 
@@ -414,8 +426,11 @@ class GitRepo:
         args = ["pull", "--progress"]
         if rebase:
             args.append("--rebase")
-        if remote:
-            args.append(remote)
+        # If branch specified without a remote, git would treat branch name as remote name.
+        # Use "origin" as the fallback so the argument order stays valid.
+        effective_remote = remote or ("origin" if branch else "")
+        if effective_remote:
+            args.append(effective_remote)
         if branch:
             args.append(branch)
         return self.runner.run_streaming(args)
@@ -426,8 +441,11 @@ class GitRepo:
             args.append("--force-with-lease")
         if tags:
             args.append("--tags")
-        if remote:
-            args.append(remote)
+        # If branch specified without a remote, git would treat branch name as remote name.
+        # Use "origin" as the fallback so the argument order stays valid.
+        effective_remote = remote or ("origin" if branch else "")
+        if effective_remote:
+            args.append(effective_remote)
         if branch:
             args.append(branch)
         return self.runner.run_streaming(args)

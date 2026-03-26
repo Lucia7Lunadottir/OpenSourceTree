@@ -15,7 +15,7 @@ from PyQt6.QtGui import QFont, QColor
 
 from app.config import (
     SSHProfile, load_ssh_profiles, save_ssh_profiles,
-    scan_default_ssh_keys, OPENSSH_CONFIG
+    scan_default_ssh_keys, ensure_agent_running, OPENSSH_CONFIG
 )
 
 
@@ -430,28 +430,38 @@ class SSHSettingsDialog(QDialog):
         el.addWidget(conn)
 
         # ssh-agent group
-        agent_grp = QGroupBox("ssh-agent (хранение пароля ключа в памяти)")
-        al = QVBoxLayout(agent_grp)
+        self._agent_grp = QGroupBox("ssh-agent (хранение пароля ключа в памяти)")
+        al = QVBoxLayout(self._agent_grp)
 
         self._agent_status_label = QLabel("Статус агента: проверяется...")
         self._agent_status_label.setStyleSheet("font-size: 11px; color: rgb(140,120,180);")
         al.addWidget(self._agent_status_label)
 
+        # List of all keys currently loaded in the agent
+        self._agent_keys_list = QListWidget()
+        self._agent_keys_list.setFixedHeight(72)
+        self._agent_keys_list.setToolTip("Ключи, загруженные в ssh-agent прямо сейчас")
+        al.addWidget(self._agent_keys_list)
+
         agent_btn_row = QHBoxLayout()
-        self._add_agent_btn = QPushButton("🔓 Добавить в агент")
+        self._add_agent_btn = QPushButton("🔓 Добавить профиль")
         self._add_agent_btn.setToolTip(
-            "Загружает ключ в ssh-agent. Если ключ защищён паролем,\n"
-            "введите его один раз — агент запомнит до конца сессии."
+            "Загружает ключ выбранного профиля в ssh-agent.\n"
+            "Если ключ защищён паролем — введите его один раз."
         )
         self._add_agent_btn.clicked.connect(self._add_to_agent)
-        self._remove_agent_btn = QPushButton("🔒 Убрать из агента")
+        self._remove_agent_btn = QPushButton("🔒 Убрать профиль")
         self._remove_agent_btn.clicked.connect(self._remove_from_agent)
+        self._clear_agent_btn = QPushButton("🗑 Очистить агент")
+        self._clear_agent_btn.setToolTip("Выгрузить все ключи из ssh-agent (ssh-add -D)")
+        self._clear_agent_btn.clicked.connect(self._clear_agent)
         self._refresh_agent_btn = QPushButton("↻")
         self._refresh_agent_btn.setFixedWidth(30)
         self._refresh_agent_btn.setToolTip("Обновить статус агента")
         self._refresh_agent_btn.clicked.connect(self._refresh_agent_status)
         agent_btn_row.addWidget(self._add_agent_btn)
         agent_btn_row.addWidget(self._remove_agent_btn)
+        agent_btn_row.addWidget(self._clear_agent_btn)
         agent_btn_row.addWidget(self._refresh_agent_btn)
         al.addLayout(agent_btn_row)
 
@@ -462,7 +472,7 @@ class SSHSettingsDialog(QDialog):
         agent_hint.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
         agent_hint.setWordWrap(True)
         al.addWidget(agent_hint)
-        el.addWidget(agent_grp)
+        el.addWidget(self._agent_grp)
 
         # Test group
         test_grp = QGroupBox("Тест подключения")
@@ -530,6 +540,13 @@ class SSHSettingsDialog(QDialog):
             )
             self._agent_status_label.setStyleSheet("font-size: 11px; color: rgb(160,220,130);")
 
+        # Populate keys list
+        self._agent_keys_list.clear()
+        for key_path in keys:
+            self._agent_keys_list.addItem(f"🔓  {key_path}")
+        if not keys and _ssh_agent_running():
+            self._agent_keys_list.addItem("(нет загруженных ключей)")
+
         # Update profile list items
         for i in range(self._profile_list.count()):
             item = self._profile_list.item(i)
@@ -549,12 +566,11 @@ class SSHSettingsDialog(QDialog):
             QMessageBox.warning(self, "ssh-agent", "Файл ключа не найден.")
             return
 
-        if not _ssh_agent_running():
+        if not ensure_agent_running():
             QMessageBox.warning(
                 self, "ssh-agent",
-                "ssh-agent не запущен.\n\n"
-                "Запустите его командой:\n  eval $(ssh-agent)\n\n"
-                "Или добавьте в ~/.bashrc / ~/.profile:\n  eval $(ssh-agent -s)"
+                "Не удалось запустить ssh-agent.\n"
+                "Попробуйте вручную: eval $(ssh-agent)"
             )
             return
 
@@ -603,6 +619,19 @@ class SSHSettingsDialog(QDialog):
             QMessageBox.warning(self, "ssh-agent", f"Ошибка: {result.stderr}")
         self._refresh_agent_status()
 
+    def _clear_agent(self):
+        ret = QMessageBox.question(
+            self, "Очистить агент",
+            "Выгрузить все ключи из ssh-agent?\nПри следующей git-операции пароль будет запрошен снова.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if ret != QMessageBox.StandardButton.Yes:
+            return
+        result = subprocess.run(["ssh-add", "-D"], capture_output=True, text=True)
+        if result.returncode != 0:
+            QMessageBox.warning(self, "ssh-agent", f"Ошибка: {result.stderr}")
+        self._refresh_agent_status()
+
     # ── List management ───────────────────────────────────────────────────────
 
     def _populate_list(self):
@@ -617,6 +646,8 @@ class SSHSettingsDialog(QDialog):
         self._current_idx = row
         self._editor.setEnabled(row >= 0)
         self._remove_btn.setEnabled(row >= 0)
+        # Agent section is always accessible regardless of profile selection
+        self._agent_grp.setEnabled(True)
 
         if row < 0 or row >= len(self._profiles):
             return

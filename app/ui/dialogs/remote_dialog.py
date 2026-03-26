@@ -1,3 +1,6 @@
+import os
+import subprocess
+
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QFormLayout, QHBoxLayout, QComboBox,
     QCheckBox, QDialogButtonBox, QMessageBox, QProgressBar, QLabel,
@@ -7,7 +10,8 @@ from PyQt6.QtCore import QThreadPool
 
 from app.i18n import t
 from app.git.repo import GitRepo
-from app.git.runner import is_auth_error
+from app.git.runner import is_auth_error, find_terminal
+from app.config import ensure_agent_running, scan_default_ssh_keys, load_ssh_profiles
 from app.workers.streaming_worker import StreamingWorker
 
 
@@ -51,7 +55,10 @@ class RemoteDialog(QDialog):
 
         if self._mode == "fetch":
             self._prune_check = QCheckBox(t("remote.prune"))
+            self._fetch_tags_check = QCheckBox(t("remote.fetch_tags"))
+            self._fetch_tags_check.setChecked(True)
             layout.addWidget(self._prune_check)
+            layout.addWidget(self._fetch_tags_check)
         elif self._mode == "pull":
             self._rebase_check = QCheckBox(t("remote.rebase"))
             layout.addWidget(self._rebase_check)
@@ -79,6 +86,11 @@ class RemoteDialog(QDialog):
         self._status_label = QLabel("")
         self._status_label.setStyleSheet("color: rgb(140, 120, 180);")
         layout.addWidget(self._status_label)
+
+        self._agent_btn = QPushButton(t("remote.add_to_agent"))
+        self._agent_btn.setVisible(False)
+        self._agent_btn.clicked.connect(self._add_to_agent_and_retry)
+        layout.addWidget(self._agent_btn)
 
         self._terminal_btn = QPushButton(t("remote.retry_terminal"))
         self._terminal_btn.setVisible(False)
@@ -120,8 +132,14 @@ class RemoteDialog(QDialog):
 
         if self._mode == "fetch":
             prune = self._prune_check.isChecked()
-            self._last_args = ["fetch"] + (["--prune"] if prune else []) + [remote or "--all"]
-            return lambda: self._repo.fetch_streaming(remote, prune)
+            tags  = self._fetch_tags_check.isChecked()
+            self._last_args = (
+                ["fetch"]
+                + (["--prune"] if prune else [])
+                + (["--tags"] if tags else [])
+                + [remote or "--all"]
+            )
+            return lambda: self._repo.fetch_streaming(remote, prune, tags)
 
         elif self._mode == "pull":
             branch = self._branch_text()
@@ -173,20 +191,25 @@ class RemoteDialog(QDialog):
         self._progress.setValue(1)
         self._progress.setVisible(False)
         self._ok_btn.setEnabled(True)
-        lines = [l for l in error.splitlines() if l.strip()]
-        short = lines[-1] if lines else t("remote.error")
-        self._status_label.setText(short)
 
         if is_auth_error(error):
+            self._agent_btn.setVisible(True)
             self._terminal_btn.setVisible(True)
+            self._status_label.setStyleSheet("color: rgb(255, 100, 100);")
             self._status_label.setText(t("remote.auth_required"))
         else:
-            QMessageBox.critical(self, t("error.git_error"), error)
+            # Output is already visible in the QPlainTextEdit above;
+            # show the last non-empty line as a compact status hint.
+            lines = [l for l in error.splitlines() if l.strip()]
+            short = lines[-1] if lines else t("remote.error")
+            self._status_label.setStyleSheet("color: rgb(255, 100, 100);")
+            self._status_label.setText(f"✗  {short}")
 
     def _retry_in_terminal(self):
         if not self._last_args:
             return
         self._terminal_btn.setVisible(False)
+        self._agent_btn.setVisible(False)
         self._status_label.setText(t("remote.opening_terminal"))
         try:
             self._repo.runner.run_in_terminal(self._last_args)
@@ -195,3 +218,70 @@ class RemoteDialog(QDialog):
         except Exception as e:
             QMessageBox.critical(self, t("remote.terminal_error"), str(e))
             self._ok_btn.setEnabled(True)
+
+    # ----------------------------------------------------------------- Agent
+
+    def _find_ssh_key(self) -> str:
+        """Return the most likely SSH private key path, or ''."""
+        for p in load_ssh_profiles():
+            if p.key_path and os.path.exists(p.key_path):
+                return p.key_path
+        keys = scan_default_ssh_keys()
+        return keys[0] if keys else ""
+
+    def _add_to_agent_and_retry(self):
+        """Add SSH key to agent (once), then retry the git operation silently."""
+        import shlex
+        key = self._find_ssh_key()
+        if not key:
+            QMessageBox.warning(
+                self, "ssh-agent",
+                "SSH-ключ не найден.\n"
+                "Укажите путь к ключу в Настройки → SSH-ключи."
+            )
+            return
+
+        if not ensure_agent_running():
+            QMessageBox.warning(
+                self, "ssh-agent",
+                "Не удалось запустить ssh-agent.\n"
+                "Запустите его вручную:\n  eval $(ssh-agent)"
+            )
+            return
+
+        terminal = find_terminal()
+        if not terminal:
+            QMessageBox.warning(self, "ssh-agent", "Терминал не найден.")
+            return
+
+        self._agent_btn.setVisible(False)
+        self._terminal_btn.setVisible(False)
+        self._status_label.setStyleSheet("color: rgb(140, 120, 180);")
+        self._status_label.setText(t("remote.opening_terminal"))
+
+        cmd = (
+            f"ssh-add {shlex.quote(key)}; "
+            f'echo ""; echo "──── Нажмите Enter чтобы продолжить ────"; read _'
+        )
+        term_name = os.path.basename(terminal)
+        if term_name == "konsole":
+            proc = subprocess.Popen(
+                [terminal, "--hide-menubar", "--hide-tabbar", "-e", "bash", "-c", cmd]
+            )
+        else:
+            proc = subprocess.Popen([terminal, "-e", "bash", "-c", cmd])
+        proc.wait()
+
+        # Check the key was actually added
+        check = subprocess.run(["ssh-add", "-l"], capture_output=True, text=True)
+        if check.returncode != 0:
+            # Agent is empty → user probably cancelled
+            self._status_label.setText(t("remote.auth_required"))
+            self._agent_btn.setVisible(True)
+            self._terminal_btn.setVisible(True)
+            return
+
+        # Key is now in agent — retry the operation automatically
+        self._status_label.setStyleSheet("color: rgb(140, 120, 180);")
+        self._output.clear()
+        self._on_accept()

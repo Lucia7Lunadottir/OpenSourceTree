@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QFormLayout, QLineEdit,
+    QDialog, QVBoxLayout, QFormLayout, QLineEdit, QCheckBox,
     QDialogButtonBox, QMessageBox
 )
 from PyQt6.QtCore import QThreadPool
@@ -34,6 +34,10 @@ class TagDialog(QDialog):
 
         layout.addLayout(form)
 
+        self._push_check = QCheckBox(t("tag.push_after"))
+        self._push_check.setChecked(True)
+        layout.addWidget(self._push_check)
+
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
@@ -49,10 +53,29 @@ class TagDialog(QDialog):
             return
         ref     = self._ref_edit.text().strip() or "HEAD"
         message = self._message_edit.text().strip()
-        worker  = GitWorker(self._repo.create_tag, name, ref, message)
-        worker.signals.result.connect(lambda _: self.accept())
+        push    = self._push_check.isChecked()
+
+        worker = GitWorker(self._repo.create_tag, name, ref, message)
+        worker.signals.result.connect(lambda _: self._after_create(name, push))
         worker.signals.error.connect(self._on_error)
         QThreadPool.globalInstance().start(worker)
 
+    def _after_create(self, name: str, push: bool):
+        if push:
+            worker = GitWorker(self._repo.push_tag, name)
+            worker.signals.result.connect(lambda _: self.accept())
+            worker.signals.error.connect(self._on_push_error)
+            QThreadPool.globalInstance().start(worker)
+        else:
+            self.accept()
+
     def _on_error(self, error: str):
         QMessageBox.critical(self, t("tag.error"), error)
+
+    def _on_push_error(self, error: str):
+        # Tag was created locally — warn about push failure but still close
+        QMessageBox.warning(
+            self, t("tag.push_error"),
+            t("tag.push_error_msg", error=error)
+        )
+        self.accept()
