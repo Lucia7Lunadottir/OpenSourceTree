@@ -5,6 +5,8 @@ class WorkerSignals(QObject):
     result = pyqtSignal(object)
     error = pyqtSignal(str)
     finished = pyqtSignal()
+    progress = pyqtSignal(int, int)   # current, total
+    progress_text = pyqtSignal(str)   # live output line
 
 
 class BaseWorker(QRunnable):

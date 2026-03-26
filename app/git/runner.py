@@ -102,7 +102,7 @@ class GitRunner:
         cmd = self._base_cmd(args)
         env = self._build_env()
         proc = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             text=True, encoding="utf-8", errors="replace", env=env,
         )
         try:

@@ -1,13 +1,14 @@
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QFormLayout, QHBoxLayout, QComboBox, QLineEdit,
-    QCheckBox, QDialogButtonBox, QMessageBox, QProgressBar, QLabel, QPushButton
+    QCheckBox, QDialogButtonBox, QMessageBox, QProgressBar, QLabel,
+    QPushButton, QPlainTextEdit
 )
 from PyQt6.QtCore import QThreadPool
 
 from app.i18n import t
 from app.git.repo import GitRepo
 from app.git.runner import is_auth_error
-from app.workers.git_worker import GitWorker
+from app.workers.streaming_worker import StreamingWorker
 
 
 class RemoteDialog(QDialog):
@@ -22,7 +23,7 @@ class RemoteDialog(QDialog):
             "push":  "remote.title.push",
         }
         self.setWindowTitle(t(title_keys.get(mode, "remote.title.fetch")))
-        self.setMinimumWidth(400)
+        self.setMinimumWidth(480)
         self._setup_ui()
 
     def _setup_ui(self):
@@ -57,9 +58,19 @@ class RemoteDialog(QDialog):
             layout.addWidget(self._tags_check)
 
         self._progress = QProgressBar()
-        self._progress.setRange(0, 0)
+        self._progress.setRange(0, 0)   # indeterminate
         self._progress.setVisible(False)
         layout.addWidget(self._progress)
+
+        self._output = QPlainTextEdit()
+        self._output.setReadOnly(True)
+        self._output.setMaximumHeight(110)   # ~6 lines
+        self._output.setVisible(False)
+        font = self._output.font()
+        font.setFamily("Monospace")
+        font.setPointSize(9)
+        self._output.setFont(font)
+        layout.addWidget(self._output)
 
         self._status_label = QLabel("")
         self._status_label.setStyleSheet("color: rgb(140, 120, 180);")
@@ -85,67 +96,64 @@ class RemoteDialog(QDialog):
         except Exception:
             return ["origin"]
 
-    def _build_args(self):
+    def _build_fn(self):
         remote = self._remote_combo.currentText()
         if remote == t("remote.all"):
             remote = ""
 
         if self._mode == "fetch":
             prune = self._prune_check.isChecked()
-            args = ["fetch"]
-            if prune:
-                args.append("--prune")
-            args.append(remote if remote else "--all")
-            fn = lambda: self._repo.fetch(remote, prune)
+            self._last_args = ["fetch"] + (["--prune"] if prune else []) + [remote or "--all"]
+            return lambda: self._repo.fetch_streaming(remote, prune)
 
         elif self._mode == "pull":
             branch = self._branch_edit.text().strip()
             rebase = self._rebase_check.isChecked()
-            args = ["pull"]
-            if rebase:
-                args.append("--rebase")
-            if remote:
-                args.append(remote)
-            if branch:
-                args.append(branch)
-            fn = lambda: self._repo.pull(remote, branch, rebase)
+            self._last_args = ["pull"] + (["--rebase"] if rebase else []) + (
+                [remote] if remote else []) + ([branch] if branch else [])
+            return lambda: self._repo.pull_streaming(remote, branch, rebase)
 
         elif self._mode == "push":
             branch = self._branch_edit.text().strip()
             force  = self._force_check.isChecked()
             tags   = self._tags_check.isChecked()
-            args   = ["push"]
-            if force:
-                args.append("--force-with-lease")
-            if tags:
-                args.append("--tags")
-            if remote:
-                args.append(remote)
-            if branch:
-                args.append(branch)
-            fn = lambda: self._repo.push(remote, branch, force, tags)
-
-        return args, fn
+            self._last_args = ["push"] + (["--force-with-lease"] if force else []) + (
+                ["--tags"] if tags else []) + ([remote] if remote else []) + (
+                [branch] if branch else [])
+            return lambda: self._repo.push_streaming(remote, branch, force, tags)
 
     def _on_accept(self):
-        args, fn = self._build_args()
-        self._last_args = args
+        fn = self._build_fn()
         self._terminal_btn.setVisible(False)
         self._ok_btn.setEnabled(False)
+        self._output.clear()
+        self._output.setVisible(True)
+        self._progress.setRange(0, 0)
         self._progress.setVisible(True)
         self._status_label.setText(t(f"remote.title.{self._mode}") + "...")
 
-        worker = GitWorker(fn)
+        worker = StreamingWorker(fn)
+        worker.signals.progress_text.connect(self._on_line)
         worker.signals.result.connect(self._on_done)
         worker.signals.error.connect(self._on_error)
         QThreadPool.globalInstance().start(worker)
 
-    def _on_done(self, result):
+    def _on_line(self, line: str):
+        if line.strip():
+            self._output.appendPlainText(line)
+            sb = self._output.verticalScrollBar()
+            sb.setValue(sb.maximum())
+
+    def _on_done(self, _result):
+        self._progress.setRange(0, 1)
+        self._progress.setValue(1)
         self._progress.setVisible(False)
         self._status_label.setText(t("remote.done"))
         self.accept()
 
     def _on_error(self, error: str):
+        self._progress.setRange(0, 1)
+        self._progress.setValue(1)
         self._progress.setVisible(False)
         self._ok_btn.setEnabled(True)
         lines = [l for l in error.splitlines() if l.strip()]

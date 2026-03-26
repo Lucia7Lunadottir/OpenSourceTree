@@ -1,9 +1,9 @@
 import os
-from typing import Optional
+from typing import Optional, Iterator
 from .runner import GitRunner, GitCommandError
 from .models import (
     CommitRecord, FileStatusEntry, BranchInfo, TagInfo,
-    StashInfo, RemoteInfo
+    StashInfo, RemoteInfo, LfsFileEntry
 )
 from .parser import (
     parse_commits, parse_file_status, parse_branches,
@@ -323,3 +323,135 @@ class GitRepo:
             return True
         except (GitCommandError, Exception):
             return False
+
+    # ------------------------------------------------- Streaming remote ops
+
+    def fetch_streaming(self, remote: str = "", prune: bool = False) -> Iterator[str]:
+        args = ["fetch", "--progress"]
+        if prune:
+            args.append("--prune")
+        args.append(remote if remote else "--all")
+        return self.runner.run_streaming(args)
+
+    def pull_streaming(self, remote: str = "", branch: str = "", rebase: bool = False) -> Iterator[str]:
+        args = ["pull", "--progress"]
+        if rebase:
+            args.append("--rebase")
+        if remote:
+            args.append(remote)
+        if branch:
+            args.append(branch)
+        return self.runner.run_streaming(args)
+
+    def push_streaming(self, remote: str = "", branch: str = "", force: bool = False, tags: bool = False) -> Iterator[str]:
+        args = ["push", "--progress"]
+        if force:
+            args.append("--force-with-lease")
+        if tags:
+            args.append("--tags")
+        if remote:
+            args.append(remote)
+        if branch:
+            args.append(branch)
+        return self.runner.run_streaming(args)
+
+    # ------------------------------------------------------------------ LFS
+
+    def lfs_is_enabled(self) -> bool:
+        """Return True if git-lfs is installed and initialized in this repo."""
+        import shutil
+        if not shutil.which("git-lfs"):
+            return False
+        try:
+            hooks_dir = self.runner.run(["rev-parse", "--git-path", "hooks"]).strip()
+            hook_path = os.path.join(hooks_dir, "pre-push")
+            # Also check if lfs is listed in the config
+            self.runner.run(["lfs", "env"])
+            return True
+        except (GitCommandError, Exception):
+            return False
+
+    def lfs_list_files(self) -> list[LfsFileEntry]:
+        """Parse `git lfs ls-files -s` output into LfsFileEntry list."""
+        try:
+            raw = self.runner.run(["lfs", "ls-files", "-s"])
+        except GitCommandError:
+            return []
+        entries = []
+        for line in raw.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            # Format: <oid> <*|-> <path>
+            # e.g. "abc123... * assets/logo.psd"
+            parts = line.split(" ", 2)
+            if len(parts) < 3:
+                continue
+            oid = parts[0]
+            marker = parts[1]   # '*' = downloaded, '-' = pointer only
+            path = parts[2]
+            downloaded = marker == "*"
+            # Size is not in ls-files -s; use 0 unless we can get it
+            size = self._lfs_file_size(path)
+            entries.append(LfsFileEntry(oid=oid, size=size, path=path, downloaded=downloaded))
+        return entries
+
+    def _lfs_file_size(self, path: str) -> int:
+        """Return LFS object size from pointer file, or 0 on error."""
+        try:
+            full = os.path.join(self.path, path)
+            with open(full, "r", encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    if line.startswith("size "):
+                        return int(line.split()[1])
+        except Exception:
+            pass
+        return 0
+
+    def lfs_pull(self, paths: list[str] = []) -> Iterator[str]:
+        args = ["lfs", "pull"]
+        if paths:
+            args += ["--"] + paths
+        return self.runner.run_streaming(args)
+
+    def lfs_fetch(self, remote: str = "", all_: bool = False) -> Iterator[str]:
+        args = ["lfs", "fetch"]
+        if all_:
+            args.append("--all")
+        if remote:
+            args.append(remote)
+        return self.runner.run_streaming(args)
+
+    def lfs_push(self, remote: str = "origin") -> Iterator[str]:
+        return self.runner.run_streaming(["lfs", "push", "--all", remote])
+
+    def lfs_track(self, pattern: str) -> None:
+        self.runner.run(["lfs", "track", pattern])
+
+    def lfs_untrack(self, pattern: str) -> None:
+        self.runner.run(["lfs", "untrack", pattern])
+
+    def lfs_tracked_patterns(self) -> list[str]:
+        """Parse .gitattributes for lines containing 'filter=lfs'."""
+        attr_path = os.path.join(self.path, ".gitattributes")
+        patterns = []
+        try:
+            with open(attr_path, "r", encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    if "filter=lfs" in line:
+                        patterns.append(line.split()[0])
+        except FileNotFoundError:
+            pass
+        return patterns
+
+    def lfs_prune(self) -> str:
+        try:
+            return self.runner.run(["lfs", "prune"])
+        except GitCommandError as e:
+            return str(e)
+
+    def lfs_status(self) -> str:
+        try:
+            return self.runner.run(["lfs", "status"])
+        except GitCommandError as e:
+            return str(e)
