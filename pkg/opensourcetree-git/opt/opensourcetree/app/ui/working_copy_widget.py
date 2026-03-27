@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QStackedWidget,
     QLabel, QTextEdit, QPushButton, QCheckBox,
     QMenu, QMessageBox, QAbstractItemView,
-    QProgressBar, QFrame, QLineEdit, QButtonGroup, QSizePolicy
+    QProgressBar, QFrame, QLineEdit, QButtonGroup
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QPoint, QThreadPool
 from PyQt6.QtGui import QColor, QFont
@@ -337,7 +337,7 @@ class WorkingCopyWidget(QWidget):
         splitter.addWidget(staged_widget)
         splitter.addWidget(unstaged_widget)
         splitter.setSizes([200, 200])
-        layout.addWidget(splitter, 1)
+        layout.addWidget(splitter)
 
         # ── Progress bar ──────────────────────────────────────────────
         progress_row = QHBoxLayout()
@@ -375,7 +375,6 @@ class WorkingCopyWidget(QWidget):
         btn_row.addStretch()
         btn_row.addWidget(self._commit_btn)
         commit_layout.addLayout(btn_row)
-        commit_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         layout.addWidget(commit_area)
 
     def _connect_signals(self):

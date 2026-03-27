@@ -46,7 +46,7 @@ class GitRunner:
         self.repo_path = repo_path
 
     def _base_cmd(self, args: list[str]) -> list[str]:
-        return ["git", "-C", self.repo_path, "-c", "core.quotePath=false"] + args
+        return ["git", "-C", self.repo_path] + args
 
     def _build_env(self) -> dict:
         from app.config import get_git_ssh_command, get_askpass_path

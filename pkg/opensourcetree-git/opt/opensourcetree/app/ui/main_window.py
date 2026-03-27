@@ -1,7 +1,7 @@
 import os
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QSplitter,
-    QTabWidget, QStatusBar, QToolBar, QLabel,
+    QTabWidget, QStatusBar, QToolBar,
     QApplication, QMessageBox, QFileDialog
 )
 from PyQt6.QtCore import Qt, QSize
@@ -55,7 +55,11 @@ class MainWindow(QMainWindow):
         # Placeholder when no tabs
         self._placeholder = QWidget()
         ph_layout = QHBoxLayout(self._placeholder)
-        ph_label = QLabel(t("main.placeholder"))
+        from PyQt6.QtWidgets import QLabel
+        ph_label = QLabel(
+            "Open a repository from the bookmarks panel,\n"
+            "or use File → Open / Clone to get started."
+        )
         ph_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         ph_label.setStyleSheet("color: #666; font-size: 14px;")
         ph_layout.addWidget(ph_label)
@@ -108,12 +112,7 @@ class MainWindow(QMainWindow):
     def _setup_statusbar(self):
         self._status = QStatusBar()
         self.setStatusBar(self._status)
-        self._status_label = QLabel(t("status.ready"))
-        self._status_label.setTextInteractionFlags(
-            Qt.TextInteractionFlag.TextSelectableByMouse |
-            Qt.TextInteractionFlag.TextSelectableByKeyboard
-        )
-        self._status.addWidget(self._status_label, 1)
+        self._status.showMessage(t("status.ready"))
 
     def _open_repo(self, path: str):
         if path in self._repo_tabs:
@@ -128,7 +127,7 @@ class MainWindow(QMainWindow):
         except Exception:
             return  # Error already shown in RepoTab constructor
 
-        tab.status_message.connect(self._status_label.setText)
+        tab.status_message.connect(self._status.showMessage)
         tab.title_changed.connect(lambda t, p=path: self._update_tab_title(p, t))
 
         if self._placeholder.parent() is self._splitter:

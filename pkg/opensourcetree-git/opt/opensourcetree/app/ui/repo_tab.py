@@ -1,7 +1,7 @@
 import os
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
-    QListWidget, QListWidgetItem, QLabel,
+    QTabWidget, QListWidget, QListWidgetItem, QLabel,
     QToolBar, QToolButton, QMenu, QMessageBox
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QTimer, QFileSystemWatcher
@@ -59,7 +59,7 @@ class RepoTab(QWidget):
         self._toolbar = self._build_toolbar()
         layout.addWidget(self._toolbar)
 
-        # Main splitter: branch panel | center | working copy
+        # Main splitter: branch panel | content
         self._main_splitter = QSplitter(Qt.Orientation.Horizontal)
 
         # Branch panel
@@ -68,11 +68,11 @@ class RepoTab(QWidget):
         self._branch_panel.setMaximumWidth(280)
         self._main_splitter.addWidget(self._branch_panel)
 
-        # Center: commit list + file list + diff viewer
-        center_widget = QWidget()
-        center_layout = QVBoxLayout(center_widget)
-        center_layout.setContentsMargins(0, 0, 0, 0)
-        center_layout.setSpacing(0)
+        # Right side: commit list + bottom pane
+        right_widget = QWidget()
+        right_layout = QVBoxLayout(right_widget)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(0)
 
         self._right_splitter = QSplitter(Qt.Orientation.Vertical)
 
@@ -80,28 +80,33 @@ class RepoTab(QWidget):
         self._commit_list = CommitListView(self._repo)
         self._right_splitter.addWidget(self._commit_list)
 
-        # Bottom pane: commit file list + diff viewer
+        # Bottom pane: file list + diff viewer
         self._bottom_splitter = QSplitter(Qt.Orientation.Horizontal)
 
-        self._commit_files_list = QListWidget()
-        self._bottom_splitter.addWidget(self._commit_files_list)
+        # File list (stacked: commit files or working copy)
+        self._file_stack = QTabWidget()
+        self._file_stack.setTabPosition(QTabWidget.TabPosition.North)
+        self._file_stack.setDocumentMode(True)
 
+        self._commit_files_list = QListWidget()
+        self._file_stack.addTab(self._commit_files_list, t("tab.files"))
+
+        self._working_copy_widget = WorkingCopyWidget(self._repo)
+        self._file_stack.addTab(self._working_copy_widget, t("tab.working_copy"))
+
+        self._bottom_splitter.addWidget(self._file_stack)
+
+        # Diff viewer
         self._diff_viewer = DiffViewer()
         self._bottom_splitter.addWidget(self._diff_viewer)
-        self._bottom_splitter.setSizes([250, 600])
+        self._bottom_splitter.setSizes([300, 600])
 
         self._right_splitter.addWidget(self._bottom_splitter)
         self._right_splitter.setSizes([400, 300])
 
-        center_layout.addWidget(self._right_splitter)
-        self._main_splitter.addWidget(center_widget)
-
-        # Right panel: working copy (stage / unstage / commit)
-        self._working_copy_widget = WorkingCopyWidget(self._repo)
-        self._working_copy_widget.setMinimumWidth(260)
-        self._main_splitter.addWidget(self._working_copy_widget)
-
-        self._main_splitter.setSizes([200, 680, 360])
+        right_layout.addWidget(self._right_splitter)
+        self._main_splitter.addWidget(right_widget)
+        self._main_splitter.setSizes([200, 800])
 
         layout.addWidget(self._main_splitter)
 
@@ -192,9 +197,11 @@ class RepoTab(QWidget):
 
     def _on_commit_selected(self, commit: CommitRecord):
         self._current_commit = commit
+        self._file_stack.setCurrentIndex(0)
         self._load_commit_files(commit)
 
     def _on_working_copy_selected(self):
+        self._file_stack.setCurrentIndex(1)
         self._working_copy_widget.refresh()
 
     def _load_commit_files(self, commit: CommitRecord):
