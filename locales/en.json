@@ -224,5 +224,13 @@
     "remotes.empty_url": "URL cannot be empty.",
     "remotes.add_empty": "Please enter both a name and URL.",
     "diff.placeholder": "Select a file to view diff",
-    "main.placeholder": "Open a repository from the bookmarks panel,\nor use File → Open / Clone to get started."
+    "main.placeholder": "Open a repository from the bookmarks panel,\nor use File → Open / Clone to get started.",
+    "tag.delete.text": "Delete tag '{name}'?",
+    "tag.delete.info": "Delete only the local copy, or also remove the tag from the remote?\n\nIf the tag is already published, deleting it locally will bring it back on the next sync.",
+    "tag.delete.local_only": "Local only",
+    "tag.delete.local_and_remote": "Local and remote",
+    "tag.delete.success_local": "Tag {name} deleted locally",
+    "tag.delete.success_remote": "Tag {name} deleted locally and from remote",
+    "tag.delete.remote_error_title": "Delete Remote Tag",
+    "tag.delete.remote_error_text": "Tag deleted locally, but could not be removed from the remote:\n\n{error}\n\nThe tag may not have been published, or you may not have the required permissions."
 }

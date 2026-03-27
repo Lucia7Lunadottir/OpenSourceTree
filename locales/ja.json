@@ -224,5 +224,13 @@
     "remotes.empty_url": "URLを入力してください。",
     "remotes.add_empty": "名前とURLを入力してください。",
     "diff.placeholder": "差分を表示するファイルを選択してください",
-    "main.placeholder": "ブックマークパネルからリポジトリを開くか、\nファイル → 開く / クローンを使用してください。"
+    "main.placeholder": "ブックマークパネルからリポジトリを開くか、\nファイル → 開く / クローンを使用してください。",
+    "tag.delete.text": "タグ '{name}' を削除しますか?",
+    "tag.delete.info": "ローカルのコピーのみ削除しますか、それともリモートリポジトリからも削除しますか?\n\nタグがすでに公開されている場合、ローカルで削除しても次回の同期時に再び表示されます。",
+    "tag.delete.local_only": "ローカルのみ",
+    "tag.delete.local_and_remote": "ローカルとリモート",
+    "tag.delete.success_local": "タグ {name} をローカルで削除しました",
+    "tag.delete.success_remote": "タグ {name} をローカルとリモートで削除しました",
+    "tag.delete.remote_error_title": "リモートタグの削除",
+    "tag.delete.remote_error_text": "タグはローカルで削除されましたが、リモートから削除できませんでした:\n\n{error}\n\nタグが公開されていないか、必要な権限がない可能性があります。"
 }

@@ -224,5 +224,13 @@
     "remotes.empty_url": "L'URL ne peut pas être vide.",
     "remotes.add_empty": "Veuillez saisir un nom et une URL.",
     "diff.placeholder": "Sélectionnez un fichier pour afficher le diff",
-    "main.placeholder": "Ouvrez un dépôt depuis le panneau de favoris\nou utilisez Fichier → Ouvrir / Cloner."
+    "main.placeholder": "Ouvrez un dépôt depuis le panneau de favoris\nou utilisez Fichier → Ouvrir / Cloner.",
+    "tag.delete.text": "Supprimer le tag '{name}' ?",
+    "tag.delete.info": "Supprimer uniquement la copie locale, ou supprimer aussi le tag du dépôt distant ?\n\nSi le tag est déjà publié, il réapparaîtra à la prochaine synchronisation.",
+    "tag.delete.local_only": "Local seulement",
+    "tag.delete.local_and_remote": "Local et distant",
+    "tag.delete.success_local": "Tag {name} supprimé localement",
+    "tag.delete.success_remote": "Tag {name} supprimé localement et à distance",
+    "tag.delete.remote_error_title": "Supprimer le tag distant",
+    "tag.delete.remote_error_text": "Le tag a été supprimé localement, mais n'a pas pu être supprimé du dépôt distant :\n\n{error}\n\nLe tag n'a peut-être pas été publié, ou vous n'avez pas les droits nécessaires."
 }

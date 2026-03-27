@@ -224,5 +224,13 @@
     "remotes.empty_url": "URL nie może być pusty.",
     "remotes.add_empty": "Wprowadź nazwę i URL.",
     "diff.placeholder": "Wybierz plik, aby zobaczyć diff",
-    "main.placeholder": "Otwórz repozytorium z panelu zakładek\nlub użyj Plik → Otwórz / Klonuj."
+    "main.placeholder": "Otwórz repozytorium z panelu zakładek\nlub użyj Plik → Otwórz / Klonuj.",
+    "tag.delete.text": "Usunąć tag '{name}'?",
+    "tag.delete.info": "Usunąć tylko kopię lokalną, czy także usunąć tag ze zdalnego repozytorium?\n\nJeśli tag jest już opublikowany, po lokalnym usunięciu pojawi się ponownie przy następnej synchronizacji.",
+    "tag.delete.local_only": "Tylko lokalnie",
+    "tag.delete.local_and_remote": "Lokalnie i zdalnie",
+    "tag.delete.success_local": "Tag {name} usunięty lokalnie",
+    "tag.delete.success_remote": "Tag {name} usunięty lokalnie i zdalnie",
+    "tag.delete.remote_error_title": "Usuń zdalny tag",
+    "tag.delete.remote_error_text": "Tag został usunięty lokalnie, ale nie udało się go usunąć ze zdalnego repozytorium:\n\n{error}\n\nTag mógł nie zostać opublikowany lub brak wymaganych uprawnień."
 }

@@ -224,5 +224,13 @@
     "remotes.empty_url": "URL darf nicht leer sein.",
     "remotes.add_empty": "Bitte Name und URL eingeben.",
     "diff.placeholder": "Datei auswählen, um Diff anzuzeigen",
-    "main.placeholder": "Repository über das Lesezeichen-Panel öffnen\noder Datei → Öffnen / Klonen verwenden."
+    "main.placeholder": "Repository über das Lesezeichen-Panel öffnen\noder Datei → Öffnen / Klonen verwenden.",
+    "tag.delete.text": "Tag '{name}' löschen?",
+    "tag.delete.info": "Nur die lokale Kopie löschen oder den Tag auch vom Remote-Repository entfernen?\n\nWenn der Tag bereits veröffentlicht wurde, erscheint er nach dem lokalen Löschen beim nächsten Sync wieder.",
+    "tag.delete.local_only": "Nur lokal",
+    "tag.delete.local_and_remote": "Lokal und remote",
+    "tag.delete.success_local": "Tag {name} lokal gelöscht",
+    "tag.delete.success_remote": "Tag {name} lokal und remote gelöscht",
+    "tag.delete.remote_error_title": "Remote-Tag löschen",
+    "tag.delete.remote_error_text": "Tag wurde lokal gelöscht, konnte aber nicht vom Remote entfernt werden:\n\n{error}\n\nMöglicherweise wurde der Tag nicht veröffentlicht oder Sie haben keine Berechtigung."
 }

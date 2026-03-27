@@ -224,5 +224,13 @@
     "remotes.empty_url": "O URL não pode estar vazio.",
     "remotes.add_empty": "Introduza um nome e URL.",
     "diff.placeholder": "Selecione um ficheiro para ver o diff",
-    "main.placeholder": "Abra um repositório no painel de favoritos\nou use Ficheiro → Abrir / Clonar."
+    "main.placeholder": "Abra um repositório no painel de favoritos\nou use Ficheiro → Abrir / Clonar.",
+    "tag.delete.text": "Excluir a tag '{name}'?",
+    "tag.delete.info": "Excluir apenas a cópia local ou também remover a tag do repositório remoto?\n\nSe a tag já foi publicada, ela reaparecerá após a próxima sincronização.",
+    "tag.delete.local_only": "Somente local",
+    "tag.delete.local_and_remote": "Local e remoto",
+    "tag.delete.success_local": "Tag {name} excluída localmente",
+    "tag.delete.success_remote": "Tag {name} excluída local e remotamente",
+    "tag.delete.remote_error_title": "Excluir tag remota",
+    "tag.delete.remote_error_text": "A tag foi excluída localmente, mas não foi possível removê-la do repositório remoto:\n\n{error}\n\nA tag pode não ter sido publicada ou você pode não ter as permissões necessárias."
 }

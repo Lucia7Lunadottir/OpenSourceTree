@@ -224,5 +224,13 @@
     "remotes.empty_url": "URL 不能为空。",
     "remotes.add_empty": "请输入名称和 URL。",
     "diff.placeholder": "选择文件以查看差异",
-    "main.placeholder": "从书签面板打开仓库，\n或使用 文件 → 打开 / 克隆。"
+    "main.placeholder": "从书签面板打开仓库，\n或使用 文件 → 打开 / 克隆。",
+    "tag.delete.text": "删除标签 '{name}'？",
+    "tag.delete.info": "仅删除本地副本，还是同时从远程仓库删除该标签？\n\n如果该标签已发布，本地删除后下次同步时将重新出现。",
+    "tag.delete.local_only": "仅本地",
+    "tag.delete.local_and_remote": "本地和远程",
+    "tag.delete.success_local": "标签 {name} 已在本地删除",
+    "tag.delete.success_remote": "标签 {name} 已在本地和远程删除",
+    "tag.delete.remote_error_title": "删除远程标签",
+    "tag.delete.remote_error_text": "标签已在本地删除，但无法从远程仓库删除：\n\n{error}\n\n该标签可能未发布，或您没有所需权限。"
 }
