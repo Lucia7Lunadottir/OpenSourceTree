@@ -228,7 +228,7 @@
     "tag.delete.text": "Supprimer le tag '{name}' ?",
     "tag.delete.info": "Supprimer uniquement la copie locale, ou supprimer aussi le tag du dépôt distant ?\n\nSi le tag est déjà publié, il réapparaîtra à la prochaine synchronisation.",
     "tag.delete.local_only": "Local seulement",
-    "tag.delete.local_and_remote": "Local et distant",
+    "tag.delete.local_and_remote": "Local + Distant",
     "tag.delete.success_local": "Tag {name} supprimé localement",
     "tag.delete.success_remote": "Tag {name} supprimé localement et à distance",
     "tag.delete.remote_error_title": "Supprimer le tag distant",

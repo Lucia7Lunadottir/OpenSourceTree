@@ -189,12 +189,49 @@ class BranchPanel(QTreeWidget):
         self._run(self._repo.push_tag, name, success_msg=t("status.tag_pushed", name=name))
 
     def _delete_tag(self, name: str):
-        ret = QMessageBox.question(
-            self, t("branch_dialog.title.delete"), f"Delete tag '{name}'?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        box = QMessageBox(self)
+        box.setWindowTitle(t("branch_dialog.title.delete"))
+        box.setText(t("tag.delete.text", name=name))
+        box.setInformativeText(t("tag.delete.info"))
+        local_btn  = box.addButton(t("tag.delete.local_only"),       QMessageBox.ButtonRole.AcceptRole)
+        remote_btn = box.addButton(t("tag.delete.local_and_remote"), QMessageBox.ButtonRole.DestructiveRole)
+        box.addButton(QMessageBox.StandardButton.Cancel)
+        box.exec()
+
+        clicked = box.clickedButton()
+        if clicked is local_btn:
+            self._run(self._repo.delete_tag, name, success_msg=t("tag.delete.success_local", name=name))
+        elif clicked is remote_btn:
+            self._run_delete_tag_remote(name)
+
+    def _run_delete_tag_remote(self, name: str):
+        """Delete tag locally first, then from the remote."""
+        local_worker = GitWorker(self._repo.delete_tag, name)
+
+        def _after_local(_):
+            remote_worker = GitWorker(self._repo.delete_remote_tag, name)
+            remote_worker.signals.result.connect(
+                lambda _: (
+                    self.status_message.emit(t("tag.delete.success_remote", name=name)),
+                    self.refresh(),
+                    self.refresh_requested.emit(),
+                )
+            )
+            remote_worker.signals.error.connect(self._on_remote_tag_delete_error)
+            QThreadPool.globalInstance().start(remote_worker)
+
+        local_worker.signals.result.connect(_after_local)
+        local_worker.signals.error.connect(lambda e: self.error_occurred.emit(e))
+        QThreadPool.globalInstance().start(local_worker)
+
+    def _on_remote_tag_delete_error(self, error: str):
+        self.refresh()
+        self.refresh_requested.emit()
+        QMessageBox.warning(
+            self,
+            t("tag.delete.remote_error_title"),
+            t("tag.delete.remote_error_text", error=error),
         )
-        if ret == QMessageBox.StandardButton.Yes:
-            self._run(self._repo.delete_tag, name, success_msg=f"Deleted tag {name}")
 
     def _push_branch(self, name: str):
         self._run(self._repo.push, "", name, success_msg=f"Pushed {name}")
