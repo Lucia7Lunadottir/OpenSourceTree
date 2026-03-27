@@ -228,7 +228,7 @@
     "tag.delete.text": "Usunąć tag '{name}'?",
     "tag.delete.info": "Usunąć tylko kopię lokalną, czy także usunąć tag ze zdalnego repozytorium?\n\nJeśli tag jest już opublikowany, po lokalnym usunięciu pojawi się ponownie przy następnej synchronizacji.",
     "tag.delete.local_only": "Tylko lokalnie",
-    "tag.delete.local_and_remote": "Lokalnie i zdalnie",
+    "tag.delete.local_and_remote": "Lokalnie + Zdalnie",
     "tag.delete.success_local": "Tag {name} usunięty lokalnie",
     "tag.delete.success_remote": "Tag {name} usunięty lokalnie i zdalnie",
     "tag.delete.remote_error_title": "Usuń zdalny tag",
