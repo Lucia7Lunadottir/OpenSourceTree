@@ -282,6 +282,9 @@ class GitRepo:
     def push_tag(self, name: str, remote: str = "origin") -> None:
         self.runner.run(["push", remote, f"refs/tags/{name}"])
 
+    def push_tag_streaming(self, name: str, remote: str = "origin") -> Iterator[str]:
+        return self.runner.run_streaming(["push", "--progress", remote, f"refs/tags/{name}"])
+
     # ---------------------------------------------------------- Commit actions
 
     def reset_to_commit(self, hash: str, mode: str = "mixed") -> None:
