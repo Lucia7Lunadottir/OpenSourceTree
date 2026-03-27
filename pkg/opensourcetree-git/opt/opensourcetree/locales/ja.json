@@ -228,7 +228,7 @@
     "tag.delete.text": "タグ '{name}' を削除しますか?",
     "tag.delete.info": "ローカルのコピーのみ削除しますか、それともリモートリポジトリからも削除しますか?\n\nタグがすでに公開されている場合、ローカルで削除しても次回の同期時に再び表示されます。",
     "tag.delete.local_only": "ローカルのみ",
-    "tag.delete.local_and_remote": "ローカルとリモート",
+    "tag.delete.local_and_remote": "ローカル + リモート",
     "tag.delete.success_local": "タグ {name} をローカルで削除しました",
     "tag.delete.success_remote": "タグ {name} をローカルとリモートで削除しました",
     "tag.delete.remote_error_title": "リモートタグの削除",

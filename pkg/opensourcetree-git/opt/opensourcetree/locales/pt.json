@@ -228,7 +228,7 @@
     "tag.delete.text": "Excluir a tag '{name}'?",
     "tag.delete.info": "Excluir apenas a cópia local ou também remover a tag do repositório remoto?\n\nSe a tag já foi publicada, ela reaparecerá após a próxima sincronização.",
     "tag.delete.local_only": "Somente local",
-    "tag.delete.local_and_remote": "Local e remoto",
+    "tag.delete.local_and_remote": "Local + Remote",
     "tag.delete.success_local": "Tag {name} excluída localmente",
     "tag.delete.success_remote": "Tag {name} excluída local e remotamente",
     "tag.delete.remote_error_title": "Excluir tag remota",
