@@ -3,7 +3,7 @@ import os
 import stat
 import subprocess
 import uuid
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, asdict, fields
 from pathlib import Path
 from datetime import datetime
 
@@ -102,7 +102,8 @@ def load_ssh_profiles() -> list[SSHProfile]:
     try:
         with open(SSH_PROFILES_FILE) as f:
             data = json.load(f)
-        return [SSHProfile(**p) for p in data]
+        known = {f.name for f in fields(SSHProfile)}
+        return [SSHProfile(**{k: v for k, v in p.items() if k in known}) for p in data]
     except Exception:
         return []
 

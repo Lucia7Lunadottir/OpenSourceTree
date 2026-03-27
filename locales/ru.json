@@ -228,7 +228,7 @@
     "tag.delete.text": "Удалить тег '{name}'?",
     "tag.delete.info": "Удалить только локальную копию или также удалить тег с удалённого репозитория?\n\nЕсли тег уже опубликован — после локального удаления он появится снова при следующей синхронизации.",
     "tag.delete.local_only": "Только локально",
-    "tag.delete.local_and_remote": "Локально и удалённо",
+    "tag.delete.local_and_remote": "Локально + Remote",
     "tag.delete.success_local": "Тег {name} удалён локально",
     "tag.delete.success_remote": "Тег {name} удалён локально и на удалённом",
     "tag.delete.remote_error_title": "Удаление тега с remote",

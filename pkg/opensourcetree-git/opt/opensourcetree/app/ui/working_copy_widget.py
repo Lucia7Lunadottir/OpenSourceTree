@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QStackedWidget,
     QLabel, QTextEdit, QPushButton, QCheckBox,
     QMenu, QMessageBox, QAbstractItemView,
-    QProgressBar, QFrame, QLineEdit, QButtonGroup
+    QProgressBar, QFrame, QLineEdit, QButtonGroup, QSizePolicy
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QPoint, QThreadPool
 from PyQt6.QtGui import QColor, QFont
@@ -46,11 +46,15 @@ class FileListWidget(QListWidget):
     def __init__(self, staged: bool, parent=None):
         super().__init__(parent)
         self._staged = staged
+        self._pending_files: tuple | None = None
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.setUniformItemSizes(True)
         self.currentItemChanged.connect(self._on_item_changed)
 
     def set_files(self, entries: list[FileStatusEntry], lfs_patterns: list[str] = ()):
+        self._pending_files = None
+        self.setUpdatesEnabled(False)
         self.clear()
         for entry in entries:
             sc = entry.status
@@ -69,6 +73,7 @@ class FileListWidget(QListWidget):
             elif lfs_mark:
                 item.setToolTip(f"Git LFS: {entry.path}")
             self.addItem(item)
+        self.setUpdatesEnabled(True)
 
     def apply_filter(self, text: str):
         text = text.strip().lower()
@@ -102,6 +107,7 @@ class FileTreeWidget(QTreeWidget):
         self._staged = staged
         self._entries: list[FileStatusEntry] = []
         self._lfs_patterns: list[str] = []
+        self._pending_files: tuple | None = None
         self.setColumnCount(1)
         self.setHeaderHidden(True)
         self.setIndentation(16)
@@ -137,6 +143,7 @@ class FileTreeWidget(QTreeWidget):
         ]
 
     def _rebuild(self):
+        self.setUpdatesEnabled(False)
         self.clear()
         dir_items: dict[str, QTreeWidgetItem] = {}
 
@@ -179,6 +186,7 @@ class FileTreeWidget(QTreeWidget):
                 item.setToolTip(0, "⚠ Merge conflict — right-click to resolve")
             elif lfs_mark:
                 item.setToolTip(0, f"Git LFS: {entry.path}")
+        self.setUpdatesEnabled(True)
 
     def _filter_tree(self, text: str):
         root = self.invisibleRootItem()
@@ -337,7 +345,7 @@ class WorkingCopyWidget(QWidget):
         splitter.addWidget(staged_widget)
         splitter.addWidget(unstaged_widget)
         splitter.setSizes([200, 200])
-        layout.addWidget(splitter)
+        layout.addWidget(splitter, 1)
 
         # ── Progress bar ──────────────────────────────────────────────
         progress_row = QHBoxLayout()
@@ -375,6 +383,7 @@ class WorkingCopyWidget(QWidget):
         btn_row.addStretch()
         btn_row.addWidget(self._commit_btn)
         commit_layout.addLayout(btn_row)
+        commit_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         layout.addWidget(commit_area)
 
     def _connect_signals(self):
@@ -404,7 +413,11 @@ class WorkingCopyWidget(QWidget):
         """0 = flat list, 1 = tree."""
         self._staged_stack.setCurrentIndex(mode_id)
         self._unstaged_stack.setCurrentIndex(mode_id)
-        # Apply current filter text to the newly visible views
+        # Flush pending data into the newly visible views
+        for view in (self._staged_list, self._unstaged_list):
+            if view._pending_files is not None:
+                view.set_files(*view._pending_files)
+                # _pending_files cleared inside set_files
         self._staged_list.apply_filter(self._staged_filter.text())
         self._unstaged_list.apply_filter(self._unstaged_filter.text())
 
@@ -426,14 +439,24 @@ class WorkingCopyWidget(QWidget):
         try:
             staged, unstaged = self._repo.get_working_copy_status()
             lfs_patterns = self._repo.lfs_tracked_patterns()
-            # Keep both views in sync so toggling shows fresh data
+
+            active_staged   = self._staged_list
+            active_unstaged = self._unstaged_list
+
+            # Rebuild only the currently visible views
+            active_staged.set_files(staged, lfs_patterns)
+            active_unstaged.set_files(unstaged, lfs_patterns)
+
+            # Mark hidden views dirty — they will rebuild when shown
             for view in (self._staged_flat, self._staged_tree):
-                view.set_files(staged, lfs_patterns)
+                if view is not active_staged:
+                    view._pending_files = (staged, lfs_patterns)
             for view in (self._unstaged_flat, self._unstaged_tree):
-                view.set_files(unstaged, lfs_patterns)
-            # Re-apply filter on active views
-            self._staged_list.apply_filter(self._staged_filter.text())
-            self._unstaged_list.apply_filter(self._unstaged_filter.text())
+                if view is not active_unstaged:
+                    view._pending_files = (unstaged, lfs_patterns)
+
+            active_staged.apply_filter(self._staged_filter.text())
+            active_unstaged.apply_filter(self._unstaged_filter.text())
             self._update_conflict_banner(staged, unstaged)
         except Exception as e:
             self.status_message.emit(f"Error refreshing status: {e}")

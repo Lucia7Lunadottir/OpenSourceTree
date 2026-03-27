@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import (
-    QTreeWidget, QTreeWidgetItem, QMenu, QMessageBox, QInputDialog
+    QTreeWidget, QTreeWidgetItem, QMenu, QMessageBox, QInputDialog,
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QDialogButtonBox
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QIcon, QColor
@@ -189,19 +190,53 @@ class BranchPanel(QTreeWidget):
         self._run(self._repo.push_tag, name, success_msg=t("status.tag_pushed", name=name))
 
     def _delete_tag(self, name: str):
-        box = QMessageBox(self)
-        box.setWindowTitle(t("branch_dialog.title.delete"))
-        box.setText(t("tag.delete.text", name=name))
-        box.setInformativeText(t("tag.delete.info"))
-        local_btn  = box.addButton(t("tag.delete.local_only"),       QMessageBox.ButtonRole.AcceptRole)
-        remote_btn = box.addButton(t("tag.delete.local_and_remote"), QMessageBox.ButtonRole.DestructiveRole)
-        box.addButton(QMessageBox.StandardButton.Cancel)
-        box.exec()
+        dlg = QDialog(self)
+        dlg.setWindowTitle(t("branch_dialog.title.delete"))
+        dlg.setMinimumWidth(430)
 
-        clicked = box.clickedButton()
-        if clicked is local_btn:
-            self._run(self._repo.delete_tag, name, success_msg=t("tag.delete.success_local", name=name))
-        elif clicked is remote_btn:
+        vbox = QVBoxLayout(dlg)
+        vbox.setSpacing(10)
+
+        lbl_title = QLabel(t("tag.delete.text", name=name))
+        lbl_title.setStyleSheet("font-weight: bold;")
+        vbox.addWidget(lbl_title)
+
+        lbl_info = QLabel(t("tag.delete.info"))
+        lbl_info.setWordWrap(True)
+        lbl_info.setStyleSheet("color: #aaa; font-size: 11px;")
+        vbox.addWidget(lbl_info)
+
+        vbox.addSpacing(4)
+
+        hbox = QHBoxLayout()
+        cancel_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
+        cancel_box.rejected.connect(dlg.reject)
+        local_btn  = QPushButton(t("tag.delete.local_only"))
+        remote_btn = QPushButton(t("tag.delete.local_and_remote"))
+        remote_btn.setStyleSheet("color: #f44747;")
+        hbox.addWidget(cancel_box)
+        hbox.addStretch()
+        hbox.addWidget(local_btn)
+        hbox.addWidget(remote_btn)
+        vbox.addLayout(hbox)
+
+        _result = [None]
+        local_btn.clicked.connect(lambda: (_result.__setitem__(0, "local"),  dlg.accept()))
+        remote_btn.clicked.connect(lambda: (_result.__setitem__(0, "remote"), dlg.accept()))
+
+        dlg.exec()
+
+        if _result[0] == "local":
+            # Do NOT emit refresh_requested — that triggers fetch_tags_bg which
+            # re-downloads the tag from remote, making it instantly reappear.
+            worker = GitWorker(self._repo.delete_tag, name)
+            worker.signals.result.connect(lambda _: (
+                self.status_message.emit(t("tag.delete.success_local", name=name)),
+                self.refresh(),
+            ))
+            worker.signals.error.connect(lambda e: self.error_occurred.emit(e))
+            QThreadPool.globalInstance().start(worker)
+        elif _result[0] == "remote":
             self._run_delete_tag_remote(name)
 
     def _run_delete_tag_remote(self, name: str):

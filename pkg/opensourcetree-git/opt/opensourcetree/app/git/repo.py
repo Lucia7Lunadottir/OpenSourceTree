@@ -279,8 +279,14 @@ class GitRepo:
     def delete_tag(self, name: str) -> None:
         self.runner.run(["tag", "-d", name])
 
+    def delete_remote_tag(self, name: str, remote: str = "origin") -> None:
+        self.runner.run(["push", remote, "--delete", f"refs/tags/{name}"])
+
     def push_tag(self, name: str, remote: str = "origin") -> None:
         self.runner.run(["push", remote, f"refs/tags/{name}"])
+
+    def push_tag_streaming(self, name: str, remote: str = "origin") -> Iterator[str]:
+        return self.runner.run_streaming(["push", "--progress", remote, f"refs/tags/{name}"])
 
     # ---------------------------------------------------------- Commit actions
 

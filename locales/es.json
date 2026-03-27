@@ -228,7 +228,7 @@
     "tag.delete.text": "¿Eliminar la etiqueta '{name}'?",
     "tag.delete.info": "¿Eliminar solo la copia local o también quitar la etiqueta del repositorio remoto?\n\nSi la etiqueta ya está publicada, volverá a aparecer tras la próxima sincronización.",
     "tag.delete.local_only": "Solo local",
-    "tag.delete.local_and_remote": "Local y remoto",
+    "tag.delete.local_and_remote": "Local + Remote",
     "tag.delete.success_local": "Etiqueta {name} eliminada localmente",
     "tag.delete.success_remote": "Etiqueta {name} eliminada local y remotamente",
     "tag.delete.remote_error_title": "Eliminar etiqueta remota",
