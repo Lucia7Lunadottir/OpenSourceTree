@@ -3,12 +3,12 @@
 pkgname = opensourcetree-git
 pkgbase = opensourcetree-git
 xdata = pkgtype=pkg
-pkgver = r14.2718395-1
+pkgver = r16.b421a5b-1
 pkgdesc = SourceTree-inspired Git GUI built with PyQt6
 url = https://github.com/7Lucia7Lokidottir7/OpenSourceTree
-builddate = 1774653562
+builddate = 1774658238
 packager = Lucia Lokidottir <bordiyan20035@gmail.com>
-size = 683424
+size = 1069086
 arch = any
 license = GPL-3.0-only
 conflict = opensourcetree
