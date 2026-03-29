@@ -232,5 +232,19 @@
     "tag.delete.success_local": "Tag {name} supprimé localement",
     "tag.delete.success_remote": "Tag {name} supprimé localement et à distance",
     "tag.delete.remote_error_title": "Supprimer le tag distant",
-    "tag.delete.remote_error_text": "Le tag a été supprimé localement, mais n'a pas pu être supprimé du dépôt distant :\n\n{error}\n\nLe tag n'a peut-être pas été publié, ou vous n'avez pas les droits nécessaires."
+    "tag.delete.remote_error_text": "Le tag a été supprimé localement, mais n'a pas pu être supprimé du dépôt distant :\n\n{error}\n\nLe tag n'a peut-être pas été publié, ou vous n'avez pas les droits nécessaires.",
+
+    "split_commit.menu_item": "Diviser le commit…",
+    "split_commit.title": "Diviser le commit",
+    "split_commit.subtitle": "{sha}  \"{message}\"\nTotal : {size} → {n} commit(s)",
+    "split_commit.batch_header": "Lot {i} — {size}",
+    "split_commit.large_file_warn": "⚠ {path} ({size}) dépasse 100 Mo — GitHub rejettera ce fichier. Utilisez Git LFS.",
+    "split_commit.btn_split": "Diviser",
+    "split_commit.splitting": "Division du commit…",
+    "split_commit.done": "Commit divisé en {n} commits",
+    "split_commit.no_upstream": "Impossible de déterminer les commits non poussés (aucun upstream configuré)",
+
+    "commit.warn_large.title": "Fichiers volumineux dans l'index",
+    "commit.warn_large.file_text": "Le(s) fichier(s) suivant(s) dépassent 100 Mo et seront rejetés par GitHub :\n\n{files}\n\nEnvisagez d'utiliser Git LFS. Faire le commit quand même ?",
+    "commit.warn_large.total_text": "La taille totale des fichiers dans l'index est de {size}, ce qui dépasse 1 Go. GitHub risque de rejeter ce push.\n\nEnvisagez de diviser. Faire le commit quand même ?"
 }

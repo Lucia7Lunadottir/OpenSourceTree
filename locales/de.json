@@ -232,5 +232,19 @@
     "tag.delete.success_local": "Tag {name} lokal gelöscht",
     "tag.delete.success_remote": "Tag {name} lokal und remote gelöscht",
     "tag.delete.remote_error_title": "Remote-Tag löschen",
-    "tag.delete.remote_error_text": "Tag wurde lokal gelöscht, konnte aber nicht vom Remote entfernt werden:\n\n{error}\n\nMöglicherweise wurde der Tag nicht veröffentlicht oder Sie haben keine Berechtigung."
+    "tag.delete.remote_error_text": "Tag wurde lokal gelöscht, konnte aber nicht vom Remote entfernt werden:\n\n{error}\n\nMöglicherweise wurde der Tag nicht veröffentlicht oder Sie haben keine Berechtigung.",
+
+    "split_commit.menu_item": "Commit aufteilen…",
+    "split_commit.title": "Commit aufteilen",
+    "split_commit.subtitle": "{sha}  \"{message}\"\nGesamt: {size} → {n} Commit(s)",
+    "split_commit.batch_header": "Batch {i} — {size}",
+    "split_commit.large_file_warn": "⚠ {path} ({size}) überschreitet 100 MB — GitHub lehnt diese Datei ab. Verwenden Sie Git LFS.",
+    "split_commit.btn_split": "Aufteilen",
+    "split_commit.splitting": "Commit wird aufgeteilt…",
+    "split_commit.done": "Commit in {n} Commits aufgeteilt",
+    "split_commit.no_upstream": "Nicht-gepushte Commits konnten nicht ermittelt werden (kein Upstream konfiguriert)",
+
+    "commit.warn_large.title": "Große Dateien im Index",
+    "commit.warn_large.file_text": "Folgende Datei(en) überschreiten 100 MB und werden von GitHub abgelehnt:\n\n{files}\n\nErwägen Sie die Verwendung von Git LFS. Trotzdem committen?",
+    "commit.warn_large.total_text": "Die Gesamtgröße der Dateien im Index beträgt {size} und überschreitet 1 GB. GitHub könnte diesen Push ablehnen.\n\nErwägen Sie eine Aufteilung. Trotzdem committen?"
 }

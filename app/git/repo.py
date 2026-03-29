@@ -385,6 +385,18 @@ class GitRepo:
         except GitCommandError:
             return False
 
+    def get_merge_msg(self) -> str:
+        try:
+            git_dir = self.runner.run(["rev-parse", "--git-dir"]).strip()
+            if not os.path.isabs(git_dir):
+                git_dir = os.path.join(self.path, git_dir)
+            msg_file = os.path.join(git_dir, "MERGE_MSG")
+            if os.path.exists(msg_file):
+                return open(msg_file, encoding="utf-8", errors="replace").read().strip()
+        except Exception:
+            pass
+        return ""
+
     def is_rebasing(self) -> bool:
         try:
             git_dir = self.runner.run(["rev-parse", "--git-dir"]).strip()
@@ -428,6 +440,98 @@ class GitRepo:
             return True
         except (GitCommandError, Exception):
             return False
+
+    # -------------------------------------------------------- Unpushed / sizes
+
+    def get_unpushed_commits(self) -> list[str]:
+        """Return list of full SHAs of commits not yet pushed to upstream."""
+        try:
+            raw = self.runner.run(["log", "@{u}..HEAD", "--format=%H"])
+        except GitCommandError:
+            # No upstream configured — fall back to all commits not on any remote
+            try:
+                raw = self.runner.run(["log", "--not", "--remotes", "--format=%H"])
+            except GitCommandError:
+                return []
+        return [line.strip() for line in raw.splitlines() if line.strip()]
+
+    def is_commit_pushed(self, sha: str) -> bool:
+        return sha not in self.get_unpushed_commits()
+
+    def get_commit_file_sizes(self, sha: str) -> list[tuple[str, int]]:
+        """Return list of (path, size_bytes) for all files in a commit, sorted by size desc."""
+        try:
+            raw = self.runner.run(["diff-tree", "--no-commit-id", "-r", "--name-only", sha])
+        except GitCommandError:
+            return []
+        results = []
+        for path in raw.splitlines():
+            path = path.strip()
+            if not path:
+                continue
+            try:
+                size_str = self.runner.run(["cat-file", "-s", f"{sha}:{path}"]).strip()
+                size = int(size_str)
+            except (GitCommandError, ValueError):
+                size = 0
+            results.append((path, size))
+        results.sort(key=lambda x: x[1], reverse=True)
+        return results
+
+    def get_staged_file_sizes(self) -> list[tuple[str, int]]:
+        """Return list of (path, size_bytes) for all staged files."""
+        try:
+            raw = self.runner.run(["ls-files", "--cached", "-s"])
+        except GitCommandError:
+            return []
+        results = []
+        for line in raw.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            # format: <mode> <hash> <stage>\t<path>
+            parts = line.split(None, 3)
+            if len(parts) < 4:
+                continue
+            obj_hash = parts[1]
+            path = parts[3].lstrip("\t")
+            try:
+                size_str = self.runner.run(["cat-file", "-s", obj_hash]).strip()
+                size = int(size_str)
+            except (GitCommandError, ValueError):
+                size = 0
+            results.append((path, size))
+        return results
+
+    def split_commit(self, sha: str, batches: list[list[str]], message: str) -> None:
+        """Split a commit into multiple commits, one per batch."""
+        n = len(batches)
+        # Resolve HEAD sha for comparison
+        head_sha = self.runner.run(["rev-parse", "HEAD"]).strip()
+        is_head = (sha == head_sha or sha.startswith(head_sha) or head_sha.startswith(sha))
+
+        if is_head:
+            self.runner.run(["reset", "--mixed", "HEAD~"])
+            for i, batch in enumerate(batches, 1):
+                self.runner.run(["add", "--"] + batch)
+                self.runner.run(["commit", "-m", f"{message} ({i}/{n})"])
+        else:
+            # Collect commits after sha
+            after_raw = self.runner.run(
+                ["log", f"{sha}..HEAD", "--format=%H", "--reverse"]
+            )
+            after_shas = [s.strip() for s in after_raw.splitlines() if s.strip()]
+            # Reset to parent of sha
+            self.runner.run(["reset", "--hard", f"{sha}^"])
+            # Cherry-pick sha without committing
+            self.runner.run(["cherry-pick", "--no-commit", sha])
+            # Unstage everything (keep in worktree)
+            self.runner.run(["reset", "HEAD", "--"])
+            for i, batch in enumerate(batches, 1):
+                self.runner.run(["add", "--"] + batch)
+                self.runner.run(["commit", "-m", f"{message} ({i}/{n})"])
+            for after_sha in after_shas:
+                self.runner.run(["cherry-pick", after_sha])
 
     # ------------------------------------------------- Streaming remote ops
 
