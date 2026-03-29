@@ -136,6 +136,17 @@ class CommitListView(QWidget):
         sh  = commit.short_hash
         msg = commit.message[:50] + ("…" if len(commit.message) > 50 else "")
 
+        # ── Split (unpushed only) ──
+        try:
+            unpushed = self._repo.get_unpushed_commits()
+        except Exception:
+            unpushed = []
+        if h in unpushed:
+            split_act = menu.addAction(t("split_commit.menu_item"))
+            menu.addSeparator()
+        else:
+            split_act = None
+
         # ── Reset ──
         reset_menu = menu.addMenu(f"Сбросить ветку на «{sh}»")
         soft_act   = reset_menu.addAction("Soft  — сохранить изменения в индексе")
@@ -164,6 +175,14 @@ class CommitListView(QWidget):
 
         action = menu.exec(self._view.viewport().mapToGlobal(pos))
         if action is None:
+            return
+
+        if split_act and action == split_act:
+            from app.ui.dialogs.split_commit_dialog import SplitCommitDialog
+            dlg = SplitCommitDialog(self._repo, h, parent=self)
+            if dlg.exec():
+                self.refresh_requested.emit()
+                self.refresh()
             return
 
         clipboard = QApplication.clipboard()

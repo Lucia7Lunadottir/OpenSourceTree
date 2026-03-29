@@ -232,5 +232,19 @@
     "tag.delete.success_local": "标签 {name} 已在本地删除",
     "tag.delete.success_remote": "标签 {name} 已在本地和远程删除",
     "tag.delete.remote_error_title": "删除远程标签",
-    "tag.delete.remote_error_text": "标签已在本地删除，但无法从远程仓库删除：\n\n{error}\n\n该标签可能未发布，或您没有所需权限。"
+    "tag.delete.remote_error_text": "标签已在本地删除，但无法从远程仓库删除：\n\n{error}\n\n该标签可能未发布，或您没有所需权限。",
+
+    "split_commit.menu_item": "拆分提交…",
+    "split_commit.title": "拆分提交",
+    "split_commit.subtitle": "{sha}  \"{message}\"\n总计：{size} → {n} 个提交",
+    "split_commit.batch_header": "批次 {i} — {size}",
+    "split_commit.large_file_warn": "⚠ {path}（{size}）超过 100 MB — GitHub 将拒绝此文件。请考虑使用 Git LFS。",
+    "split_commit.btn_split": "拆分",
+    "split_commit.splitting": "正在拆分提交…",
+    "split_commit.done": "提交已拆分为 {n} 个",
+    "split_commit.no_upstream": "无法确定未推送的提交（未配置上游分支）",
+
+    "commit.warn_large.title": "暂存区存在大文件",
+    "commit.warn_large.file_text": "以下文件超过 100 MB，将被 GitHub 拒绝：\n\n{files}\n\n请考虑使用 Git LFS。仍然提交？",
+    "commit.warn_large.total_text": "暂存区文件总大小为 {size}，超过 1 GB。GitHub 可能会拒绝此次推送。\n\n请考虑拆分提交。仍然提交？"
 }

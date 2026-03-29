@@ -256,7 +256,8 @@ class WorkingCopyWidget(QWidget):
         self._abort_btn = QPushButton("")
         self._abort_btn.setFixedHeight(22)
         self._abort_btn.clicked.connect(self._on_abort)
-        banner_row.addWidget(QLabel("⚠"))
+        self._banner_icon = QLabel("⚠")
+        banner_row.addWidget(self._banner_icon)
         banner_row.addWidget(self._conflict_label, 1)
         banner_row.addWidget(self._abort_btn)
         self._conflict_banner.setVisible(False)
@@ -464,9 +465,26 @@ class WorkingCopyWidget(QWidget):
     def _update_conflict_banner(self, staged, unstaged):
         conflicted = {e.path for e in staged + unstaged if e.status == "U"}
         if not conflicted:
-            self._conflict_banner.setVisible(False)
-            self._abort_fn = None
+            if self._repo.is_merging():
+                # All conflicts resolved but merge not yet committed
+                self._banner_icon.setText("✓")
+                self._banner_icon.setStyleSheet("color: #4ec9b0; font-size: 14px;")
+                self._conflict_banner.setStyleSheet(
+                    "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);"
+                )
+                self._conflict_label.setText(t("conflict.merge_ready"))
+                self._abort_btn.setText(t("conflict.merge_ready_abort"))
+                self._abort_fn = self._repo.abort_merge
+                self._conflict_banner.setVisible(True)
+                self._maybe_fill_merge_msg()
+            else:
+                self._conflict_banner.setVisible(False)
+                self._abort_fn = None
             return
+        # Reset banner style to warning style
+        self._banner_icon.setText("⚠")
+        self._banner_icon.setStyleSheet("")
+        self._conflict_banner.setStyleSheet("")
         if self._repo.is_merging():
             op, fn = t("conflict.abort_merge"), self._repo.abort_merge
         elif self._repo.is_rebasing():
@@ -479,6 +497,15 @@ class WorkingCopyWidget(QWidget):
         self._conflict_label.setText(t("conflict.banner", n=len(conflicted)))
         self._abort_btn.setText(op)
         self._conflict_banner.setVisible(True)
+
+    def _maybe_fill_merge_msg(self):
+        if not self._commit_edit.toPlainText().strip():
+            try:
+                msg = self._repo.get_merge_msg()
+                if msg:
+                    self._commit_edit.setPlainText(msg)
+            except Exception:
+                pass
 
     # ------------------------------------------------------------------ Context menus
 
@@ -611,6 +638,36 @@ class WorkingCopyWidget(QWidget):
             QMessageBox.warning(self, t("working_copy.commit_btn"),
                                 t("error.no_commit_message"))
             return
+
+        try:
+            staged_sizes = self._repo.get_staged_file_sizes()
+        except Exception:
+            staged_sizes = []
+
+        if staged_sizes:
+            GITHUB_FILE_MAX = 100 * 1024 * 1024
+            GITHUB_PUSH_MAX = 1024 * 1024 * 1024
+            large_files = [(p, s) for p, s in staged_sizes if s > GITHUB_FILE_MAX]
+            total = sum(s for _, s in staged_sizes)
+
+            if large_files:
+                names = "\n".join(f"  {p}  ({s / 1024**2:.0f} MB)" for p, s in large_files)
+                ret = QMessageBox.warning(
+                    self, t("commit.warn_large.title"),
+                    t("commit.warn_large.file_text", files=names),
+                    QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
+                )
+                if ret == QMessageBox.StandardButton.Cancel:
+                    return
+            elif total > GITHUB_PUSH_MAX:
+                ret = QMessageBox.warning(
+                    self, t("commit.warn_large.title"),
+                    t("commit.warn_large.total_text", size=f"{total / 1024**2:.0f} MB"),
+                    QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel,
+                )
+                if ret == QMessageBox.StandardButton.Cancel:
+                    return
+
         worker = GitWorker(self._repo.commit, message, self._amend_check.isChecked())
         worker.signals.result.connect(lambda _: self._on_committed())
         worker.signals.error.connect(self._on_error)

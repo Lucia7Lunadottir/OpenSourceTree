@@ -179,6 +179,8 @@
     "conflict.no_editor": "Could not open an editor. Edit the file manually:\n{path}",
     "conflict.error": "Conflict Error",
     "conflict.context_menu": "Resolve Conflict...",
+    "conflict.merge_ready": "✓ All conflicts resolved — commit to complete the merge",
+    "conflict.merge_ready_abort": "Abort Merge",
     "progress.staging": "Staging {current} / {total} files...",
     "progress.unstaging": "Unstaging {current} / {total} files...",
     "lfs.title": "LFS Manager",
@@ -400,5 +402,19 @@
     "identity.error.title": "Git Identity",
     "identity.error.global_prefix": "Global: {error}",
     "identity.error.repo_prefix": "Repository: {error}",
-    "identity.error.errors": "Errors:\n{errors}"
+    "identity.error.errors": "Errors:\n{errors}",
+
+    "split_commit.menu_item": "Split commit…",
+    "split_commit.title": "Split Commit",
+    "split_commit.subtitle": "{sha}  \"{message}\"\nTotal: {size} → {n} commit(s)",
+    "split_commit.batch_header": "Batch {i} — {size}",
+    "split_commit.large_file_warn": "⚠ {path} ({size}) exceeds 100 MB — GitHub will reject this file. Consider Git LFS.",
+    "split_commit.btn_split": "Split",
+    "split_commit.splitting": "Splitting commit…",
+    "split_commit.done": "Commit split into {n} commits",
+    "split_commit.no_upstream": "Could not determine unpushed commits (no upstream configured)",
+
+    "commit.warn_large.title": "Large staged files",
+    "commit.warn_large.file_text": "The following file(s) exceed 100 MB and will be rejected by GitHub:\n\n{files}\n\nConsider using Git LFS. Commit anyway?",
+    "commit.warn_large.total_text": "Total staged size is {size}, which exceeds 1 GB. GitHub may reject this push.\n\nConsider splitting. Commit anyway?"
 }

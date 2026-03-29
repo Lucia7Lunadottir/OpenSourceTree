@@ -232,5 +232,19 @@
     "tag.delete.success_local": "Тег {name} видалено локально",
     "tag.delete.success_remote": "Тег {name} видалено локально та на віддаленому",
     "tag.delete.remote_error_title": "Видалення віддаленого тегу",
-    "tag.delete.remote_error_text": "Тег видалено локально, але не вдалося видалити з віддаленого репозиторію:\n\n{error}\n\nМожливо, тег не був опублікований або немає необхідних прав."
+    "tag.delete.remote_error_text": "Тег видалено локально, але не вдалося видалити з віддаленого репозиторію:\n\n{error}\n\nМожливо, тег не був опублікований або немає необхідних прав.",
+
+    "split_commit.menu_item": "Розбити коміт…",
+    "split_commit.title": "Розбити коміт",
+    "split_commit.subtitle": "{sha}  \"{message}\"\nВсього: {size} → {n} коміт(ів)",
+    "split_commit.batch_header": "Пакет {i} — {size}",
+    "split_commit.large_file_warn": "⚠ {path} ({size}) перевищує 100 МБ — GitHub відхилить цей файл. Використовуйте Git LFS.",
+    "split_commit.btn_split": "Розбити",
+    "split_commit.splitting": "Розбиваємо коміт…",
+    "split_commit.done": "Коміт розбито на {n} комітів",
+    "split_commit.no_upstream": "Не вдалося визначити незапушені коміти (upstream не налаштовано)",
+
+    "commit.warn_large.title": "Великі файли в індексі",
+    "commit.warn_large.file_text": "Наступні файли перевищують 100 МБ і будуть відхилені GitHub:\n\n{files}\n\nРозгляньте використання Git LFS. Все одно закомітити?",
+    "commit.warn_large.total_text": "Загальний розмір файлів в індексі становить {size}, що перевищує 1 ГБ. GitHub може відхилити цей push.\n\nРозгляньте розбиття. Все одно закомітити?"
 }

@@ -179,6 +179,8 @@
     "conflict.no_editor": "Не удалось открыть редактор. Отредактируйте файл вручную:\n{path}",
     "conflict.error": "Ошибка конфликта",
     "conflict.context_menu": "Разрешить конфликт...",
+    "conflict.merge_ready": "✓ Все конфликты разрешены — выполните коммит для завершения слияния",
+    "conflict.merge_ready_abort": "Прервать слияние",
     "progress.staging": "Индексирование {current} / {total} файлов...",
     "progress.unstaging": "Снятие с индекса {current} / {total} файлов...",
     "lfs.title": "LFS Менеджер",
@@ -400,5 +402,19 @@
     "identity.error.title": "Git Identity",
     "identity.error.global_prefix": "Глобальные: {error}",
     "identity.error.repo_prefix": "Репозиторий: {error}",
-    "identity.error.errors": "Ошибки:\n{errors}"
+    "identity.error.errors": "Ошибки:\n{errors}",
+
+    "split_commit.menu_item": "Разбить коммит…",
+    "split_commit.title": "Разбить коммит",
+    "split_commit.subtitle": "{sha}  \"{message}\"\nВсего: {size} → {n} коммит(ов)",
+    "split_commit.batch_header": "Пакет {i} — {size}",
+    "split_commit.large_file_warn": "⚠ {path} ({size}) превышает 100 МБ — GitHub отклонит этот файл. Используйте Git LFS.",
+    "split_commit.btn_split": "Разбить",
+    "split_commit.splitting": "Разбиваем коммит…",
+    "split_commit.done": "Коммит разбит на {n} коммита(ов)",
+    "split_commit.no_upstream": "Невозможно определить незапушенные коммиты (upstream не настроен)",
+
+    "commit.warn_large.title": "Большие файлы в индексе",
+    "commit.warn_large.file_text": "Следующие файлы превышают 100 МБ и будут отклонены GitHub:\n\n{files}\n\nРассмотрите использование Git LFS. Всё равно закоммитить?",
+    "commit.warn_large.total_text": "Общий размер файлов в индексе составляет {size}, что превышает 1 ГБ. GitHub может отклонить пуш.\n\nРассмотрите разбиение. Всё равно закоммитить?"
 }

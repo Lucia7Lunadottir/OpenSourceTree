@@ -232,5 +232,19 @@
     "tag.delete.success_local": "Tag {name} usunięty lokalnie",
     "tag.delete.success_remote": "Tag {name} usunięty lokalnie i zdalnie",
     "tag.delete.remote_error_title": "Usuń zdalny tag",
-    "tag.delete.remote_error_text": "Tag został usunięty lokalnie, ale nie udało się go usunąć ze zdalnego repozytorium:\n\n{error}\n\nTag mógł nie zostać opublikowany lub brak wymaganych uprawnień."
+    "tag.delete.remote_error_text": "Tag został usunięty lokalnie, ale nie udało się go usunąć ze zdalnego repozytorium:\n\n{error}\n\nTag mógł nie zostać opublikowany lub brak wymaganych uprawnień.",
+
+    "split_commit.menu_item": "Podziel commit…",
+    "split_commit.title": "Podziel commit",
+    "split_commit.subtitle": "{sha}  \"{message}\"\nŁącznie: {size} → {n} commit(ów)",
+    "split_commit.batch_header": "Partia {i} — {size}",
+    "split_commit.large_file_warn": "⚠ {path} ({size}) przekracza 100 MB — GitHub odrzuci ten plik. Rozważ użycie Git LFS.",
+    "split_commit.btn_split": "Podziel",
+    "split_commit.splitting": "Dzielenie commita…",
+    "split_commit.done": "Commit podzielony na {n} commitów",
+    "split_commit.no_upstream": "Nie można określić niezapchniętych commitów (brak skonfigurowanego upstream)",
+
+    "commit.warn_large.title": "Duże pliki w indeksie",
+    "commit.warn_large.file_text": "Następujące pliki przekraczają 100 MB i zostaną odrzucone przez GitHub:\n\n{files}\n\nRozważ użycie Git LFS. Zacommitować mimo to?",
+    "commit.warn_large.total_text": "Łączny rozmiar plików w indeksie wynosi {size}, co przekracza 1 GB. GitHub może odrzucić ten push.\n\nRozważ podział. Zacommitować mimo to?"
 }

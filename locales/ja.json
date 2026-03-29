@@ -232,5 +232,19 @@
     "tag.delete.success_local": "タグ {name} をローカルで削除しました",
     "tag.delete.success_remote": "タグ {name} をローカルとリモートで削除しました",
     "tag.delete.remote_error_title": "リモートタグの削除",
-    "tag.delete.remote_error_text": "タグはローカルで削除されましたが、リモートから削除できませんでした:\n\n{error}\n\nタグが公開されていないか、必要な権限がない可能性があります。"
+    "tag.delete.remote_error_text": "タグはローカルで削除されましたが、リモートから削除できませんでした:\n\n{error}\n\nタグが公開されていないか、必要な権限がない可能性があります。",
+
+    "split_commit.menu_item": "コミットを分割…",
+    "split_commit.title": "コミットの分割",
+    "split_commit.subtitle": "{sha}  \"{message}\"\n合計: {size} → {n} コミット",
+    "split_commit.batch_header": "バッチ {i} — {size}",
+    "split_commit.large_file_warn": "⚠ {path} ({size}) は 100 MB を超えています — GitHub はこのファイルを拒否します。Git LFS の使用を検討してください。",
+    "split_commit.btn_split": "分割",
+    "split_commit.splitting": "コミットを分割中…",
+    "split_commit.done": "コミットを {n} 個に分割しました",
+    "split_commit.no_upstream": "未プッシュのコミットを確認できませんでした（upstream が設定されていません）",
+
+    "commit.warn_large.title": "インデックスに大きなファイルがあります",
+    "commit.warn_large.file_text": "以下のファイルが 100 MB を超えており、GitHub に拒否されます：\n\n{files}\n\nGit LFS の使用を検討してください。それでもコミットしますか？",
+    "commit.warn_large.total_text": "インデックス内のファイルの合計サイズが {size} で、1 GB を超えています。GitHub がこのプッシュを拒否する可能性があります。\n\n分割を検討してください。それでもコミットしますか？"
 }
