@@ -17,6 +17,7 @@ from app.config import (
     SSHProfile, load_ssh_profiles, save_ssh_profiles,
     scan_default_ssh_keys, ensure_agent_running, OPENSSH_CONFIG
 )
+from app.i18n import t
 
 
 # ── Key generator dialog ───────────────────────────────────────────────────────
@@ -26,7 +27,7 @@ class KeyGenerateDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Создать SSH-ключ")
+        self.setWindowTitle(t("ssh.keygen.title"))
         self.setMinimumWidth(500)
         self._result_path = ""
         self._setup_ui()
@@ -39,17 +40,17 @@ class KeyGenerateDialog(QDialog):
 
         # Key type
         self._type_combo = QComboBox()
-        self._type_combo.addItem("Ed25519  (рекомендуется, современный)", "ed25519")
-        self._type_combo.addItem("RSA 4096  (совместимость со старыми серверами)", "rsa")
-        self._type_combo.addItem("ECDSA 521", "ecdsa")
+        self._type_combo.addItem(t("ssh.keygen.type_ed25519"), "ed25519")
+        self._type_combo.addItem(t("ssh.keygen.type_rsa"), "rsa")
+        self._type_combo.addItem(t("ssh.keygen.type_ecdsa"), "ecdsa")
         self._type_combo.currentIndexChanged.connect(self._on_type_changed)
-        form.addRow("Тип ключа:", self._type_combo)
+        form.addRow(t("ssh.keygen.key_type"), self._type_combo)
 
         # Key size (only for RSA/ECDSA)
         self._size_combo = QComboBox()
         self._size_combo.addItems(["4096", "2048"])
         self._size_combo.setVisible(False)
-        self._size_label = QLabel("Размер:")
+        self._size_label = QLabel(t("ssh.keygen.key_size"))
         self._size_label.setVisible(False)
         form.addRow(self._size_label, self._size_combo)
 
@@ -59,29 +60,29 @@ class KeyGenerateDialog(QDialog):
         ssh_dir = Path.home() / ".ssh"
         self._path_edit.setText(str(ssh_dir / "id_ed25519"))
         self._path_edit.setPlaceholderText(str(ssh_dir / "id_ed25519"))
-        browse_btn = QPushButton("Обзор...")
+        browse_btn = QPushButton(t("ssh.keygen.browse"))
         browse_btn.setFixedWidth(80)
         browse_btn.clicked.connect(self._browse_path)
         path_row.addWidget(self._path_edit)
         path_row.addWidget(browse_btn)
-        form.addRow("Сохранить в:", path_row)
+        form.addRow(t("ssh.keygen.save_path"), path_row)
 
         # Comment
         self._comment_edit = QLineEdit()
-        self._comment_edit.setPlaceholderText("your@email.com или имя ключа")
+        self._comment_edit.setPlaceholderText(t("ssh.keygen.comment_placeholder"))
         self._comment_edit.setText(os.environ.get("USER", ""))
-        form.addRow("Комментарий:", self._comment_edit)
+        form.addRow(t("ssh.keygen.comment"), self._comment_edit)
 
         layout.addLayout(form)
 
         # Passphrase group
-        pass_grp = QGroupBox("Пароль для ключа (необязательно, но рекомендуется)")
+        pass_grp = QGroupBox(t("ssh.keygen.passphrase_group"))
         pf = QFormLayout(pass_grp)
 
         pass_row = QHBoxLayout()
         self._pass_edit = QLineEdit()
         self._pass_edit.setEchoMode(QLineEdit.EchoMode.Password)
-        self._pass_edit.setPlaceholderText("Оставьте пустым — ключ без пароля")
+        self._pass_edit.setPlaceholderText(t("ssh.keygen.passphrase_placeholder"))
         self._show_pass_btn = QPushButton("👁")
         self._show_pass_btn.setFixedWidth(32)
         self._show_pass_btn.setStyleSheet("padding: 2px 5px; min-width: 0;")
@@ -93,12 +94,12 @@ class KeyGenerateDialog(QDialog):
         )
         pass_row.addWidget(self._pass_edit)
         pass_row.addWidget(self._show_pass_btn)
-        pf.addRow("Пароль:", pass_row)
+        pf.addRow(t("ssh.keygen.passphrase"), pass_row)
 
         confirm_row = QHBoxLayout()
         self._confirm_edit = QLineEdit()
         self._confirm_edit.setEchoMode(QLineEdit.EchoMode.Password)
-        self._confirm_edit.setPlaceholderText("Повторите пароль")
+        self._confirm_edit.setPlaceholderText(t("ssh.keygen.confirm_placeholder"))
         self._show_confirm_btn = QPushButton("👁")
         self._show_confirm_btn.setFixedWidth(32)
         self._show_confirm_btn.setStyleSheet("padding: 2px 5px; min-width: 0;")
@@ -110,23 +111,20 @@ class KeyGenerateDialog(QDialog):
         )
         confirm_row.addWidget(self._confirm_edit)
         confirm_row.addWidget(self._show_confirm_btn)
-        pf.addRow("Подтверждение:", confirm_row)
+        pf.addRow(t("ssh.keygen.confirm"), confirm_row)
 
-        pass_hint = QLabel(
-            "Пароль защищает ключ на диске. При использовании ssh-agent\n"
-            "вводить его нужно будет только один раз за сессию."
-        )
+        pass_hint = QLabel(t("ssh.keygen.passphrase_hint"))
         pass_hint.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
         pf.addRow("", pass_hint)
         layout.addWidget(pass_grp)
 
         # Agent checkbox
-        self._add_to_agent = QCheckBox("Добавить в ssh-agent после создания")
+        self._add_to_agent = QCheckBox(t("ssh.keygen.add_to_agent"))
         self._add_to_agent.setChecked(True)
         layout.addWidget(self._add_to_agent)
 
         # Command preview
-        preview_grp = QGroupBox("Команда")
+        preview_grp = QGroupBox(t("ssh.keygen.cmd_preview"))
         pl = QVBoxLayout(preview_grp)
         self._preview_label = QLabel()
         self._preview_label.setFont(QFont("Monospace", 9))
@@ -143,7 +141,7 @@ class KeyGenerateDialog(QDialog):
 
         # Buttons
         btns = QDialogButtonBox()
-        gen_btn = btns.addButton("Создать ключ", QDialogButtonBox.ButtonRole.AcceptRole)
+        gen_btn = btns.addButton(t("ssh.keygen.btn_generate"), QDialogButtonBox.ButtonRole.AcceptRole)
         btns.addButton(QDialogButtonBox.StandardButton.Cancel)
         btns.accepted.connect(self._generate)
         btns.rejected.connect(self.reject)
@@ -163,9 +161,9 @@ class KeyGenerateDialog(QDialog):
 
     def _browse_path(self):
         path, _ = QFileDialog.getSaveFileName(
-            self, "Сохранить ключ как",
+            self, t("ssh.keygen.save_dialog_title"),
             str(Path.home() / ".ssh"),
-            "Все файлы (*)"
+            t("ssh.keygen.save_dialog_filter")
         )
         if path:
             self._path_edit.setText(path)
@@ -186,19 +184,19 @@ class KeyGenerateDialog(QDialog):
     def _generate(self):
         path = self._path_edit.text().strip()
         if not path:
-            QMessageBox.warning(self, "Ошибка", "Укажите путь для сохранения ключа.")
+            QMessageBox.warning(self, t("ssh.keygen.error.title"), t("ssh.keygen.error.no_path"))
             return
 
         passphrase = self._pass_edit.text()
         confirm = self._confirm_edit.text()
         if passphrase != confirm:
-            QMessageBox.warning(self, "Ошибка", "Пароли не совпадают.")
+            QMessageBox.warning(self, t("ssh.keygen.error.title"), t("ssh.keygen.error.passwords_mismatch"))
             return
 
         if Path(path).exists():
             ret = QMessageBox.question(
-                self, "Файл существует",
-                f"'{path}' уже существует. Перезаписать?",
+                self, t("ssh.keygen.error.file_exists"),
+                t("ssh.keygen.error.file_exists_msg", path=path),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if ret != QMessageBox.StandardButton.Yes:
@@ -230,8 +228,8 @@ class KeyGenerateDialog(QDialog):
                 capture_output=True, text=True,
             )
             if result.returncode != 0:
-                QMessageBox.critical(self, "Ошибка создания ключа",
-                                     result.stderr or "Неизвестная ошибка")
+                QMessageBox.critical(self, t("ssh.keygen.error.key_gen_title"),
+                                     result.stderr or t("ssh.keygen.error.key_gen_title"))
                 return
         else:
             # No passphrase — run directly
@@ -244,12 +242,12 @@ class KeyGenerateDialog(QDialog):
 
             result = subprocess.run(args, capture_output=True, text=True)
             if result.returncode != 0:
-                QMessageBox.critical(self, "Ошибка создания ключа",
-                                     result.stderr or "Неизвестная ошибка")
+                QMessageBox.critical(self, t("ssh.keygen.error.key_gen_title"),
+                                     result.stderr or t("ssh.keygen.error.key_gen_title"))
                 return
 
         if not Path(path).exists():
-            QMessageBox.critical(self, "Ошибка", "Ключ не был создан.")
+            QMessageBox.critical(self, t("ssh.keygen.error.title"), t("ssh.keygen.error.key_not_created"))
             return
 
         # Add to agent if requested
@@ -296,7 +294,7 @@ class ProfileItem(QListWidgetItem):
         self.refresh_label()
 
     def refresh_label(self):
-        name = self.profile.name or self.profile.host_alias or "(без имени)"
+        name = self.profile.name or self.profile.host_alias or t("ssh.profile_no_name")
         host = self.profile.hostname or "?"
         agent_mark = " 🔓" if self.in_agent else ""
         self.setText(f"{name}{agent_mark}\n{host}")
@@ -309,7 +307,7 @@ class ProfileItem(QListWidgetItem):
 class SSHSettingsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("SSH-ключи и профили")
+        self.setWindowTitle(t("ssh.title"))
         self.resize(860, 620)
         self._profiles: list[SSHProfile] = load_ssh_profiles()
         self._current_idx: int = -1
@@ -336,7 +334,7 @@ class SSHSettingsDialog(QDialog):
         ll.setContentsMargins(0, 0, 0, 0)
         ll.setSpacing(4)
 
-        list_label = QLabel("Профили SSH")
+        list_label = QLabel(t("ssh.profiles_label"))
         list_label.setStyleSheet("font-weight: bold; color: rgb(203,166,247);")
         ll.addWidget(list_label)
 
@@ -348,19 +346,19 @@ class SSHSettingsDialog(QDialog):
         ll.addWidget(self._profile_list)
 
         btn_row = QHBoxLayout()
-        self._add_btn    = QPushButton("+ Добавить")
-        self._remove_btn = QPushButton("Удалить")
+        self._add_btn    = QPushButton(t("ssh.btn_add"))
+        self._remove_btn = QPushButton(t("ssh.btn_remove"))
         self._remove_btn.setEnabled(False)
         btn_row.addWidget(self._add_btn)
         btn_row.addWidget(self._remove_btn)
         ll.addLayout(btn_row)
 
-        gen_btn = QPushButton("✨ Создать ключ...")
-        gen_btn.setToolTip("Создать новую пару SSH-ключей")
+        gen_btn = QPushButton(t("ssh.btn_generate"))
+        gen_btn.setToolTip(t("ssh.btn_generate_tip"))
         ll.addWidget(gen_btn)
 
-        import_btn = QPushButton("📂 Импортировать ключи")
-        import_btn.setToolTip("Найти существующие ключи в ~/.ssh/")
+        import_btn = QPushButton(t("ssh.btn_import"))
+        import_btn.setToolTip(t("ssh.btn_import_tip"))
         ll.addWidget(import_btn)
 
         splitter.addWidget(left)
@@ -373,94 +371,87 @@ class SSHSettingsDialog(QDialog):
         el.setSpacing(8)
 
         # Basic group
-        basic = QGroupBox("Профиль")
+        basic = QGroupBox(t("ssh.group_profile"))
         bf = QFormLayout(basic)
 
         self._name_edit = QLineEdit()
-        self._name_edit.setPlaceholderText("напр. GitHub Personal")
-        bf.addRow("Название:", self._name_edit)
+        self._name_edit.setPlaceholderText(t("ssh.field_name_placeholder"))
+        bf.addRow(t("ssh.field_name"), self._name_edit)
 
         key_row = QHBoxLayout()
         self._key_edit = QLineEdit()
-        self._key_edit.setPlaceholderText("~/.ssh/id_ed25519")
-        browse_btn = QPushButton("Обзор...")
+        self._key_edit.setPlaceholderText(t("ssh.field_key_placeholder"))
+        browse_btn = QPushButton(t("ssh.keygen.browse"))
         browse_btn.setFixedWidth(80)
         browse_btn.clicked.connect(self._browse_key)
         key_row.addWidget(self._key_edit)
         key_row.addWidget(browse_btn)
-        bf.addRow("Файл ключа:", key_row)
+        bf.addRow(t("ssh.field_key_file"), key_row)
 
         self._pubkey_label = QLabel("")
         self._pubkey_label.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
         self._pubkey_label.setWordWrap(True)
         self._pubkey_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        bf.addRow("Публичный ключ:", self._pubkey_label)
+        bf.addRow(t("ssh.field_pubkey"), self._pubkey_label)
 
-        copy_pubkey_btn = QPushButton("Копировать публичный ключ")
+        copy_pubkey_btn = QPushButton(t("ssh.btn_copy_pubkey"))
         copy_pubkey_btn.clicked.connect(self._copy_pubkey)
         bf.addRow("", copy_pubkey_btn)
         el.addWidget(basic)
 
         # Connection group
-        conn = QGroupBox("Подключение")
+        conn = QGroupBox(t("ssh.group_connection"))
         cf = QFormLayout(conn)
 
         self._alias_edit = QLineEdit()
-        self._alias_edit.setPlaceholderText("github-personal  (для git@github-personal:user/repo.git)")
-        cf.addRow("Псевдоним хоста:", self._alias_edit)
+        self._alias_edit.setPlaceholderText(t("ssh.field_alias_placeholder"))
+        cf.addRow(t("ssh.field_alias"), self._alias_edit)
 
         self._host_edit = QLineEdit()
-        self._host_edit.setPlaceholderText("github.com")
-        cf.addRow("Хост (реальный):", self._host_edit)
+        self._host_edit.setPlaceholderText(t("ssh.field_host_placeholder"))
+        cf.addRow(t("ssh.field_host"), self._host_edit)
 
         self._user_edit = QLineEdit("git")
-        cf.addRow("Пользователь SSH:", self._user_edit)
+        cf.addRow(t("ssh.field_ssh_user"), self._user_edit)
 
         self._port_spin = QSpinBox()
         self._port_spin.setRange(1, 65535)
         self._port_spin.setValue(22)
-        cf.addRow("Порт:", self._port_spin)
+        cf.addRow(t("ssh.field_port"), self._port_spin)
 
         self._strict_combo = QComboBox()
         self._strict_combo.addItems(["accept-new", "yes", "no"])
-        self._strict_combo.setToolTip(
-            "accept-new — принять новые, отклонить изменённые\n"
-            "yes — всегда проверять\n"
-            "no — не проверять (небезопасно)"
-        )
-        cf.addRow("Проверка хоста:", self._strict_combo)
+        self._strict_combo.setToolTip(t("ssh.strict_check_tip"))
+        cf.addRow(t("ssh.field_strict_check"), self._strict_combo)
         el.addWidget(conn)
 
         # ssh-agent group
-        self._agent_grp = QGroupBox("ssh-agent (хранение пароля ключа в памяти)")
+        self._agent_grp = QGroupBox(t("ssh.group_agent"))
         al = QVBoxLayout(self._agent_grp)
 
-        self._agent_status_label = QLabel("Статус агента: проверяется...")
+        self._agent_status_label = QLabel(t("ssh.agent_status_checking"))
         self._agent_status_label.setStyleSheet("font-size: 11px; color: rgb(140,120,180);")
         al.addWidget(self._agent_status_label)
 
         # List of all keys currently loaded in the agent
         self._agent_keys_list = QListWidget()
         self._agent_keys_list.setFixedHeight(72)
-        self._agent_keys_list.setToolTip("Ключи, загруженные в ssh-agent прямо сейчас")
+        self._agent_keys_list.setToolTip(t("ssh.agent_keys_list_tip"))
         al.addWidget(self._agent_keys_list)
 
         agent_btn_row = QHBoxLayout()
-        self._add_agent_btn = QPushButton("🔓 Добавить профиль")
-        self._add_agent_btn.setToolTip(
-            "Загружает ключ выбранного профиля в ssh-agent.\n"
-            "Если ключ защищён паролем — введите его один раз."
-        )
+        self._add_agent_btn = QPushButton(t("ssh.btn_add_to_agent"))
+        self._add_agent_btn.setToolTip(t("ssh.btn_add_to_agent_tip"))
         self._add_agent_btn.clicked.connect(self._add_to_agent)
-        self._remove_agent_btn = QPushButton("🔒 Убрать профиль")
+        self._remove_agent_btn = QPushButton(t("ssh.btn_remove_from_agent"))
         self._remove_agent_btn.clicked.connect(self._remove_from_agent)
-        self._clear_agent_btn = QPushButton("🗑 Очистить агент")
-        self._clear_agent_btn.setToolTip("Выгрузить все ключи из ssh-agent (ssh-add -D)")
+        self._clear_agent_btn = QPushButton(t("ssh.btn_clear_agent"))
+        self._clear_agent_btn.setToolTip(t("ssh.btn_clear_agent_tip"))
         self._clear_agent_btn.clicked.connect(self._clear_agent)
         self._refresh_agent_btn = QPushButton("↻")
         self._refresh_agent_btn.setFixedWidth(30)
         self._refresh_agent_btn.setStyleSheet("padding: 2px 4px; min-width: 0;")
-        self._refresh_agent_btn.setToolTip("Обновить статус агента")
+        self._refresh_agent_btn.setToolTip(t("ssh.btn_refresh_agent_tip"))
         self._refresh_agent_btn.clicked.connect(self._refresh_agent_status)
         agent_btn_row.addWidget(self._add_agent_btn)
         agent_btn_row.addWidget(self._remove_agent_btn)
@@ -468,29 +459,26 @@ class SSHSettingsDialog(QDialog):
         agent_btn_row.addWidget(self._refresh_agent_btn)
         al.addLayout(agent_btn_row)
 
-        agent_hint = QLabel(
-            "ssh-agent хранит расшифрованный ключ в оперативной памяти.\n"
-            "Git использует его автоматически — пароль спрашивается только при добавлении."
-        )
+        agent_hint = QLabel(t("ssh.agent_hint"))
         agent_hint.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
         agent_hint.setWordWrap(True)
         al.addWidget(agent_hint)
         el.addWidget(self._agent_grp)
 
         # Test group
-        test_grp = QGroupBox("Тест подключения")
+        test_grp = QGroupBox(t("ssh.group_test"))
         tl = QVBoxLayout(test_grp)
         test_row = QHBoxLayout()
-        self._test_btn = QPushButton("Проверить")
+        self._test_btn = QPushButton(t("ssh.btn_test"))
         self._test_btn.clicked.connect(self._test_connection)
-        test_row.addWidget(QLabel("ssh -T <псевдоним>@<хост>"))
+        test_row.addWidget(QLabel(t("ssh.test_cmd_label")))
         test_row.addStretch()
         test_row.addWidget(self._test_btn)
         tl.addLayout(test_row)
         self._test_output = QTextEdit()
         self._test_output.setReadOnly(True)
         self._test_output.setFixedHeight(55)
-        self._test_output.setPlaceholderText("Результат появится здесь...")
+        self._test_output.setPlaceholderText(t("ssh.test_placeholder"))
         tl.addWidget(self._test_output)
         el.addWidget(test_grp)
 
@@ -504,7 +492,7 @@ class SSHSettingsDialog(QDialog):
         btns = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
         )
-        btns.button(QDialogButtonBox.StandardButton.Save).setText("Сохранить всё")
+        btns.button(QDialogButtonBox.StandardButton.Save).setText(t("ssh.btn_save_all"))
         btns.accepted.connect(self._save_all)
         btns.rejected.connect(self.reject)
         root.addWidget(btns)
@@ -532,15 +520,13 @@ class SSHSettingsDialog(QDialog):
     def _on_agent_status(self, keys: list):
         self._agent_keys = keys
         if not _ssh_agent_running():
-            self._agent_status_label.setText("⚠ ssh-agent не запущен")
+            self._agent_status_label.setText(t("ssh.agent_status_not_running"))
             self._agent_status_label.setStyleSheet("font-size: 11px; color: rgb(255,150,100);")
         elif not keys:
-            self._agent_status_label.setText("ssh-agent запущен, ключей не загружено")
+            self._agent_status_label.setText(t("ssh.agent_status_no_keys"))
             self._agent_status_label.setStyleSheet("font-size: 11px; color: rgb(140,120,180);")
         else:
-            self._agent_status_label.setText(
-                f"ssh-agent: {len(keys)} ключ(ей) загружено  🔓"
-            )
+            self._agent_status_label.setText(t("ssh.agent_status_keys", n=len(keys)))
             self._agent_status_label.setStyleSheet("font-size: 11px; color: rgb(160,220,130);")
 
         # Populate keys list
@@ -548,7 +534,7 @@ class SSHSettingsDialog(QDialog):
         for key_path in keys:
             self._agent_keys_list.addItem(f"🔓  {key_path}")
         if not keys and _ssh_agent_running():
-            self._agent_keys_list.addItem("(нет загруженных ключей)")
+            self._agent_keys_list.addItem(t("ssh.agent_no_keys"))
 
         # Update profile list items
         for i in range(self._profile_list.count()):
@@ -566,15 +552,11 @@ class SSHSettingsDialog(QDialog):
         self._flush_editor_to_profile(self._current_idx)
         p = self._profiles[self._current_idx]
         if not p.key_path or not os.path.exists(p.key_path):
-            QMessageBox.warning(self, "ssh-agent", "Файл ключа не найден.")
+            QMessageBox.warning(self, t("ssh.agent.title"), t("ssh.agent.no_key_file"))
             return
 
         if not ensure_agent_running():
-            QMessageBox.warning(
-                self, "ssh-agent",
-                "Не удалось запустить ssh-agent.\n"
-                "Попробуйте вручную: eval $(ssh-agent)"
-            )
+            QMessageBox.warning(self, t("ssh.agent.title"), t("ssh.agent.start_failed"))
             return
 
         # Run ssh-add in terminal (handles passphrase prompt natively)
@@ -599,12 +581,8 @@ class SSHSettingsDialog(QDialog):
                 ["ssh-add", p.key_path], capture_output=True, text=True
             )
             if result.returncode != 0:
-                QMessageBox.warning(
-                    self, "ssh-agent",
-                    f"Не удалось добавить ключ:\n{result.stderr}\n\n"
-                    "Ключ может быть защищён паролем. Запустите в терминале:\n"
-                    f"  ssh-add {p.key_path}"
-                )
+                QMessageBox.warning(self, t("ssh.agent.title"),
+                                    t("ssh.agent.add_failed", error=result.stderr, path=p.key_path))
                 return
 
         self._refresh_agent_status()
@@ -619,20 +597,19 @@ class SSHSettingsDialog(QDialog):
             ["ssh-add", "-d", p.key_path], capture_output=True, text=True
         )
         if result.returncode != 0:
-            QMessageBox.warning(self, "ssh-agent", f"Ошибка: {result.stderr}")
+            QMessageBox.warning(self, t("ssh.agent.title"), t("ssh.agent.remove_error", error=result.stderr))
         self._refresh_agent_status()
 
     def _clear_agent(self):
         ret = QMessageBox.question(
-            self, "Очистить агент",
-            "Выгрузить все ключи из ssh-agent?\nПри следующей git-операции пароль будет запрошен снова.",
+            self, t("ssh.agent.clear.title"), t("ssh.agent.clear.text"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if ret != QMessageBox.StandardButton.Yes:
             return
         result = subprocess.run(["ssh-add", "-D"], capture_output=True, text=True)
         if result.returncode != 0:
-            QMessageBox.warning(self, "ssh-agent", f"Ошибка: {result.stderr}")
+            QMessageBox.warning(self, t("ssh.agent.title"), t("ssh.agent.clear_error", error=result.stderr))
         self._refresh_agent_status()
 
     # ── List management ───────────────────────────────────────────────────────
@@ -701,7 +678,7 @@ class SSHSettingsDialog(QDialog):
     def _add_profile(self):
         if self._dirty and self._current_idx >= 0:
             self._flush_editor_to_profile(self._current_idx)
-        p = SSHProfile(name="Новый профиль")
+        p = SSHProfile(name=t("ssh.new_profile_name"))
         self._profiles.append(p)
         self._profile_list.addItem(ProfileItem(p))
         self._profile_list.setCurrentRow(len(self._profiles) - 1)
@@ -710,10 +687,10 @@ class SSHSettingsDialog(QDialog):
         row = self._profile_list.currentRow()
         if row < 0:
             return
-        name = self._profiles[row].name or "профиль"
+        name = self._profiles[row].name or t("ssh.profile_no_name")
         ret = QMessageBox.question(
-            self, "Удалить профиль",
-            f"Удалить '{name}'?",
+            self, t("ssh.confirm_remove.title"),
+            t("ssh.confirm_remove.text", name=name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if ret == QMessageBox.StandardButton.Yes:
@@ -731,9 +708,9 @@ class SSHSettingsDialog(QDialog):
 
     def _browse_key(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Выберите файл приватного ключа",
+            self, t("ssh.browse_key_title"),
             os.path.expanduser("~/.ssh"),
-            "Ключи SSH (id_* *);;Все файлы (*)",
+            t("ssh.browse_key_filter"),
         )
         if path:
             self._key_edit.setText(path)
@@ -751,23 +728,23 @@ class SSHSettingsDialog(QDialog):
                     display = text
                 self._pubkey_label.setText(display)
             except Exception:
-                self._pubkey_label.setText("(не удалось прочитать)")
+                self._pubkey_label.setText(t("ssh.pubkey_read_error"))
         else:
-            self._pubkey_label.setText("(.pub файл не найден)")
+            self._pubkey_label.setText(t("ssh.pubkey_not_found"))
 
     def _copy_pubkey(self):
         key = self._key_edit.text().strip()
         pub = key + ".pub" if key else ""
         if not pub or not os.path.exists(pub):
-            QMessageBox.warning(self, "Публичный ключ", "Файл .pub не найден рядом с приватным ключом.")
+            QMessageBox.warning(self, t("ssh.copy_pubkey.title"), t("ssh.copy_pubkey.no_file"))
             return
         text = Path(pub).read_text().strip()
         QApplication.clipboard().setText(text)
-        QMessageBox.information(self, "Скопировано", "Публичный ключ скопирован в буфер обмена.")
+        QMessageBox.information(self, t("ssh.copy_pubkey.done_title"), t("ssh.copy_pubkey.done_text"))
 
     def _generate_key(self):
         if not shutil.which("ssh-keygen"):
-            QMessageBox.critical(self, "Ошибка", "ssh-keygen не найден в PATH.")
+            QMessageBox.critical(self, t("ssh.keygen.error.title"), t("ssh.keygen_not_found_msg"))
             return
 
         dlg = KeyGenerateDialog(self)
@@ -776,7 +753,7 @@ class SSHSettingsDialog(QDialog):
 
         key_path = dlg.result_path()
         if not key_path or not Path(key_path).exists():
-            QMessageBox.warning(self, "Ключ не создан", "Файл ключа не найден после генерации.")
+            QMessageBox.warning(self, t("ssh.key_not_created.title"), t("ssh.key_not_created.text"))
             return
 
         # Auto-create profile
@@ -789,13 +766,7 @@ class SSHSettingsDialog(QDialog):
         self._populate_list()
         self._profile_list.setCurrentRow(len(self._profiles) - 1)
 
-        QMessageBox.information(
-            self, "Ключ создан",
-            f"Ключ создан: {key_path}\n\n"
-            f"Публичный ключ:\n{key_path}.pub\n\n"
-            "Добавьте содержимое .pub файла на GitHub/GitLab:\n"
-            "GitHub → Settings → SSH and GPG keys → New SSH key"
-        )
+        QMessageBox.information(self, t("ssh.key_created.title"), t("ssh.key_created.text", path=key_path))
         self._refresh_agent_status()
 
     def _import_keys(self):
@@ -804,11 +775,11 @@ class SSHSettingsDialog(QDialog):
         new_keys = [k for k in found if k not in existing_paths]
 
         if not new_keys:
-            QMessageBox.information(self, "Импорт", "Новых ключей в ~/.ssh/ не найдено.")
+            QMessageBox.information(self, t("ssh.import.confirm.title"), t("ssh.import.none_found"))
             return
 
-        msg = "Найдены ключи:\n" + "\n".join(f"  • {k}" for k in new_keys) + "\n\nДобавить как профили?"
-        ret = QMessageBox.question(self, "Импорт ключей", msg,
+        msg = t("ssh.import.confirm.text", keys="\n".join(f"  • {k}" for k in new_keys))
+        ret = QMessageBox.question(self, t("ssh.import.confirm.title"), msg,
                                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         if ret != QMessageBox.StandardButton.Yes:
             return
@@ -831,15 +802,15 @@ class SSHSettingsDialog(QDialog):
         p = self._profiles[row]
 
         if not p.key_path or not os.path.exists(p.key_path):
-            self._test_output.setPlainText("Файл ключа не найден.")
+            self._test_output.setPlainText(t("ssh.test.no_key"))
             return
         if not p.hostname:
-            self._test_output.setPlainText("Укажите хост для подключения.")
+            self._test_output.setPlainText(t("ssh.test.no_host"))
             return
 
         target = p.host_alias or p.hostname
         self._test_btn.setEnabled(False)
-        self._test_output.setPlainText("Подключаемся...")
+        self._test_output.setPlainText(t("ssh.test.connecting"))
 
         cmd = [
             "ssh",
@@ -858,11 +829,11 @@ class SSHSettingsDialog(QDialog):
             if any(m in output.lower() for m in ok_markers):
                 self._test_output.setPlainText("✓ " + output)
             else:
-                self._test_output.setPlainText(output or f"Код завершения: {result.returncode}")
+                self._test_output.setPlainText(output or t("ssh.test.exit_code", code=result.returncode))
         except subprocess.TimeoutExpired:
-            self._test_output.setPlainText("Таймаут подключения (10 с)")
+            self._test_output.setPlainText(t("ssh.test.timeout"))
         except Exception as e:
-            self._test_output.setPlainText(f"Ошибка: {e}")
+            self._test_output.setPlainText(t("ssh.test.error", error=str(e)))
         finally:
             self._test_btn.setEnabled(True)
 
