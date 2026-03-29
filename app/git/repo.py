@@ -56,6 +56,13 @@ class GitRepo:
         commits = parse_commits(raw)
         return compute_graph_layout(commits)
 
+    def get_archive_sha256(self, hash: str) -> str:
+        """Return sha256 hex digest of a tar.gz archive of the given commit.
+        Useful for AUR sha256sums=() entries."""
+        import hashlib
+        data = self.runner.run_bytes(["archive", "--format=tar.gz", hash], timeout=120)
+        return hashlib.sha256(data).hexdigest()
+
     def get_commit_detail(self, hash: str) -> CommitRecord:
         fmt = "%H%x00%h%x00%P%x00%an%x00%ae%x00%aI%x00%s%x00%D%x00%b"
         raw = self.runner.run(["show", f"--format={fmt}", "--no-patch", hash])

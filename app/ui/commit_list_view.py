@@ -151,14 +151,22 @@ class CommitListView(QWidget):
         cherrypick_act  = menu.addAction("Cherry-pick")
         revert_act      = menu.addAction("Revert (создать отменяющий коммит)")
         menu.addSeparator()
-        copy_hash_act   = menu.addAction(f"Копировать хэш  ({sh})")
-        copy_full_act   = menu.addAction(f"Копировать полный хэш")
-        copy_msg_act    = menu.addAction("Копировать сообщение коммита")
 
+        # ── Copy SHA submenu ──
+        copy_menu = menu.addMenu("Копировать SHA...")
+        copy_short_act  = copy_menu.addAction(f"Короткий хэш  ({sh})")
+        copy_full_act   = copy_menu.addAction(f"Полный хэш  ({h})")
+        copy_msg_act    = copy_menu.addAction("Сообщение коммита")
+        copy_menu.addSeparator()
+        copy_aur_act    = copy_menu.addAction(f"AUR: _commit='{h}'")
+        copy_ref_act    = copy_menu.addAction(f"Git ref: #commit={h}")
+        copy_sha256_act = copy_menu.addAction("AUR: sha256sum архива (вычислить...)")
 
         action = menu.exec(self._view.viewport().mapToGlobal(pos))
         if action is None:
             return
+
+        clipboard = QApplication.clipboard()
 
         if action == soft_act:
             self._reset(h, "soft")
@@ -175,12 +183,29 @@ class CommitListView(QWidget):
             self._run_op(self._repo.cherry_pick, h, f"Cherry-pick {sh} выполнен")
         elif action == revert_act:
             self._run_op(self._repo.revert_commit, h, f"Revert {sh} выполнен")
-        elif action == copy_hash_act:
-            QApplication.clipboard().setText(sh)
+        elif action == copy_short_act:
+            clipboard.setText(sh)
         elif action == copy_full_act:
-            QApplication.clipboard().setText(h)
+            clipboard.setText(h)
         elif action == copy_msg_act:
-            QApplication.clipboard().setText(commit.message)
+            clipboard.setText(commit.message)
+        elif action == copy_aur_act:
+            clipboard.setText(f"_commit='{h}'")
+        elif action == copy_ref_act:
+            clipboard.setText(f"#commit={h}")
+        elif action == copy_sha256_act:
+            self._copy_archive_sha256(h)
+
+    def _copy_archive_sha256(self, hash: str):
+        self.status_message.emit(f"Вычисляется sha256 архива {hash[:8]}…")
+        worker = GitWorker(self._repo.get_archive_sha256, hash)
+        worker.signals.result.connect(self._on_sha256_ready)
+        worker.signals.error.connect(self._on_op_error)
+        QThreadPool.globalInstance().start(worker)
+
+    def _on_sha256_ready(self, digest: str):
+        QApplication.clipboard().setText(digest)
+        self.status_message.emit(f"sha256 скопирован: {digest[:16]}…")
 
     def _reset(self, hash: str, mode: str):
         label = {"soft": "Soft", "mixed": "Mixed", "hard": "Hard"}[mode]

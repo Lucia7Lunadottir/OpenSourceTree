@@ -1,6 +1,6 @@
 # Maintainer: Lucia <bordiyan20035@gmail.com>
 pkgname=opensourcetree-git
-pkgver=r16.b421a5b
+pkgver=1.2.5
 pkgrel=1
 pkgdesc="SourceTree-inspired Git GUI built with PyQt6"
 arch=('any')
@@ -24,7 +24,9 @@ sha256sums=('SKIP')
 
 pkgver() {
     cd "$srcdir/opensourcetree"
-    printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+    git describe --tags --long 2>/dev/null \
+        | sed 's/^v//;s/-[0-9]*-g[0-9a-f]*//' \
+        || printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
 package() {

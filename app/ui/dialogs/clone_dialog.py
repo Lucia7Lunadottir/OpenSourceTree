@@ -83,6 +83,13 @@ class CloneDialog(QDialog):
             QMessageBox.warning(self, t("clone.title"), t("clone.error.no_url"))
             return
 
+        if url.startswith("/") or url.startswith("./") or url.startswith("~"):
+            QMessageBox.warning(
+                self, t("clone.title"),
+                t("clone.error.local_path_as_url")
+            )
+            return
+
         dest = self._dest_edit.text().strip() or os.path.expanduser("~")
         name = self._name_edit.text().strip() or self._name_edit.placeholderText()
         target_path = os.path.join(dest, name)
@@ -91,9 +98,16 @@ class CloneDialog(QDialog):
         self._progress.setVisible(True)
         self._status_label.setText(t("clone.cloning"))
 
+        _is_ssh = url.startswith("git@") or url.startswith("ssh://")
+
         def do_clone():
             runner = GitRunner(dest)
-            runner.run(["clone", url, target_path], timeout=300)
+            if _is_ssh:
+                runner.run_in_terminal(["clone", url, target_path])
+                if not os.path.isdir(os.path.join(target_path, ".git")):
+                    raise RuntimeError(t("clone.error.ssh_failed"))
+            else:
+                runner.run(["clone", url, target_path], timeout=300)
             return target_path
 
         worker = GitWorker(do_clone)

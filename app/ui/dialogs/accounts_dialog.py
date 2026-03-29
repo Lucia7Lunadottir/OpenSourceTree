@@ -14,6 +14,7 @@ from app.config import (
     Account, PROVIDERS, load_accounts, save_accounts, fetch_avatar,
     AVATARS_DIR
 )
+from app.i18n import t
 
 
 # ── Avatar fetcher thread ─────────────────────────────────────────────────────
@@ -44,7 +45,7 @@ class AccountItem(QListWidgetItem):
     def refresh(self):
         acc = self.account
         provider_label = PROVIDERS.get(acc.provider, {}).get("label", acc.provider)
-        name = acc.label or acc.username or "(без имени)"
+        name = acc.label or acc.username or t("accounts.no_name")
         self.setText(f"{name}\n{provider_label}  •  {acc.host or '—'}")
         self._load_avatar()
 
@@ -66,7 +67,7 @@ class AccountItem(QListWidgetItem):
 class AccountsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Аккаунты")
+        self.setWindowTitle(t("accounts.title"))
         self.resize(820, 560)
         self._accounts: list[Account] = load_accounts()
         self._current_idx = -1
@@ -91,7 +92,7 @@ class AccountsDialog(QDialog):
         ll.setContentsMargins(0, 0, 0, 0)
         ll.setSpacing(4)
 
-        hdr = QLabel("Аккаунты")
+        hdr = QLabel(t("accounts.header"))
         hdr.setStyleSheet("font-weight: bold; color: rgb(203,166,247);")
         ll.addWidget(hdr)
 
@@ -101,8 +102,8 @@ class AccountsDialog(QDialog):
         self._list.currentRowChanged.connect(self._on_selected)
         ll.addWidget(self._list)
 
-        add_btn    = QPushButton("+ Добавить")
-        self._del_btn = QPushButton("Удалить")
+        add_btn    = QPushButton(t("accounts.btn_add"))
+        self._del_btn = QPushButton(t("accounts.btn_remove"))
         self._del_btn.setEnabled(False)
         btn_row = QHBoxLayout()
         btn_row.addWidget(add_btn)
@@ -122,34 +123,34 @@ class AccountsDialog(QDialog):
         form = QFormLayout()
 
         self._label_edit = QLineEdit()
-        self._label_edit.setPlaceholderText("напр. «GitHub Личный»")
-        form.addRow("Название:", self._label_edit)
+        self._label_edit.setPlaceholderText(t("accounts.field_label_placeholder"))
+        form.addRow(t("accounts.field_label"), self._label_edit)
 
         self._provider_combo = QComboBox()
         for key, val in PROVIDERS.items():
             self._provider_combo.addItem(val["label"], key)
-        form.addRow("Провайдер:", self._provider_combo)
+        form.addRow(t("accounts.field_provider"), self._provider_combo)
 
         self._host_edit = QLineEdit()
-        self._host_edit.setPlaceholderText("github.com")
-        form.addRow("Хост:", self._host_edit)
+        self._host_edit.setPlaceholderText(t("accounts.field_host_placeholder"))
+        form.addRow(t("accounts.field_host"), self._host_edit)
 
         self._api_url_edit = QLineEdit()
-        self._api_url_edit.setPlaceholderText("https://api.github.com  (для self-hosted)")
-        form.addRow("API URL:", self._api_url_edit)
+        self._api_url_edit.setPlaceholderText(t("accounts.field_api_url_placeholder"))
+        form.addRow(t("accounts.field_api_url"), self._api_url_edit)
 
         self._user_edit = QLineEdit()
-        self._user_edit.setPlaceholderText("your-login")
-        form.addRow("Логин:", self._user_edit)
+        self._user_edit.setPlaceholderText(t("accounts.field_login_placeholder"))
+        form.addRow(t("accounts.field_login"), self._user_edit)
 
         self._email_edit = QLineEdit()
-        self._email_edit.setPlaceholderText("you@example.com")
-        form.addRow("E-mail (для коммитов):", self._email_edit)
+        self._email_edit.setPlaceholderText(t("accounts.field_email_placeholder"))
+        form.addRow(t("accounts.field_email"), self._email_edit)
 
         # Token row with show/hide toggle
         token_row = QHBoxLayout()
         self._token_edit = QLineEdit()
-        self._token_edit.setPlaceholderText("Personal Access Token (HTTPS)")
+        self._token_edit.setPlaceholderText(t("accounts.field_token_placeholder"))
         self._token_edit.setEchoMode(QLineEdit.EchoMode.Password)
         self._show_token_btn = QPushButton("👁")
         self._show_token_btn.setFixedWidth(32)
@@ -162,12 +163,9 @@ class AccountsDialog(QDialog):
         )
         token_row.addWidget(self._token_edit)
         token_row.addWidget(self._show_token_btn)
-        form.addRow("Токен доступа:", token_row)
+        form.addRow(t("accounts.field_token"), token_row)
 
-        token_hint = QLabel(
-            'Создать: GitHub → Settings → Developer settings → Personal access tokens.<br>'
-            'Права: <code>repo</code> (для чтения/записи репозиториев).'
-        )
+        token_hint = QLabel(t("accounts.token_hint"))
         token_hint.setWordWrap(True)
         token_hint.setTextFormat(Qt.TextFormat.RichText)
         token_hint.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
@@ -184,7 +182,7 @@ class AccountsDialog(QDialog):
         )
         self._avatar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._avatar_label.setText("?")
-        self._fetch_avatar_btn = QPushButton("Загрузить аватар")
+        self._fetch_avatar_btn = QPushButton(t("accounts.btn_fetch_avatar"))
         self._fetch_avatar_btn.clicked.connect(self._fetch_avatar)
         avatar_row.addWidget(self._avatar_label)
         avatar_row.addWidget(self._fetch_avatar_btn)
@@ -192,7 +190,7 @@ class AccountsDialog(QDialog):
         el.addLayout(avatar_row)
 
         # Test button
-        self._test_btn = QPushButton("Проверить токен")
+        self._test_btn = QPushButton(t("accounts.btn_test_token"))
         self._test_btn.clicked.connect(self._test_token)
         el.addWidget(self._test_btn)
 
@@ -209,7 +207,7 @@ class AccountsDialog(QDialog):
         btns = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
         )
-        btns.button(QDialogButtonBox.StandardButton.Save).setText("Сохранить")
+        btns.button(QDialogButtonBox.StandardButton.Save).setText(t("accounts.btn_save"))
         btns.accepted.connect(self._save_all)
         btns.rejected.connect(self.reject)
         root.addWidget(btns)
@@ -298,7 +296,7 @@ class AccountsDialog(QDialog):
     def _add_account(self):
         if self._dirty and self._current_idx >= 0:
             self._flush(self._current_idx)
-        acc = Account(label="Новый аккаунт")
+        acc = Account(label=t("accounts.new_account"))
         self._accounts.append(acc)
         self._list.addItem(AccountItem(acc))
         self._list.setCurrentRow(len(self._accounts) - 1)
@@ -307,9 +305,9 @@ class AccountsDialog(QDialog):
         row = self._list.currentRow()
         if row < 0:
             return
-        name = self._accounts[row].label or "аккаунт"
+        name = self._accounts[row].label or t("accounts.account_no_name")
         ret = QMessageBox.question(
-            self, "Удалить аккаунт", f"Удалить «{name}»?",
+            self, t("accounts.confirm_remove.title"), t("accounts.confirm_remove.text", name=name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if ret == QMessageBox.StandardButton.Yes:
@@ -331,10 +329,10 @@ class AccountsDialog(QDialog):
         self._flush(self._current_idx)
         acc = self._accounts[self._current_idx]
         if not acc.username:
-            self._test_result.setText("Укажите логин для загрузки аватара.")
+            self._test_result.setText(t("accounts.avatar_no_login"))
             return
         self._fetch_avatar_btn.setEnabled(False)
-        self._fetch_avatar_btn.setText("Загружаю...")
+        self._fetch_avatar_btn.setText(t("accounts.btn_fetching_avatar"))
         fetcher = AvatarFetcher(acc)
         fetcher.done.connect(self._on_avatar_fetched)
         self._fetchers.append(fetcher)
@@ -352,9 +350,9 @@ class AccountsDialog(QDialog):
                     self._refresh_avatar_display(acc)
                 break
         self._fetch_avatar_btn.setEnabled(True)
-        self._fetch_avatar_btn.setText("Загрузить аватар")
+        self._fetch_avatar_btn.setText(t("accounts.btn_fetch_avatar"))
         if not path:
-            self._test_result.setText("Не удалось загрузить аватар (проверьте логин и токен).")
+            self._test_result.setText(t("accounts.avatar_load_error"))
 
     def _refresh_avatar_display(self, acc: Account):
         p = acc.avatar_path
@@ -380,17 +378,17 @@ class AccountsDialog(QDialog):
             return
         acc = self._accounts[row]
         if not acc.token:
-            self._test_result.setText("Токен не указан.")
+            self._test_result.setText(t("accounts.test_no_token"))
             return
 
         import urllib.request, json
         api_url = acc.api_url or PROVIDERS.get(acc.provider, {}).get("api_url", "")
         if not api_url:
-            self._test_result.setText("API URL не определён для этого провайдера.")
+            self._test_result.setText(t("accounts.test_no_api"))
             return
 
         self._test_btn.setEnabled(False)
-        self._test_result.setText("Проверяю...")
+        self._test_result.setText(t("accounts.test_checking"))
 
         try:
             headers = {
@@ -409,13 +407,13 @@ class AccountsDialog(QDialog):
                 data = json.loads(r.read())
 
             login = data.get("login") or data.get("username") or data.get("name", "?")
-            self._test_result.setText(f"✓ Успешно! Вошли как: {login}")
+            self._test_result.setText(t("accounts.test_success", login=login))
             # Update username if empty
             if not acc.username:
                 acc.username = login
                 self._user_edit.setText(login)
         except Exception as e:
-            self._test_result.setText(f"✗ Ошибка: {e}")
+            self._test_result.setText(t("accounts.test_error", error=str(e)))
         finally:
             self._test_btn.setEnabled(True)
 
