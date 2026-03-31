@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
     QProgressBar, QFrame, QLineEdit, QButtonGroup, QSizePolicy
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QPoint, QThreadPool
-from PyQt6.QtGui import QColor, QFont
+from PyQt6.QtGui import QColor, QFont, QMouseEvent
 
 from app.i18n import t
 from app.git.repo import GitRepo
@@ -90,6 +90,14 @@ class FileListWidget(QListWidget):
             if item.data(Qt.ItemDataRole.UserRole)
         ]
 
+    def mousePressEvent(self, event: QMouseEvent):
+        if event.button() == Qt.MouseButton.RightButton:
+            item = self.itemAt(event.pos())
+            if item and item.isSelected():
+                # Don't clear multi-selection when right-clicking an already-selected item
+                return
+        super().mousePressEvent(event)
+
     def _on_item_changed(self, current, _prev):
         if current:
             entry = current.data(Qt.ItemDataRole.UserRole)
@@ -141,6 +149,13 @@ class FileTreeWidget(QTreeWidget):
             for item in self.selectedItems()
             if item.data(0, Qt.ItemDataRole.UserRole) is not None
         ]
+
+    def mousePressEvent(self, event: QMouseEvent):
+        if event.button() == Qt.MouseButton.RightButton:
+            item = self.itemAt(event.pos())
+            if item and item.isSelected():
+                return
+        super().mousePressEvent(event)
 
     def _rebuild(self):
         self.setUpdatesEnabled(False)
@@ -582,17 +597,22 @@ class WorkingCopyWidget(QWidget):
             for entry in entries:
                 self._run_op(self._repo.stage_file, entry.path)
         elif action == discard_action:
+            if len(entries) == 1:
+                msg = f"Discard changes to {entries[0].path}?"
+            else:
+                names = "\n".join(f"  • {e.path}" for e in entries)
+                msg = f"Discard changes to {len(entries)} files?\n\n{names}"
             ret = QMessageBox.question(
-                self, "Discard Changes",
-                f"Discard changes to {entries[0].path}?",
+                self, "Discard Changes", msg,
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if ret == QMessageBox.StandardButton.Yes:
-                for entry in entries:
-                    self._run_op(
-                        lambda p: self._repo.runner.run(["checkout", "--", p]),
-                        entry.path,
-                    )
+                paths = [e.path for e in entries]
+                self._run_op(
+                    lambda pp=paths: [
+                        self._repo.runner.run(["checkout", "--", p]) for p in pp
+                    ]
+                )
 
     def _open_conflict_dialog(self, path: str):
         from app.ui.dialogs.conflict_dialog import ConflictDialog
