@@ -1,8 +1,8 @@
 pkgbase = opensourcetree-git
 	pkgdesc = SourceTree-inspired Git GUI built with PyQt6
-	pkgver = v1.2.7
-	pkgrel = 1
-	url = https://github.com/7Lucia7Lokidottir7/OpenSourceTree
+	pkgver = v1.2.8
+	pkgrel = 2
+	url = https://github.com/Lucia7Lunadottir/OpenSourceTree
 	arch = any
 	license = GPL-3.0-only
 	makedepends = git
@@ -14,7 +14,7 @@ pkgbase = opensourcetree-git
 	optdepends = git-lfs: Git Large File Storage support
 	provides = opensourcetree
 	conflicts = opensourcetree
-	source = opensourcetree::git+https://github.com/7Lucia7Lokidottir7/OpenSourceTree.git
+	source = opensourcetree::git+https://github.com/Lucia7Lunadottir/OpenSourceTree.git
 	sha256sums = SKIP
 
 pkgname = opensourcetree-git

@@ -1,10 +1,10 @@
 # Maintainer: Lucia <bordiyan20035@gmail.com>
 pkgname=opensourcetree-git
-pkgver=1.2.7
-pkgrel=1
+pkgver=1.2.8
+pkgrel=2
 pkgdesc="SourceTree-inspired Git GUI built with PyQt6"
 arch=('any')
-url="https://github.com/7Lucia7Lokidottir7/OpenSourceTree"
+url="https://github.com/Lucia7Lunadottir/OpenSourceTree"
 license=('GPL-3.0-only')
 depends=(
     'python'
