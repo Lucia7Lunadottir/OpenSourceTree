@@ -607,12 +607,16 @@ class WorkingCopyWidget(QWidget):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if ret == QMessageBox.StandardButton.Yes:
-                paths = [e.path for e in entries]
-                self._run_op(
-                    lambda pp=paths: [
-                        self._repo.runner.run(["checkout", "--", p]) for p in pp
-                    ]
-                )
+                def do_discard(ents=entries):
+                    for e in ents:
+                        try:
+                            if e.status == "?":
+                                self._repo.runner.run(["clean", "-f", "-q", "--", e.path])
+                            else:
+                                self._repo.runner.run(["checkout", "--", e.path])
+                        except Exception:
+                            pass
+                self._run_op(do_discard)
 
     def _open_conflict_dialog(self, path: str):
         from app.ui.dialogs.conflict_dialog import ConflictDialog
