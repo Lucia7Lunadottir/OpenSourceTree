@@ -60,6 +60,8 @@
     "working_copy.unstage": "Прибрати з індексу",
     "working_copy.stage": "Додати до індексу",
     "working_copy.discard": "Скасувати зміни",
+    "working_copy.discard_confirm_one": "Скасувати зміни в {path}?",
+    "working_copy.discard_confirm_many": "Скасувати зміни в {n} файлах?\n\n{names}",
     "working_copy.view_list": "Список",
     "working_copy.view_tree": "Дерево",
     "working_copy.stage_folder": "Додати {n} файлів у папці",
@@ -233,7 +235,6 @@
     "tag.delete.success_remote": "Тег {name} видалено локально та на віддаленому",
     "tag.delete.remote_error_title": "Видалення віддаленого тегу",
     "tag.delete.remote_error_text": "Тег видалено локально, але не вдалося видалити з віддаленого репозиторію:\n\n{error}\n\nМожливо, тег не був опублікований або немає необхідних прав.",
-
     "split_commit.menu_item": "Розбити коміт…",
     "split_commit.title": "Розбити коміт",
     "split_commit.subtitle": "{sha}  \"{message}\"\nВсього: {size} → {n} коміт(ів)",
@@ -243,8 +244,23 @@
     "split_commit.splitting": "Розбиваємо коміт…",
     "split_commit.done": "Коміт розбито на {n} комітів",
     "split_commit.no_upstream": "Не вдалося визначити незапушені коміти (upstream не налаштовано)",
-
     "commit.warn_large.title": "Великі файли в індексі",
     "commit.warn_large.file_text": "Наступні файли перевищують 100 МБ і будуть відхилені GitHub:\n\n{files}\n\nРозгляньте використання Git LFS. Все одно закомітити?",
-    "commit.warn_large.total_text": "Загальний розмір файлів в індексі становить {size}, що перевищує 1 ГБ. GitHub може відхилити цей push.\n\nРозгляньте розбиття. Все одно закомітити?"
+    "commit.warn_large.total_text": "Загальний розмір файлів в індексі становить {size}, що перевищує 1 ГБ. GitHub може відхилити цей push.\n\nРозгляньте розбиття. Все одно закомітити?",
+    "branch_dialog.current_branch": "Поточна гілка: {name}",
+    "branch_dialog.merge_hint": "Вибрана гілка буде злита з поточною.",
+    "branch_dialog.rebase_hint": "Поточна гілка буде перебазована на вибрану.",
+    "branch_dialog.creating": "Створення гілки «{name}»…",
+    "branch_dialog.renaming": "Перейменування «{old}» → «{new}»…",
+    "branch_dialog.deleting": "Видалення гілки «{name}»…",
+    "branch_dialog.merging": "Зливаємо «{branch}»…",
+    "branch_dialog.rebasing": "Перебазовуємось на «{branch}»…",
+    "branch_dialog.conflict.merge_title": "Конфлікти злиття",
+    "branch_dialog.conflict.merge_text": "Виникли конфлікти злиття.\n\nGit записав конфліктуючі файли на диск.\nВирішіть конфлікти в панелі «Робоча копія»:\n  • Права кнопка миші на файлі з конфліктом → «Вирішити конфлікт»\n  • Або виберіть «Прийняти наше» / «Прийняти їхнє»\n\nПісля вирішення всіх конфліктів зробіть коміт для завершення злиття.",
+    "branch_dialog.conflict.rebase_title": "Конфлікти перебазування",
+    "branch_dialog.conflict.rebase_text": "Виникли конфлікти під час перебазування.\n\nВирішіть конфлікти в панелі «Робоча копія»,\nпотім натисніть «Продовжити Rebase» на банері конфліктів,\nабо «Перервати Rebase» для скасування.",
+    "conflict.rebase_ready": "✓ Усі конфлікти вирішено — натисніть «Продовжити Rebase»",
+    "conflict.continue_rebase": "Продовжити Rebase",
+    "conflict.cherry_pick_ready": "✓ Усі конфлікти вирішено — натисніть «Продовжити Cherry-pick»",
+    "conflict.continue_cherry_pick": "Продовжити Cherry-pick"
 }

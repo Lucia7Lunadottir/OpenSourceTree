@@ -60,6 +60,8 @@
     "working_copy.unstage": "Wycofaj z indeksu",
     "working_copy.stage": "Dodaj do indeksu",
     "working_copy.discard": "Odrzuć zmiany",
+    "working_copy.discard_confirm_one": "Odrzucić zmiany w {path}?",
+    "working_copy.discard_confirm_many": "Odrzucić zmiany w {n} plikach?\n\n{names}",
     "working_copy.view_list": "Lista",
     "working_copy.view_tree": "Drzewo",
     "working_copy.stage_folder": "Dodaj {n} plików z folderu",
@@ -233,7 +235,6 @@
     "tag.delete.success_remote": "Tag {name} usunięty lokalnie i zdalnie",
     "tag.delete.remote_error_title": "Usuń zdalny tag",
     "tag.delete.remote_error_text": "Tag został usunięty lokalnie, ale nie udało się go usunąć ze zdalnego repozytorium:\n\n{error}\n\nTag mógł nie zostać opublikowany lub brak wymaganych uprawnień.",
-
     "split_commit.menu_item": "Podziel commit…",
     "split_commit.title": "Podziel commit",
     "split_commit.subtitle": "{sha}  \"{message}\"\nŁącznie: {size} → {n} commit(ów)",
@@ -243,8 +244,23 @@
     "split_commit.splitting": "Dzielenie commita…",
     "split_commit.done": "Commit podzielony na {n} commitów",
     "split_commit.no_upstream": "Nie można określić niezapchniętych commitów (brak skonfigurowanego upstream)",
-
     "commit.warn_large.title": "Duże pliki w indeksie",
     "commit.warn_large.file_text": "Następujące pliki przekraczają 100 MB i zostaną odrzucone przez GitHub:\n\n{files}\n\nRozważ użycie Git LFS. Zacommitować mimo to?",
-    "commit.warn_large.total_text": "Łączny rozmiar plików w indeksie wynosi {size}, co przekracza 1 GB. GitHub może odrzucić ten push.\n\nRozważ podział. Zacommitować mimo to?"
+    "commit.warn_large.total_text": "Łączny rozmiar plików w indeksie wynosi {size}, co przekracza 1 GB. GitHub może odrzucić ten push.\n\nRozważ podział. Zacommitować mimo to?",
+    "branch_dialog.current_branch": "Bieżąca gałąź: {name}",
+    "branch_dialog.merge_hint": "Wybrana gałąź zostanie scalona z bieżącą.",
+    "branch_dialog.rebase_hint": "Bieżąca gałąź zostanie przeniesiona na wybraną.",
+    "branch_dialog.creating": "Tworzenie gałęzi '{name}'...",
+    "branch_dialog.renaming": "Zmiana nazwy '{old}' → '{new}'...",
+    "branch_dialog.deleting": "Usuwanie gałęzi '{name}'...",
+    "branch_dialog.merging": "Scalanie '{branch}'...",
+    "branch_dialog.rebasing": "Rebase na '{branch}'...",
+    "branch_dialog.conflict.merge_title": "Konflikty scalania",
+    "branch_dialog.conflict.merge_text": "Wystąpiły konflikty scalania.\n\nGit zapisał pliki z konfliktami na dysku.\nRozwiąż konflikty w panelu «Kopia robocza»:\n  • Prawy klik na pliku z konfliktem → «Rozwiąż konflikt»\n  • Lub wybierz «Przyjmij naszą» / «Przyjmij ich»\n\nPo rozwiązaniu wszystkich konfliktów utwórz commit, aby zakończyć scalanie.",
+    "branch_dialog.conflict.rebase_title": "Konflikty rebase",
+    "branch_dialog.conflict.rebase_text": "Podczas rebase wystąpiły konflikty.\n\nRozwiąż konflikty w panelu «Kopia robocza»,\nnastępnie kliknij «Kontynuuj Rebase» w banerze konfliktów,\nlub użyj «Przerwij Rebase», aby anulować.",
+    "conflict.rebase_ready": "✓ Wszystkie konflikty rozwiązane — kliknij Kontynuuj Rebase",
+    "conflict.continue_rebase": "Kontynuuj Rebase",
+    "conflict.cherry_pick_ready": "✓ Wszystkie konflikty rozwiązane — kliknij Kontynuuj Cherry-pick",
+    "conflict.continue_cherry_pick": "Kontynuuj Cherry-pick"
 }

@@ -60,6 +60,8 @@
     "working_copy.unstage": "Unstage",
     "working_copy.stage": "Stage",
     "working_copy.discard": "Discard Changes",
+    "working_copy.discard_confirm_one": "Discard changes to {path}?",
+    "working_copy.discard_confirm_many": "Discard changes to {n} files?\n\n{names}",
     "working_copy.view_list": "List",
     "working_copy.view_tree": "Tree",
     "working_copy.stage_folder": "Stage {n} files in folder",
@@ -416,5 +418,23 @@
 
     "commit.warn_large.title": "Large staged files",
     "commit.warn_large.file_text": "The following file(s) exceed 100 MB and will be rejected by GitHub:\n\n{files}\n\nConsider using Git LFS. Commit anyway?",
-    "commit.warn_large.total_text": "Total staged size is {size}, which exceeds 1 GB. GitHub may reject this push.\n\nConsider splitting. Commit anyway?"
+    "commit.warn_large.total_text": "Total staged size is {size}, which exceeds 1 GB. GitHub may reject this push.\n\nConsider splitting. Commit anyway?",
+
+    "branch_dialog.current_branch": "Current branch: {name}",
+    "branch_dialog.merge_hint": "The selected branch will be merged into the current branch.",
+    "branch_dialog.rebase_hint": "The current branch will be rebased onto the selected branch.",
+    "branch_dialog.creating": "Creating branch '{name}'...",
+    "branch_dialog.renaming": "Renaming '{old}' → '{new}'...",
+    "branch_dialog.deleting": "Deleting branch '{name}'...",
+    "branch_dialog.merging": "Merging '{branch}'...",
+    "branch_dialog.rebasing": "Rebasing onto '{branch}'...",
+    "branch_dialog.conflict.merge_title": "Merge Conflicts",
+    "branch_dialog.conflict.merge_text": "Merge conflicts occurred.\n\nGit has written the conflicting files to disk.\nResolve them in the Working Copy panel:\n  • Right-click a conflicted file → Resolve Conflict\n  • Or choose Accept Ours / Accept Theirs\n\nAfter resolving all conflicts, create a commit to finish the merge.",
+    "branch_dialog.conflict.rebase_title": "Rebase Conflicts",
+    "branch_dialog.conflict.rebase_text": "Conflicts occurred during rebase.\n\nResolve the conflicts in the Working Copy panel,\nthen click Continue Rebase in the conflict banner,\nor use Abort Rebase to cancel.",
+
+    "conflict.rebase_ready": "✓ All conflicts resolved — click Continue Rebase to proceed",
+    "conflict.continue_rebase": "Continue Rebase",
+    "conflict.cherry_pick_ready": "✓ All conflicts resolved — click Continue Cherry-pick to proceed",
+    "conflict.continue_cherry_pick": "Continue Cherry-pick"
 }

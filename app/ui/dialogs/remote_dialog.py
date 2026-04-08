@@ -121,7 +121,10 @@ class RemoteDialog(QDialog):
 
     def _get_branches(self) -> list[str]:
         try:
-            return [b.name for b in self._repo.get_branches() if not b.is_remote]
+            all_branches = self._repo.get_branches()
+            local  = [b.name for b in all_branches if not b.is_remote]
+            remote = [b.name for b in all_branches if b.is_remote]
+            return local + remote
         except Exception:
             return []
 

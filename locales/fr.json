@@ -60,6 +60,8 @@
     "working_copy.unstage": "Désindexer",
     "working_copy.stage": "Indexer",
     "working_copy.discard": "Annuler les modifications",
+    "working_copy.discard_confirm_one": "Abandonner les modifications de {path} ?",
+    "working_copy.discard_confirm_many": "Abandonner les modifications de {n} fichiers ?\n\n{names}",
     "working_copy.view_list": "Liste",
     "working_copy.view_tree": "Arborescence",
     "working_copy.stage_folder": "Indexer {n} fichiers du dossier",
@@ -233,7 +235,6 @@
     "tag.delete.success_remote": "Tag {name} supprimé localement et à distance",
     "tag.delete.remote_error_title": "Supprimer le tag distant",
     "tag.delete.remote_error_text": "Le tag a été supprimé localement, mais n'a pas pu être supprimé du dépôt distant :\n\n{error}\n\nLe tag n'a peut-être pas été publié, ou vous n'avez pas les droits nécessaires.",
-
     "split_commit.menu_item": "Diviser le commit…",
     "split_commit.title": "Diviser le commit",
     "split_commit.subtitle": "{sha}  \"{message}\"\nTotal : {size} → {n} commit(s)",
@@ -243,8 +244,23 @@
     "split_commit.splitting": "Division du commit…",
     "split_commit.done": "Commit divisé en {n} commits",
     "split_commit.no_upstream": "Impossible de déterminer les commits non poussés (aucun upstream configuré)",
-
     "commit.warn_large.title": "Fichiers volumineux dans l'index",
     "commit.warn_large.file_text": "Le(s) fichier(s) suivant(s) dépassent 100 Mo et seront rejetés par GitHub :\n\n{files}\n\nEnvisagez d'utiliser Git LFS. Faire le commit quand même ?",
-    "commit.warn_large.total_text": "La taille totale des fichiers dans l'index est de {size}, ce qui dépasse 1 Go. GitHub risque de rejeter ce push.\n\nEnvisagez de diviser. Faire le commit quand même ?"
+    "commit.warn_large.total_text": "La taille totale des fichiers dans l'index est de {size}, ce qui dépasse 1 Go. GitHub risque de rejeter ce push.\n\nEnvisagez de diviser. Faire le commit quand même ?",
+    "branch_dialog.current_branch": "Branche actuelle : {name}",
+    "branch_dialog.merge_hint": "La branche sélectionnée sera fusionnée dans la branche actuelle.",
+    "branch_dialog.rebase_hint": "La branche actuelle sera rebasée sur la branche sélectionnée.",
+    "branch_dialog.creating": "Création de la branche '{name}'...",
+    "branch_dialog.renaming": "Renommage de '{old}' → '{new}'...",
+    "branch_dialog.deleting": "Suppression de la branche '{name}'...",
+    "branch_dialog.merging": "Fusion de '{branch}'...",
+    "branch_dialog.rebasing": "Rebase sur '{branch}'...",
+    "branch_dialog.conflict.merge_title": "Conflits de fusion",
+    "branch_dialog.conflict.merge_text": "Des conflits de fusion sont survenus.\n\nGit a écrit les fichiers en conflit sur le disque.\nRésolvez les conflits dans le panneau «Copie de travail» :\n  • Clic droit sur un fichier en conflit → «Résoudre le conflit»\n  • Ou choisissez «Accepter le nôtre» / «Accepter le leur»\n\nAprès avoir résolu tous les conflits, effectuez un commit pour terminer la fusion.",
+    "branch_dialog.conflict.rebase_title": "Conflits de rebase",
+    "branch_dialog.conflict.rebase_text": "Des conflits sont survenus lors du rebase.\n\nRésolvez les conflits dans le panneau «Copie de travail»,\npuis cliquez sur «Continuer le Rebase» dans la bannière de conflits,\nou utilisez «Abandonner le Rebase» pour annuler.",
+    "conflict.rebase_ready": "✓ Tous les conflits résolus — cliquez sur Continuer le Rebase",
+    "conflict.continue_rebase": "Continuer le Rebase",
+    "conflict.cherry_pick_ready": "✓ Tous les conflits résolus — cliquez sur Continuer le Cherry-pick",
+    "conflict.continue_cherry_pick": "Continuer le Cherry-pick"
 }

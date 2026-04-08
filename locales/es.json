@@ -60,6 +60,8 @@
     "working_copy.unstage": "Quitar (Unstage)",
     "working_copy.stage": "Preparar (Stage)",
     "working_copy.discard": "Descartar cambios",
+    "working_copy.discard_confirm_one": "¿Descartar cambios en {path}?",
+    "working_copy.discard_confirm_many": "¿Descartar cambios en {n} archivos?\n\n{names}",
     "working_copy.view_list": "Lista",
     "working_copy.view_tree": "Árbol",
     "working_copy.stage_folder": "Preparar {n} archivos en la carpeta",
@@ -233,7 +235,6 @@
     "tag.delete.success_remote": "Etiqueta {name} eliminada local y remotamente",
     "tag.delete.remote_error_title": "Eliminar etiqueta remota",
     "tag.delete.remote_error_text": "La etiqueta se eliminó localmente, pero no se pudo quitar del repositorio remoto:\n\n{error}\n\nEs posible que la etiqueta no haya sido publicada o no tenga los permisos necesarios.",
-
     "split_commit.menu_item": "Dividir commit…",
     "split_commit.title": "Dividir commit",
     "split_commit.subtitle": "{sha}  \"{message}\"\nTotal: {size} → {n} commit(s)",
@@ -243,8 +244,23 @@
     "split_commit.splitting": "Dividiendo commit…",
     "split_commit.done": "Commit dividido en {n} commits",
     "split_commit.no_upstream": "No se pudieron determinar los commits no enviados (sin upstream configurado)",
-
     "commit.warn_large.title": "Archivos grandes en el índice",
     "commit.warn_large.file_text": "Los siguientes archivo(s) superan los 100 MB y serán rechazados por GitHub:\n\n{files}\n\nConsidere usar Git LFS. ¿Hacer commit de todas formas?",
-    "commit.warn_large.total_text": "El tamaño total de los archivos en el índice es {size}, que supera 1 GB. GitHub puede rechazar este push.\n\nConsidere dividirlo. ¿Hacer commit de todas formas?"
+    "commit.warn_large.total_text": "El tamaño total de los archivos en el índice es {size}, que supera 1 GB. GitHub puede rechazar este push.\n\nConsidere dividirlo. ¿Hacer commit de todas formas?",
+    "branch_dialog.current_branch": "Rama actual: {name}",
+    "branch_dialog.merge_hint": "La rama seleccionada se fusionará en la rama actual.",
+    "branch_dialog.rebase_hint": "La rama actual se reorganizará sobre la rama seleccionada.",
+    "branch_dialog.creating": "Creando rama '{name}'...",
+    "branch_dialog.renaming": "Renombrando '{old}' → '{new}'...",
+    "branch_dialog.deleting": "Eliminando rama '{name}'...",
+    "branch_dialog.merging": "Fusionando '{branch}'...",
+    "branch_dialog.rebasing": "Reorganizando sobre '{branch}'...",
+    "branch_dialog.conflict.merge_title": "Conflictos de fusión",
+    "branch_dialog.conflict.merge_text": "Se produjeron conflictos de fusión.\n\nGit ha escrito los archivos en conflicto en el disco.\nResuelva los conflictos en el panel «Copia de trabajo»:\n  • Clic derecho en un archivo en conflicto → «Resolver conflicto»\n  • O elija «Aceptar nuestro» / «Aceptar el suyo»\n\nDespués de resolver todos los conflictos, realice un commit para completar la fusión.",
+    "branch_dialog.conflict.rebase_title": "Conflictos de reorganización",
+    "branch_dialog.conflict.rebase_text": "Se produjeron conflictos durante la reorganización.\n\nResuelva los conflictos en el panel «Copia de trabajo»,\nluego haga clic en «Continuar Rebase» en el banner de conflictos,\no use «Abortar Rebase» para cancelar.",
+    "conflict.rebase_ready": "✓ Todos los conflictos resueltos — haga clic en Continuar Rebase",
+    "conflict.continue_rebase": "Continuar Rebase",
+    "conflict.cherry_pick_ready": "✓ Todos los conflictos resueltos — haga clic en Continuar Cherry-pick",
+    "conflict.continue_cherry_pick": "Continuar Cherry-pick"
 }
