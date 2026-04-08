@@ -3,20 +3,36 @@ pkgname=opensourcetree-git
 pkgver=1.2.9
 pkgrel=1
 pkgdesc="SourceTree-inspired Git GUI built with PyQt6"
-arch=('any')
+arch=('x86_64')
 url="https://github.com/Lucia7Lunadottir/OpenSourceTree"
 license=('GPL-3.0-only')
+
+# ── Runtime dependencies ───────────────────────────────────────────────────────
+# Qt6 native libs and system libs are NOT bundled in the PyInstaller binary;
+# they are linked at runtime from these packages.
 depends=(
-    'python'
-    'python-pyqt6'
-    'python-numpy'
-    'python-pygments'
+    'qt6-base'          # libQt6{Core,Gui,Widgets,Network,DBus,PrintSupport}.so
+    'qt6-svg'           # libQt6{Svg,SvgWidgets}.so
+    'python-numpy'      # numpy (used in graph layout)
     'git'
+    'libxcb'            # Qt XCB platform plugin
+    'libx11'
 )
 optdepends=(
     'git-lfs: Git Large File Storage support'
+    'konsole: for interactive SSH authentication in terminal'
+    'xterm: alternative terminal for SSH auth'
 )
-makedepends=('git')
+
+# ── Build dependencies ─────────────────────────────────────────────────────────
+makedepends=(
+    'git'
+    'python-pyinstaller'   # pyinstaller
+    'python-pyqt6'         # needed at build time for PyInstaller analysis
+    'python-numpy'
+    'python-pygments'
+)
+
 provides=('opensourcetree')
 conflicts=('opensourcetree')
 source=("opensourcetree::git+$url.git")
@@ -29,33 +45,37 @@ pkgver() {
         || printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
-package() {
+build() {
     cd "$srcdir/opensourcetree"
+    pyinstaller opensourcetree.spec \
+        --distpath "$srcdir/dist" \
+        --workpath "$srcdir/build" \
+        --noconfirm
+}
 
+package() {
+    local _bundle="$srcdir/dist/opensourcetree"
     local _dest="$pkgdir/opt/opensourcetree"
+
+    # Install the PyInstaller bundle
     install -dm755 "$_dest"
+    cp -r "$_bundle/." "$_dest/"
+    chmod -R u=rwX,go=rX "$_dest"
 
-    # Основные файлы приложения
-    install -m644 main.py   "$_dest/"
-    install -m644 style.qss "$_dest/"
+    # The main executable must be executable
+    chmod 755 "$_dest/opensourcetree"
 
-    # Python-пакет, ресурсы и локали
-    cp -r app     "$_dest/"
-    cp -r assets  "$_dest/"
-    cp -r locales "$_dest/"
-
-    # Иконка
-    install -m644 OpenSourceTreeIcon.png "$_dest/"
-    install -Dm644 OpenSourceTreeIcon.png \
+    # Application icon
+    install -Dm644 "$srcdir/opensourcetree/OpenSourceTreeIcon.png" \
         "$pkgdir/usr/share/pixmaps/opensourcetree.png"
 
-    # .desktop-файл
-    install -Dm644 opensourcetree.desktop \
+    # .desktop file
+    install -Dm644 "$srcdir/opensourcetree/opensourcetree.desktop" \
         "$pkgdir/usr/share/applications/opensourcetree.desktop"
 
-    # Лаунчер
-    install -Dm755 /dev/stdin "$pkgdir/usr/bin/opensourcetree" << 'EOF'
+    # Launcher wrapper (handles LD_LIBRARY_PATH for xcb platform plugin)
+    install -Dm755 /dev/stdin "$pkgdir/usr/bin/opensourcetree" << 'LAUNCHER'
 #!/bin/bash
-exec python3 /opt/opensourcetree/main.py "$@"
-EOF
+exec /opt/opensourcetree/opensourcetree "$@"
+LAUNCHER
 }

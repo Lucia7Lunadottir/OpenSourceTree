@@ -60,6 +60,8 @@
     "working_copy.unstage": "取消暂存",
     "working_copy.stage": "暂存",
     "working_copy.discard": "丢弃更改",
+    "working_copy.discard_confirm_one": "放弃对 {path} 的更改？",
+    "working_copy.discard_confirm_many": "放弃对 {n} 个文件的更改？\n\n{names}",
     "working_copy.view_list": "列表",
     "working_copy.view_tree": "树状",
     "working_copy.stage_folder": "暂存文件夹中的 {n} 个文件",
@@ -233,7 +235,6 @@
     "tag.delete.success_remote": "标签 {name} 已在本地和远程删除",
     "tag.delete.remote_error_title": "删除远程标签",
     "tag.delete.remote_error_text": "标签已在本地删除，但无法从远程仓库删除：\n\n{error}\n\n该标签可能未发布，或您没有所需权限。",
-
     "split_commit.menu_item": "拆分提交…",
     "split_commit.title": "拆分提交",
     "split_commit.subtitle": "{sha}  \"{message}\"\n总计：{size} → {n} 个提交",
@@ -243,8 +244,23 @@
     "split_commit.splitting": "正在拆分提交…",
     "split_commit.done": "提交已拆分为 {n} 个",
     "split_commit.no_upstream": "无法确定未推送的提交（未配置上游分支）",
-
     "commit.warn_large.title": "暂存区存在大文件",
     "commit.warn_large.file_text": "以下文件超过 100 MB，将被 GitHub 拒绝：\n\n{files}\n\n请考虑使用 Git LFS。仍然提交？",
-    "commit.warn_large.total_text": "暂存区文件总大小为 {size}，超过 1 GB。GitHub 可能会拒绝此次推送。\n\n请考虑拆分提交。仍然提交？"
+    "commit.warn_large.total_text": "暂存区文件总大小为 {size}，超过 1 GB。GitHub 可能会拒绝此次推送。\n\n请考虑拆分提交。仍然提交？",
+    "branch_dialog.current_branch": "当前分支：{name}",
+    "branch_dialog.merge_hint": "所选分支将合并到当前分支。",
+    "branch_dialog.rebase_hint": "当前分支将变基到所选分支。",
+    "branch_dialog.creating": "正在创建分支 '{name}'...",
+    "branch_dialog.renaming": "正在将 '{old}' 重命名为 '{new}'...",
+    "branch_dialog.deleting": "正在删除分支 '{name}'...",
+    "branch_dialog.merging": "正在合并 '{branch}'...",
+    "branch_dialog.rebasing": "正在变基到 '{branch}'...",
+    "branch_dialog.conflict.merge_title": "合并冲突",
+    "branch_dialog.conflict.merge_text": "发生了合并冲突。\n\nGit 已将冲突文件写入磁盘。\n请在「工作副本」面板中解决冲突：\n  • 右键冲突文件 → 「解决冲突」\n  • 或选择「接受我方」/「接受对方」\n\n解决所有冲突后，提交以完成合并。",
+    "branch_dialog.conflict.rebase_title": "变基冲突",
+    "branch_dialog.conflict.rebase_text": "变基过程中发生了冲突。\n\n请在「工作副本」面板中解决冲突，\n然后在冲突提示栏中点击「继续变基」，\n或使用「中止变基」取消。",
+    "conflict.rebase_ready": "✓ 所有冲突已解决 — 点击「继续变基」",
+    "conflict.continue_rebase": "继续变基",
+    "conflict.cherry_pick_ready": "✓ 所有冲突已解决 — 点击「继续 Cherry-pick」",
+    "conflict.continue_cherry_pick": "继续 Cherry-pick"
 }

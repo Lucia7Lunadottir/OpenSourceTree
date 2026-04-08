@@ -241,6 +241,7 @@ class WorkingCopyWidget(QWidget):
         super().__init__(parent)
         self._repo = repo
         self._abort_fn = None
+        self._continue_fn = None
         self._pre_amend_text = ""
         self._setup_ui()
         self._connect_signals()
@@ -268,12 +269,17 @@ class WorkingCopyWidget(QWidget):
         banner_row = QHBoxLayout(self._conflict_banner)
         banner_row.setContentsMargins(8, 5, 8, 5)
         self._conflict_label = QLabel("")
+        self._continue_btn = QPushButton("")
+        self._continue_btn.setFixedHeight(22)
+        self._continue_btn.setVisible(False)
+        self._continue_btn.clicked.connect(self._on_continue)
         self._abort_btn = QPushButton("")
         self._abort_btn.setFixedHeight(22)
         self._abort_btn.clicked.connect(self._on_abort)
         self._banner_icon = QLabel("⚠")
         banner_row.addWidget(self._banner_icon)
         banner_row.addWidget(self._conflict_label, 1)
+        banner_row.addWidget(self._continue_btn)
         banner_row.addWidget(self._abort_btn)
         self._conflict_banner.setVisible(False)
         layout.addWidget(self._conflict_banner)
@@ -479,9 +485,11 @@ class WorkingCopyWidget(QWidget):
 
     def _update_conflict_banner(self, staged, unstaged):
         conflicted = {e.path for e in staged + unstaged if e.status == "U"}
+        self._continue_fn = None
+
         if not conflicted:
             if self._repo.is_merging():
-                # All conflicts resolved but merge not yet committed
+                # All conflicts resolved — waiting for merge commit
                 self._banner_icon.setText("✓")
                 self._banner_icon.setStyleSheet("color: #4ec9b0; font-size: 14px;")
                 self._conflict_banner.setStyleSheet(
@@ -490,16 +498,48 @@ class WorkingCopyWidget(QWidget):
                 self._conflict_label.setText(t("conflict.merge_ready"))
                 self._abort_btn.setText(t("conflict.merge_ready_abort"))
                 self._abort_fn = self._repo.abort_merge
+                self._continue_btn.setVisible(False)
                 self._conflict_banner.setVisible(True)
                 self._maybe_fill_merge_msg()
+            elif self._repo.is_rebasing():
+                # All conflicts resolved — user must run rebase --continue
+                self._banner_icon.setText("✓")
+                self._banner_icon.setStyleSheet("color: #4ec9b0; font-size: 14px;")
+                self._conflict_banner.setStyleSheet(
+                    "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);"
+                )
+                self._conflict_label.setText(t("conflict.rebase_ready"))
+                self._abort_btn.setText(t("conflict.abort_rebase"))
+                self._abort_fn = self._repo.abort_rebase
+                self._continue_btn.setText(t("conflict.continue_rebase"))
+                self._continue_btn.setVisible(True)
+                self._continue_fn = self._repo.rebase_continue
+                self._conflict_banner.setVisible(True)
+            elif self._repo.is_cherry_picking():
+                # All conflicts resolved — user must run cherry-pick --continue
+                self._banner_icon.setText("✓")
+                self._banner_icon.setStyleSheet("color: #4ec9b0; font-size: 14px;")
+                self._conflict_banner.setStyleSheet(
+                    "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);"
+                )
+                self._conflict_label.setText(t("conflict.cherry_pick_ready"))
+                self._abort_btn.setText(t("conflict.abort_cherry_pick"))
+                self._abort_fn = self._repo.abort_cherry_pick
+                self._continue_btn.setText(t("conflict.continue_cherry_pick"))
+                self._continue_btn.setVisible(True)
+                self._continue_fn = self._repo.cherry_pick_continue
+                self._conflict_banner.setVisible(True)
             else:
                 self._conflict_banner.setVisible(False)
                 self._abort_fn = None
+                self._continue_btn.setVisible(False)
             return
-        # Reset banner style to warning style
+
+        # Reset banner style to conflict/warning style
         self._banner_icon.setText("⚠")
         self._banner_icon.setStyleSheet("")
         self._conflict_banner.setStyleSheet("")
+        self._continue_btn.setVisible(False)
         if self._repo.is_merging():
             op, fn = t("conflict.abort_merge"), self._repo.abort_merge
         elif self._repo.is_rebasing():
@@ -598,24 +638,27 @@ class WorkingCopyWidget(QWidget):
                 self._run_op(self._repo.stage_file, entry.path)
         elif action == discard_action:
             if len(entries) == 1:
-                msg = f"Discard changes to {entries[0].path}?"
+                msg = t("working_copy.discard_confirm_one", path=entries[0].path)
             else:
-                names = "\n".join(f"  • {e.path}" for e in entries)
-                msg = f"Discard changes to {len(entries)} files?\n\n{names}"
+                names = "\n".join(f"  \u2022 {e.path}" for e in entries)
+                msg = t("working_copy.discard_confirm_many", n=len(entries), names=names)
             ret = QMessageBox.question(
-                self, "Discard Changes", msg,
+                self, t("working_copy.discard"), msg,
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if ret == QMessageBox.StandardButton.Yes:
                 def do_discard(ents=entries):
+                    errors = []
                     for e in ents:
                         try:
                             if e.status == "?":
                                 self._repo.runner.run(["clean", "-f", "-q", "--", e.path])
                             else:
                                 self._repo.runner.run(["checkout", "--", e.path])
-                        except Exception:
-                            pass
+                        except Exception as ex:
+                            errors.append(f"{e.path}: {ex}")
+                    if errors:
+                        raise RuntimeError("\n".join(errors))
                 self._run_op(do_discard)
 
     def _open_conflict_dialog(self, path: str):
@@ -635,8 +678,21 @@ class WorkingCopyWidget(QWidget):
             try:
                 self._abort_fn()
                 self.refresh()
+                self.committed.emit()   # ask repo_tab to refresh commit list too
             except Exception as e:
                 self.status_message.emit(str(e))
+
+    def _on_continue(self):
+        if not self._continue_fn:
+            return
+        try:
+            self._continue_fn()
+            self.refresh()
+            self.committed.emit()   # ask repo_tab to refresh commit list too
+        except Exception as e:
+            # A conflict during --continue means more conflicts remain
+            self.refresh()
+            self.status_message.emit(str(e))
 
     def _on_stage_all(self):
         try:

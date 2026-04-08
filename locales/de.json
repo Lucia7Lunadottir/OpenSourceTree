@@ -60,6 +60,8 @@
     "working_copy.unstage": "Zurücknehmen (Unstage)",
     "working_copy.stage": "Bereitstellen (Stage)",
     "working_copy.discard": "Änderungen verwerfen",
+    "working_copy.discard_confirm_one": "Änderungen an {path} verwerfen?",
+    "working_copy.discard_confirm_many": "Änderungen an {n} Dateien verwerfen?\n\n{names}",
     "working_copy.view_list": "Liste",
     "working_copy.view_tree": "Baumstruktur",
     "working_copy.stage_folder": "{n} Dateien in Ordner bereitstellen",
@@ -233,7 +235,6 @@
     "tag.delete.success_remote": "Tag {name} lokal und remote gelöscht",
     "tag.delete.remote_error_title": "Remote-Tag löschen",
     "tag.delete.remote_error_text": "Tag wurde lokal gelöscht, konnte aber nicht vom Remote entfernt werden:\n\n{error}\n\nMöglicherweise wurde der Tag nicht veröffentlicht oder Sie haben keine Berechtigung.",
-
     "split_commit.menu_item": "Commit aufteilen…",
     "split_commit.title": "Commit aufteilen",
     "split_commit.subtitle": "{sha}  \"{message}\"\nGesamt: {size} → {n} Commit(s)",
@@ -243,8 +244,23 @@
     "split_commit.splitting": "Commit wird aufgeteilt…",
     "split_commit.done": "Commit in {n} Commits aufgeteilt",
     "split_commit.no_upstream": "Nicht-gepushte Commits konnten nicht ermittelt werden (kein Upstream konfiguriert)",
-
     "commit.warn_large.title": "Große Dateien im Index",
     "commit.warn_large.file_text": "Folgende Datei(en) überschreiten 100 MB und werden von GitHub abgelehnt:\n\n{files}\n\nErwägen Sie die Verwendung von Git LFS. Trotzdem committen?",
-    "commit.warn_large.total_text": "Die Gesamtgröße der Dateien im Index beträgt {size} und überschreitet 1 GB. GitHub könnte diesen Push ablehnen.\n\nErwägen Sie eine Aufteilung. Trotzdem committen?"
+    "commit.warn_large.total_text": "Die Gesamtgröße der Dateien im Index beträgt {size} und überschreitet 1 GB. GitHub könnte diesen Push ablehnen.\n\nErwägen Sie eine Aufteilung. Trotzdem committen?",
+    "branch_dialog.current_branch": "Aktueller Branch: {name}",
+    "branch_dialog.merge_hint": "Der ausgewählte Branch wird in den aktuellen Branch gemergt.",
+    "branch_dialog.rebase_hint": "Der aktuelle Branch wird auf den ausgewählten Branch rebased.",
+    "branch_dialog.creating": "Branch '{name}' wird erstellt...",
+    "branch_dialog.renaming": "'{old}' wird umbenannt → '{new}'...",
+    "branch_dialog.deleting": "Branch '{name}' wird gelöscht...",
+    "branch_dialog.merging": "'{branch}' wird gemergt...",
+    "branch_dialog.rebasing": "Rebase auf '{branch}'...",
+    "branch_dialog.conflict.merge_title": "Merge-Konflikte",
+    "branch_dialog.conflict.merge_text": "Es sind Merge-Konflikte aufgetreten.\n\nGit hat die Konfliktdateien auf die Festplatte geschrieben.\nLösen Sie die Konflikte im Bereich «Arbeitskopie»:\n  • Rechtsklick auf eine Konfliktdatei → «Konflikt lösen»\n  • Oder wählen Sie «Unsere annehmen» / «Ihre annehmen»\n\nNach der Lösung aller Konflikte führen Sie einen Commit durch, um den Merge abzuschließen.",
+    "branch_dialog.conflict.rebase_title": "Rebase-Konflikte",
+    "branch_dialog.conflict.rebase_text": "Beim Rebase sind Konflikte aufgetreten.\n\nLösen Sie die Konflikte im Bereich «Arbeitskopie»,\nklicken Sie dann auf «Rebase fortsetzen» im Konfliktbanner,\noder verwenden Sie «Rebase abbrechen», um den Vorgang abzubrechen.",
+    "conflict.rebase_ready": "✓ Alle Konflikte gelöst — klicken Sie auf «Rebase fortsetzen»",
+    "conflict.continue_rebase": "Rebase fortsetzen",
+    "conflict.cherry_pick_ready": "✓ Alle Konflikte gelöst — klicken Sie auf «Cherry-pick fortsetzen»",
+    "conflict.continue_cherry_pick": "Cherry-pick fortsetzen"
 }

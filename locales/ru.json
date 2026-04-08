@@ -60,6 +60,8 @@
     "working_copy.unstage": "Убрать из индекса",
     "working_copy.stage": "Добавить в индекс",
     "working_copy.discard": "Отменить изменения",
+    "working_copy.discard_confirm_one": "Отменить изменения в {path}?",
+    "working_copy.discard_confirm_many": "Отменить изменения в {n} файлах?\n\n{names}",
     "working_copy.view_list": "Список",
     "working_copy.view_tree": "Дерево",
     "working_copy.stage_folder": "Добавить {n} файлов в папке",
@@ -235,10 +237,8 @@
     "tag.delete.success_remote": "Тег {name} удалён локально и на удалённом",
     "tag.delete.remote_error_title": "Удаление тега с remote",
     "tag.delete.remote_error_text": "Тег удалён локально, но удалить с удалённого репозитория не удалось:\n\n{error}\n\nВозможно, тег не был опубликован, или нет прав доступа.",
-
     "clone.error.local_path_as_url": "URL выглядит как локальный путь. Введите SSH (git@...) или HTTPS URL.",
     "clone.error.ssh_failed": "Клонирование не выполнено или отменено.",
-
     "ssh.title": "SSH-ключи и профили",
     "ssh.profiles_label": "Профили SSH",
     "ssh.btn_add": "+ Добавить",
@@ -316,7 +316,6 @@
     "ssh.agent.clear.title": "Очистить агент",
     "ssh.agent.clear.text": "Выгрузить все ключи из ssh-agent?\nПри следующей git-операции пароль будет запрошен снова.",
     "ssh.agent.clear_error": "Ошибка: {error}",
-
     "ssh.keygen.title": "Создать SSH-ключ",
     "ssh.keygen.key_type": "Тип ключа:",
     "ssh.keygen.type_ed25519": "Ed25519  (рекомендуется, современный)",
@@ -345,7 +344,6 @@
     "ssh.keygen.error.file_exists_msg": "'{path}' уже существует. Перезаписать?",
     "ssh.keygen.error.key_gen_title": "Ошибка создания ключа",
     "ssh.keygen.error.key_not_created": "Ключ не был создан.",
-
     "accounts.title": "Аккаунты",
     "accounts.header": "Аккаунты",
     "accounts.no_name": "(без имени)",
@@ -380,7 +378,6 @@
     "accounts.confirm_remove.text": "Удалить «{name}»?",
     "accounts.new_account": "Новый аккаунт",
     "accounts.account_no_name": "аккаунт",
-
     "identity.title": "Git Identity — Имя и E-mail",
     "identity.scope_label": "Область:",
     "identity.scope_global": "Глобально (для всех репозиториев)",
@@ -403,7 +400,6 @@
     "identity.error.global_prefix": "Глобальные: {error}",
     "identity.error.repo_prefix": "Репозиторий: {error}",
     "identity.error.errors": "Ошибки:\n{errors}",
-
     "split_commit.menu_item": "Разбить коммит…",
     "split_commit.title": "Разбить коммит",
     "split_commit.subtitle": "{sha}  \"{message}\"\nВсего: {size} → {n} коммит(ов)",
@@ -413,8 +409,23 @@
     "split_commit.splitting": "Разбиваем коммит…",
     "split_commit.done": "Коммит разбит на {n} коммита(ов)",
     "split_commit.no_upstream": "Невозможно определить незапушенные коммиты (upstream не настроен)",
-
     "commit.warn_large.title": "Большие файлы в индексе",
     "commit.warn_large.file_text": "Следующие файлы превышают 100 МБ и будут отклонены GitHub:\n\n{files}\n\nРассмотрите использование Git LFS. Всё равно закоммитить?",
-    "commit.warn_large.total_text": "Общий размер файлов в индексе составляет {size}, что превышает 1 ГБ. GitHub может отклонить пуш.\n\nРассмотрите разбиение. Всё равно закоммитить?"
+    "commit.warn_large.total_text": "Общий размер файлов в индексе составляет {size}, что превышает 1 ГБ. GitHub может отклонить пуш.\n\nРассмотрите разбиение. Всё равно закоммитить?",
+    "branch_dialog.current_branch": "Текущая ветка: {name}",
+    "branch_dialog.merge_hint": "Выбранная ветка будет влита в текущую.",
+    "branch_dialog.rebase_hint": "Текущая ветка будет перебазирована на выбранную.",
+    "branch_dialog.creating": "Создание ветки «{name}»…",
+    "branch_dialog.renaming": "Переименование «{old}» → «{new}»…",
+    "branch_dialog.deleting": "Удаление ветки «{name}»…",
+    "branch_dialog.merging": "Вливаем «{branch}»…",
+    "branch_dialog.rebasing": "Перебазируемся на «{branch}»…",
+    "branch_dialog.conflict.merge_title": "Конфликты слияния",
+    "branch_dialog.conflict.merge_text": "Возникли конфликты слияния.\n\nGit записал конфликтующие файлы на диск.\nРазрешите конфликты в панели «Рабочая копия»:\n  • Правая кнопка мыши на файле с конфликтом → «Разрешить конфликт»\n  • Или выберите «Принять наш» / «Принять их»\n\nПосле разрешения всех конфликтов выполните коммит для завершения слияния.",
+    "branch_dialog.conflict.rebase_title": "Конфликты перебазирования",
+    "branch_dialog.conflict.rebase_text": "Возникли конфликты при перебазировании.\n\nРазрешите конфликты в панели «Рабочая копия»,\nзатем нажмите «Продолжить Rebase» на баннере конфликтов,\nили «Прервать Rebase» для отмены.",
+    "conflict.rebase_ready": "✓ Все конфликты разрешены — нажмите «Продолжить Rebase»",
+    "conflict.continue_rebase": "Продолжить Rebase",
+    "conflict.cherry_pick_ready": "✓ Все конфликты разрешены — нажмите «Продолжить Cherry-pick»",
+    "conflict.continue_cherry_pick": "Продолжить Cherry-pick"
 }

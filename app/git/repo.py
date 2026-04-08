@@ -52,6 +52,9 @@ class GitRepo:
             ]
         if branch:
             args.append(branch)
+        else:
+            # Show all branches including remote tracking refs so fetched changes are visible
+            args.append("--all")
         raw = self.runner.run(args)
         commits = parse_commits(raw)
         return compute_graph_layout(commits)
@@ -420,8 +423,14 @@ class GitRepo:
     def abort_rebase(self) -> None:
         self.runner.run(["rebase", "--abort"])
 
+    def rebase_continue(self) -> None:
+        self.runner.run(["rebase", "--continue"], timeout=60)
+
     def abort_cherry_pick(self) -> None:
         self.runner.run(["cherry-pick", "--abort"])
+
+    def cherry_pick_continue(self) -> None:
+        self.runner.run(["cherry-pick", "--continue"], timeout=60)
 
     def get_last_commit_message(self) -> str:
         """Return full commit message (subject + body) of HEAD."""
@@ -479,27 +488,32 @@ class GitRepo:
         return results
 
     def get_staged_file_sizes(self) -> list[tuple[str, int]]:
-        """Return list of (path, size_bytes) for all staged files."""
+        """Return list of (path, size_bytes) for files with staged changes only.
+
+        Uses diff-index against HEAD so only files that actually differ from the
+        last commit are counted. Falls back to ls-files for the initial commit
+        (no HEAD yet).
+        """
         try:
-            raw = self.runner.run(["ls-files", "--cached", "-s"])
+            # Files that differ from HEAD — these are the actual staged changes
+            raw = self.runner.run(["diff-index", "--cached", "HEAD", "--name-only"])
         except GitCommandError:
-            return []
-        results = []
-        for line in raw.splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            # format: <mode> <hash> <stage>\t<path>
-            parts = line.split(None, 3)
-            if len(parts) < 4:
-                continue
-            obj_hash = parts[1]
-            path = parts[3].lstrip("\t")
+            # No HEAD yet (initial commit) — every staged file is new
             try:
-                size_str = self.runner.run(["cat-file", "-s", obj_hash]).strip()
+                raw = self.runner.run(["ls-files", "--cached"])
+            except GitCommandError:
+                return []
+        results = []
+        for path in raw.splitlines():
+            path = path.strip()
+            if not path:
+                continue
+            try:
+                # ":path" resolves to the staged blob
+                size_str = self.runner.run(["cat-file", "-s", f":{path}"]).strip()
                 size = int(size_str)
             except (GitCommandError, ValueError):
-                size = 0
+                size = 0  # Deleted files or errors → treat as 0
             results.append((path, size))
         return results
 

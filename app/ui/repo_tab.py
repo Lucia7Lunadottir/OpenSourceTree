@@ -264,13 +264,15 @@ class RepoTab(QWidget):
 
     def _on_merge(self):
         dlg = BranchDialog(self._repo, mode="merge", parent=self)
-        if dlg.exec():
-            self._refresh_all()
+        dlg.exec()
+        # Always refresh: a merge with conflicts writes state to disk even on failure
+        self._refresh_all()
 
     def _on_rebase(self):
         dlg = BranchDialog(self._repo, mode="rebase", parent=self)
-        if dlg.exec():
-            self._refresh_all()
+        dlg.exec()
+        # Always refresh: rebase pauses on conflicts leaving state that must be shown
+        self._refresh_all()
 
     def _on_stash(self):
         dlg = StashDialog(self._repo, parent=self)
