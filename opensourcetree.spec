@@ -20,37 +20,17 @@ project_root = Path(SPECPATH)
 
 # ── Shared-library name-prefixes that come from system packages ───────────────
 # These will be declared as PKGBUILD dependencies so we don't bundle them.
-_SYSTEM_LIB_PREFIXES = (
-    # Qt6 native  (qt6-base, qt6-svg, qt6-declarative, …)
-    "libQt6",
-    # XCB / X11  (libxcb, xorg-server)
-    "libxcb", "libX", "libxkb",
-    # OpenGL / EGL / Vulkan  (mesa, vulkan-icd-loader)
-    "libGL", "libEGL", "libvulkan", "libGLdispatch", "libGLX",
-    # Wayland  (wayland)
-    "libwayland",
-    # DRM  (libdrm)
-    "libdrm", "libgbm",
-    # ICU  (icu) — can be 30+ MB; always present where Qt6 is installed
-    "libicu",
-    # Font stack  (fontconfig, freetype2, harfbuzz)
-    "libfontconfig", "libfreetype", "libharfbuzz",
-    # DBus / GLib  (dbus, glib2)
-    "libdbus", "libglib", "libgobject", "libgio", "libgmodule", "libgthread",
-    # Standard C/C++ runtime  (gcc-libs, glibc)
-    "libstdc++", "libgcc_s", "libc.so", "libm.so", "libdl.so",
-    "libpthread", "librt.so", "libresolv",
-    # Compression  (zlib, zstd, brotli, lz4)
-    "libz.so", "libzstd", "libbrotli", "liblz4", "liblzma",
-    # Misc system
-    "libexpat", "libuuid", "libsystemd", "libmount", "libblkid",
-    "libpcre", "libpcre2", "libmd.so", "libbsd.so",
-)
-
-
-def _is_system_lib(name: str) -> bool:
-    base = os.path.basename(name)
-    return any(base.startswith(p) for p in _SYSTEM_LIB_PREFIXES)
+def _is_system_lib(dest_name: str, src_path: str) -> bool:
+    """
+    Exclude system-provided shared libraries from the bundle.
+    Keep only Python site-packages (PyQt6 bindings, numpy, pygments .so files).
+    """
+    p = src_path or ""
+    if "/site-packages/" in p:
+        return False   # Python package bindings — keep
+    if p.startswith("/usr/lib/") or p.startswith("/usr/local/lib/"):
+        return True    # system .so (Qt6 native, ICU, KDE, codecs, …) — exclude
+    return False
 
 
 # ── Analysis ──────────────────────────────────────────────────────────────────
@@ -139,7 +119,7 @@ a = Analysis(
 # They are declared as PKGBUILD runtime dependencies; no need to bundle them.
 a.binaries = TOC([
     entry for entry in a.binaries
-    if not _is_system_lib(entry[0])
+    if not _is_system_lib(entry[0], entry[1])
 ])
 
 # ── Build ─────────────────────────────────────────────────────────────────────
