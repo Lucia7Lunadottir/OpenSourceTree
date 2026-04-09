@@ -27,11 +27,11 @@ optdepends=(
 # ── Build dependencies ─────────────────────────────────────────────────────────
 makedepends=(
     'git'
-    'python-pyinstaller'   # pyinstaller
     'python-pyqt6'         # needed at build time for PyInstaller analysis
     'python-numpy'
     'python-pygments'
 )
+# Note: PyInstaller must be installed separately (e.g. via pipx install pyinstaller)
 
 provides=('opensourcetree')
 conflicts=('opensourcetree')
