@@ -1,22 +1,17 @@
 # Maintainer: Lucia <bordiyan20035@gmail.com>
 pkgname=opensourcetree-git
-pkgver=1.2.10
+pkgver=1.2.9
 pkgrel=1
 pkgdesc="SourceTree-inspired Git GUI built with PyQt6"
-arch=('x86_64')
+arch=('any')
 url="https://github.com/Lucia7Lunadottir/OpenSourceTree"
 license=('GPL-3.0-only')
 
-# ── Runtime dependencies ───────────────────────────────────────────────────────
-# Qt6 native libs and system libs are NOT bundled in the PyInstaller binary;
-# they are linked at runtime from these packages.
 depends=(
-    'qt6-base'          # libQt6{Core,Gui,Widgets,Network,DBus,PrintSupport}.so
-    'qt6-svg'           # libQt6{Svg,SvgWidgets}.so
-    'python-numpy'      # numpy (used in graph layout)
+    'python-pyqt6'
+    'python-numpy'
+    'python-pygments'
     'git'
-    'libxcb'            # Qt XCB platform plugin
-    'libx11'
 )
 optdepends=(
     'git-lfs: Git Large File Storage support'
@@ -24,14 +19,7 @@ optdepends=(
     'xterm: alternative terminal for SSH auth'
 )
 
-# ── Build dependencies ─────────────────────────────────────────────────────────
-makedepends=(
-    'git'
-    'python-pyqt6'         # needed at build time for PyInstaller analysis
-    'python-numpy'
-    'python-pygments'
-)
-# Note: PyInstaller must be installed separately (e.g. via pipx install pyinstaller)
+makedepends=('git')
 
 provides=('opensourcetree')
 conflicts=('opensourcetree')
@@ -45,37 +33,29 @@ pkgver() {
         || printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
-build() {
-    cd "$srcdir/opensourcetree"
-    pyinstaller opensourcetree.spec \
-        --distpath "$srcdir/dist" \
-        --workpath "$srcdir/build" \
-        --noconfirm
-}
-
 package() {
-    local _bundle="$srcdir/dist/opensourcetree"
-    local _dest="$pkgdir/opt/opensourcetree"
+    local _src="$srcdir/opensourcetree"
+    local _lib="$pkgdir/usr/lib/opensourcetree"
+    install -dm755 "$_lib"
 
-    # Install the PyInstaller bundle
-    install -dm755 "$_dest"
-    cp -r "$_bundle/." "$_dest/"
-    chmod -R u=rwX,go=rX "$_dest"
+    install -Dm644 "$_src/main.py"    "$_lib/main.py"
+    install -Dm644 "$_src/style.qss"  "$_lib/style.qss"
 
-    # The main executable must be executable
-    chmod 755 "$_dest/opensourcetree"
+    cp -a "$_src/app"     "$_lib/"
+    cp -a "$_src/assets"  "$_lib/"
+    cp -a "$_src/locales" "$_lib/"
 
-    # Application icon
-    install -Dm644 "$srcdir/opensourcetree/OpenSourceTreeIcon.png" \
+    find "$_lib" -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true
+
+    install -Dm755 /dev/stdin "$pkgdir/usr/bin/opensourcetree" << 'EOF'
+#!/bin/bash
+cd /usr/lib/opensourcetree/
+exec python3 main.py "$@"
+EOF
+
+    install -Dm644 "$_src/OpenSourceTreeIcon.png" \
         "$pkgdir/usr/share/pixmaps/opensourcetree.png"
 
-    # .desktop file
-    install -Dm644 "$srcdir/opensourcetree/opensourcetree.desktop" \
+    install -Dm644 "$_src/opensourcetree.desktop" \
         "$pkgdir/usr/share/applications/opensourcetree.desktop"
-
-    # Launcher wrapper (handles LD_LIBRARY_PATH for xcb platform plugin)
-    install -Dm755 /dev/stdin "$pkgdir/usr/bin/opensourcetree" << 'LAUNCHER'
-#!/bin/bash
-exec /opt/opensourcetree/opensourcetree "$@"
-LAUNCHER
 }
