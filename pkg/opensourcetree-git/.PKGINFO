@@ -3,20 +3,21 @@
 pkgname = opensourcetree-git
 pkgbase = opensourcetree-git
 xdata = pkgtype=pkg
-pkgver = r16.b421a5b-1
+pkgver = 1.2.9-1
 pkgdesc = SourceTree-inspired Git GUI built with PyQt6
-url = https://github.com/7Lucia7Lokidottir7/OpenSourceTree
-builddate = 1774658238
+url = https://github.com/Lucia7Lunadottir/OpenSourceTree
+builddate = 1776286765
 packager = Lucia Lokidottir <bordiyan20035@gmail.com>
-size = 1069086
+size = 821826
 arch = any
 license = GPL-3.0-only
 conflict = opensourcetree
 provides = opensourcetree
-depend = python
 depend = python-pyqt6
 depend = python-numpy
 depend = python-pygments
 depend = git
 optdepend = git-lfs: Git Large File Storage support
+optdepend = konsole: for interactive SSH authentication in terminal
+optdepend = xterm: alternative terminal for SSH auth
 makedepend = git
