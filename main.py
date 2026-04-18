@@ -63,13 +63,14 @@ def main():
     app = QApplication(sys.argv)
     app.setApplicationName("OpenSourceTree")
     app.setApplicationVersion("0.1.0")
+    app.setDesktopFileName("opensourcetree")
 
     # Определение пути к иконке (предполагается, что файл icon.png рядом)
     base_dir = os.path.dirname(os.path.abspath(__file__))
     icon_path = os.path.join(base_dir, 'OpenSourceTreeIcon.png')
 
     # Установка иконки
-    app.setWindowIcon(QIcon(icon_path))
+    app.setWindowIcon(QIcon.fromTheme("opensourcetree", QIcon(icon_path)))
 
     load_language(get_language())
     apply_dark_palette(app)
