@@ -99,6 +99,7 @@ class GitRunner:
         return result.stdout
 
     def run_streaming(self, args: list[str]) -> Iterator[str]:
+        import re
         cmd = self._base_cmd(args)
         env = self._build_env()
         proc = subprocess.Popen(
@@ -106,15 +107,28 @@ class GitRunner:
             text=True, encoding="utf-8", errors="replace", env=env,
         )
         collected: list[str] = []
+        buf = ""
         try:
-            for line in proc.stdout:
-                collected.append(line)
-                yield line
+            while True:
+                chunk = proc.stdout.read(512)
+                if not chunk:
+                    if buf.strip():
+                        collected.append(buf)
+                        yield buf
+                    break
+                buf += chunk
+                # Split on \r or \n so git's \r-based progress lines are emitted promptly
+                parts = re.split(r"[\r\n]", buf)
+                for line in parts[:-1]:
+                    if line.strip():
+                        collected.append(line)
+                        yield line
+                buf = parts[-1]
         finally:
             proc.stdout.close()
             proc.wait()
         if proc.returncode != 0:
-            raise GitCommandError(cmd, proc.returncode, "".join(collected))
+            raise GitCommandError(cmd, proc.returncode, "\n".join(collected))
 
     def run_in_terminal(self, args: list[str]) -> None:
         """Open a terminal window and run the git command interactively."""

@@ -73,9 +73,15 @@ class RemoteDialog(QDialog):
         self._progress.setVisible(False)
         layout.addWidget(self._progress)
 
+        # Live progress line (git \r-overwritten lines: Writing objects X%, etc.)
+        self._live_line = QLabel("")
+        self._live_line.setStyleSheet("color: #9cdcfe; font-family: Monospace; font-size: 9pt;")
+        self._live_line.setVisible(False)
+        layout.addWidget(self._live_line)
+
         self._output = QPlainTextEdit()
         self._output.setReadOnly(True)
-        self._output.setMaximumHeight(110)   # ~6 lines
+        self._output.setMinimumHeight(180)
         self._output.setVisible(False)
         font = self._output.font()
         font.setFamily("Monospace")
@@ -166,6 +172,8 @@ class RemoteDialog(QDialog):
         self._ok_btn.setEnabled(False)
         self._output.clear()
         self._output.setVisible(True)
+        self._live_line.setText("")
+        self._live_line.setVisible(True)
         self._progress.setRange(0, 0)
         self._progress.setVisible(True)
         self._status_label.setText(t(f"remote.title.{self._mode}") + "...")
@@ -176,8 +184,25 @@ class RemoteDialog(QDialog):
         worker.signals.error.connect(self._on_error)
         QThreadPool.globalInstance().start(worker)
 
+    # Prefixes that git uses for \r-overwritten in-place progress lines
+    _PROGRESS_PREFIXES = (
+        "Enumerating objects",
+        "Counting objects",
+        "Compressing objects",
+        "Writing objects",
+        "Total ",
+        "Receiving objects",
+        "Resolving deltas",
+    )
+
     def _on_line(self, line: str):
-        if line.strip():
+        line = line.strip()
+        if not line:
+            return
+        if any(line.startswith(p) for p in self._PROGRESS_PREFIXES):
+            # Update the live progress label in place
+            self._live_line.setText(line)
+        else:
             self._output.appendPlainText(line)
             sb = self._output.verticalScrollBar()
             sb.setValue(sb.maximum())
@@ -186,6 +211,7 @@ class RemoteDialog(QDialog):
         self._progress.setRange(0, 1)
         self._progress.setValue(1)
         self._progress.setVisible(False)
+        self._live_line.setVisible(False)
         self._status_label.setText(t("remote.done"))
         self.accept()
 
@@ -193,6 +219,7 @@ class RemoteDialog(QDialog):
         self._progress.setRange(0, 1)
         self._progress.setValue(1)
         self._progress.setVisible(False)
+        self._live_line.setVisible(False)
         self._ok_btn.setEnabled(True)
 
         if is_auth_error(error):

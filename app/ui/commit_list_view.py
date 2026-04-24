@@ -138,10 +138,10 @@ class CommitListView(QWidget):
 
         # ── Split (unpushed only) ──
         try:
-            unpushed = self._repo.get_unpushed_commits()
+            is_pushed = self._repo.is_commit_pushed(h)
         except Exception:
-            unpushed = []
-        if h in unpushed:
+            is_pushed = True  # safe default: hide split for unknown state
+        if not is_pushed:
             split_act = menu.addAction(t("split_commit.menu_item"))
             menu.addSeparator()
         else:

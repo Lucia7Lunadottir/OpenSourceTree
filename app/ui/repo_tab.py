@@ -132,6 +132,12 @@ class RepoTab(QWidget):
         tb.addAction(t("toolbar.remotes"), self._on_remotes)
         tb.addSeparator()
         tb.addAction(t("toolbar.refresh"), self._refresh_all)
+        tb.addSeparator()
+        fix_action = tb.addAction(t("toolbar.fix"), self._on_fix)
+        fix_action.setToolTip(
+            "Kill stuck git processes and remove .lock files\n"
+            "Use when git operations hang or report 'index.lock exists'"
+        )
 
         return tb
 
@@ -296,6 +302,37 @@ class RepoTab(QWidget):
     def _on_remotes(self):
         dlg = RemotesDialog(self._repo, parent=self)
         dlg.exec()
+
+    def _on_fix(self):
+        ret = QMessageBox.question(
+            self, t("cleanup.title"), t("cleanup.confirm"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if ret != QMessageBox.StandardButton.Yes:
+            return
+
+        result = self._repo.cleanup_repo()
+        locks  = result["locks_removed"]
+        pids   = result["pids_killed"]
+        errors = result["errors"]
+
+        if not locks and not pids and not errors:
+            QMessageBox.information(self, t("cleanup.title"), t("cleanup.nothing"))
+            return
+
+        locks_str = ", ".join(locks) if locks else "0"
+        pids_str  = ", ".join(str(p) for p in pids) if pids else "0"
+
+        if errors:
+            msg = t("cleanup.done_with_errors",
+                    locks=locks_str, pids=pids_str,
+                    errors="\n".join(errors))
+        else:
+            msg = t("cleanup.done", locks=locks_str, pids=pids_str)
+
+        QMessageBox.information(self, t("cleanup.title"), msg)
+        self._refresh_all()
 
     def _on_error(self, error: str):
         lines = [l for l in error.splitlines() if l.strip()]

@@ -77,10 +77,19 @@ class GitRepo:
                 commit.body = parts[8].strip()
         return commit
 
+    def _is_root_commit(self, sha: str) -> bool:
+        try:
+            self.runner.run(["rev-parse", "--verify", f"{sha}^"])
+            return False
+        except GitCommandError:
+            return True
+
     def get_commit_files(self, hash: str) -> list[FileStatusEntry]:
-        raw = self.runner.run([
-            "diff-tree", "--no-commit-id", "-r", "--name-status", "--diff-filter=ACDMRT", hash
-        ])
+        root_flag = ["--root"] if self._is_root_commit(hash) else []
+        raw = self.runner.run(
+            ["diff-tree", "--no-commit-id", "-r", "--name-status", "--diff-filter=ACDMRT"]
+            + root_flag + [hash]
+        )
         entries = []
         for line in raw.splitlines():
             line = line.strip()
@@ -442,6 +451,76 @@ class GitRepo:
     def get_repo_name(self) -> str:
         return os.path.basename(self.path)
 
+    def cleanup_repo(self) -> dict:
+        """Kill stale git processes and remove .lock files.
+
+        Returns a dict with keys:
+          'locks_removed'  – list of removed file names (relative to .git/)
+          'pids_killed'    – list of killed PIDs (int)
+          'errors'         – list of error strings encountered
+        """
+        import glob as _glob
+        import signal
+        import subprocess as _sp
+
+        result: dict = {"locks_removed": [], "pids_killed": [], "errors": []}
+
+        # ── 1. Kill stale git processes ──────────────────────────────────────
+        try:
+            out = _sp.run(
+                ["pgrep", "-a", "-x", "git"],
+                capture_output=True, text=True,
+            )
+            for line in out.stdout.splitlines():
+                parts = line.split(None, 1)
+                if len(parts) < 2:
+                    continue
+                pid_str, cmdline = parts
+                # Only kill processes that reference this repo path
+                if self.path not in cmdline:
+                    continue
+                try:
+                    pid = int(pid_str)
+                    os.kill(pid, signal.SIGTERM)
+                    result["pids_killed"].append(pid)
+                except (ValueError, ProcessLookupError, PermissionError) as e:
+                    result["errors"].append(f"kill {pid_str}: {e}")
+        except FileNotFoundError:
+            # pgrep not available – try /proc
+            try:
+                for entry in os.listdir("/proc"):
+                    if not entry.isdigit():
+                        continue
+                    try:
+                        cmdline_path = f"/proc/{entry}/cmdline"
+                        with open(cmdline_path, "rb") as f:
+                            cmdline = f.read().replace(b"\x00", b" ").decode(errors="replace")
+                        if "git" in cmdline and self.path in cmdline:
+                            pid = int(entry)
+                            os.kill(pid, signal.SIGTERM)
+                            result["pids_killed"].append(pid)
+                    except (OSError, ValueError):
+                        pass
+            except OSError as e:
+                result["errors"].append(f"proc scan: {e}")
+
+        # ── 2. Remove .lock files ────────────────────────────────────────────
+        git_dir_raw = ""
+        try:
+            git_dir_raw = self.runner.run(["rev-parse", "--git-dir"]).strip()
+        except GitCommandError:
+            pass
+        git_dir = os.path.join(self.path, git_dir_raw) if git_dir_raw else os.path.join(self.path, ".git")
+
+        for lock_path in _glob.glob(os.path.join(git_dir, "**", "*.lock"), recursive=True):
+            try:
+                os.remove(lock_path)
+                result["locks_removed"].append(os.path.relpath(lock_path, git_dir))
+            except OSError as e:
+                result["errors"].append(f"rm {os.path.basename(lock_path)}: {e}")
+
+        return result
+
     @staticmethod
     def is_git_repo(path: str) -> bool:
         try:
@@ -465,27 +544,62 @@ class GitRepo:
         return [line.strip() for line in raw.splitlines() if line.strip()]
 
     def is_commit_pushed(self, sha: str) -> bool:
-        return sha not in self.get_unpushed_commits()
+        """Return True if sha is reachable from any remote-tracking branch."""
+        try:
+            raw = self.runner.run(["branch", "-r", "--contains", sha])
+            return bool(raw.strip())
+        except GitCommandError:
+            return False  # uncertain → allow split
 
     def get_commit_file_sizes(self, sha: str) -> list[tuple[str, int]]:
         """Return list of (path, size_bytes) for all files in a commit, sorted by size desc."""
         try:
-            raw = self.runner.run(["diff-tree", "--no-commit-id", "-r", "--name-only", sha])
+            root_flag = ["--root"] if self._is_root_commit(sha) else []
+            raw = self.runner.run(
+                ["diff-tree", "--no-commit-id", "-r", "--name-only"] + root_flag + [sha]
+            )
         except GitCommandError:
             return []
+        lfs_paths = self._get_lfs_tracked_paths(sha)
         results = []
         for path in raw.splitlines():
             path = path.strip()
             if not path:
                 continue
-            try:
-                size_str = self.runner.run(["cat-file", "-s", f"{sha}:{path}"]).strip()
-                size = int(size_str)
-            except (GitCommandError, ValueError):
-                size = 0
+            size = self._resolve_file_size(sha, path, lfs_paths)
             results.append((path, size))
         results.sort(key=lambda x: x[1], reverse=True)
         return results
+
+    _LFS_POINTER_PREFIX = b"version https://git-lfs.github.com/spec/v1"
+
+    def _get_lfs_tracked_paths(self, sha: str) -> set[str]:
+        """Return set of paths stored in LFS for this commit (via .gitattributes filter=lfs)."""
+        try:
+            raw = self.runner.run(["lfs", "ls-files", "--name-only", sha])
+            return {line.strip() for line in raw.splitlines() if line.strip()}
+        except GitCommandError:
+            return set()
+
+    def _resolve_file_size(self, sha: str, path: str, lfs_paths: set[str]) -> int:
+        """Return real file size. For LFS files, parses the pointer; otherwise uses blob size."""
+        if path in lfs_paths:
+            try:
+                pointer = self.runner.run_bytes(["cat-file", "blob", f"{sha}:{path}"])
+                for line in pointer.split(b"\n"):
+                    if line.startswith(b"size "):
+                        try:
+                            return int(line[5:].strip())
+                        except ValueError:
+                            break
+            except GitCommandError:
+                pass
+            return 0
+        try:
+            size_str = self.runner.run(["cat-file", "-s", f"{sha}:{path}"]).strip()
+            return int(size_str)
+        except (GitCommandError, ValueError):
+            return 0
 
     def get_staged_file_sizes(self) -> list[tuple[str, int]]:
         """Return list of (path, size_bytes) for files with staged changes only.
@@ -519,16 +633,23 @@ class GitRepo:
 
     def split_commit(self, sha: str, batches: list[list[str]], message: str) -> None:
         """Split a commit into multiple commits, one per batch."""
+        _T = 1800  # 30-minute timeout for large staging/commit operations
         n = len(batches)
         # Resolve HEAD sha for comparison
         head_sha = self.runner.run(["rev-parse", "HEAD"]).strip()
         is_head = (sha == head_sha or sha.startswith(head_sha) or head_sha.startswith(sha))
 
         if is_head:
-            self.runner.run(["reset", "--mixed", "HEAD~"])
+            if self._is_root_commit(sha):
+                # Root commit has no parent — delete the branch ref to get an unborn branch,
+                # then recreate history from scratch (working tree stays intact).
+                self.runner.run(["rm", "-r", "--cached", "."], timeout=_T)
+                self.runner.run(["update-ref", "-d", "HEAD"])
+            else:
+                self.runner.run(["reset", "--mixed", "HEAD~"], timeout=_T)
             for i, batch in enumerate(batches, 1):
-                self.runner.run(["add", "--"] + batch)
-                self.runner.run(["commit", "-m", f"{message} ({i}/{n})"])
+                self.runner.run(["add", "--"] + batch, timeout=_T)
+                self.runner.run(["commit", "-m", f"{message} ({i}/{n})"], timeout=_T)
         else:
             # Collect commits after sha
             after_raw = self.runner.run(
@@ -536,16 +657,16 @@ class GitRepo:
             )
             after_shas = [s.strip() for s in after_raw.splitlines() if s.strip()]
             # Reset to parent of sha
-            self.runner.run(["reset", "--hard", f"{sha}^"])
+            self.runner.run(["reset", "--hard", f"{sha}^"], timeout=_T)
             # Cherry-pick sha without committing
-            self.runner.run(["cherry-pick", "--no-commit", sha])
+            self.runner.run(["cherry-pick", "--no-commit", sha], timeout=_T)
             # Unstage everything (keep in worktree)
-            self.runner.run(["reset", "HEAD", "--"])
+            self.runner.run(["reset", "HEAD", "--"], timeout=_T)
             for i, batch in enumerate(batches, 1):
-                self.runner.run(["add", "--"] + batch)
-                self.runner.run(["commit", "-m", f"{message} ({i}/{n})"])
+                self.runner.run(["add", "--"] + batch, timeout=_T)
+                self.runner.run(["commit", "-m", f"{message} ({i}/{n})"], timeout=_T)
             for after_sha in after_shas:
-                self.runner.run(["cherry-pick", after_sha])
+                self.runner.run(["cherry-pick", after_sha], timeout=_T)
 
     # ------------------------------------------------- Streaming remote ops
 
