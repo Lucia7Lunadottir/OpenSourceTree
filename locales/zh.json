@@ -262,5 +262,26 @@
     "conflict.rebase_ready": "✓ 所有冲突已解决 — 点击「继续变基」",
     "conflict.continue_rebase": "继续变基",
     "conflict.cherry_pick_ready": "✓ 所有冲突已解决 — 点击「继续 Cherry-pick」",
-    "conflict.continue_cherry_pick": "继续 Cherry-pick"
+    "conflict.continue_cherry_pick": "继续 Cherry-pick",
+
+    "hard_reset.dialog_title": "硬重置",
+    "hard_reset.dialog_text": "将分支重置到提交 {hash}（HARD 模式）？\n\n所有未提交的更改将被自动保存\n到临时存储（Stash），可通过\nStash → 右键 → Pop 恢复。\n\n是否继续？",
+    "hard_reset.done_title": "硬重置完成",
+    "hard_reset.done_text": "硬重置已完成。\n\n✅ 您未保存的更改已保存至：\n  「{label}」\n\n要恢复它们：\n  Stash 面板 → 右键 → Pop",
+    "hard_reset.done_status": "硬重置完成",
+
+    "stash_pop.dialog_title": "Stash Pop — 恢复更改",
+    "stash_pop.dialog_text": "从 Stash 恢复更改并删除条目？\n\n更改将返回工作副本，Stash 条目将被删除。\n\n若要保留条目，请使用「Apply」而非「Pop」。",
+    "stash_pop.success": "✅ 已从 Stash 恢复更改",
+
+    "stash_drop.dialog_title": "删除 Stash 条目？",
+    "stash_drop.dialog_text": "删除此 Stash 条目？\n\n⚠ 保存在此条目中的更改将被永久删除。\n\n若要先恢复它们，请按取消并使用「Pop」。",
+    "stash_drop.success": "Stash 条目已删除",
+
+    "discard.dialog_title": "放弃更改",
+    "discard.dialog_text_one": "放弃以下文件的更改：\n  • {path}\n\n✅ 更改将保存至临时存储（Stash），\n可通过以下方式恢复：\n  Stash → 右键 → Pop\n\n是否继续？",
+    "discard.dialog_text_many": "放弃 {n} 个文件的更改：\n{names}\n\n✅ 更改将保存至临时存储（Stash），\n可通过以下方式恢复：\n  Stash → 右键 → Pop\n\n是否继续？",
+    "discard.success": "✅ 已保存至 Stash「{label}」— 通过 Stash → Pop 恢复",
+    "discard.error_title": "无法保存到 Stash",
+    "discard.error_text": "更改未被放弃 — 您的文件是安全的。\n\n原因：{error}"
 }

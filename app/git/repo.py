@@ -63,7 +63,7 @@ class GitRepo:
         """Return sha256 hex digest of a tar.gz archive of the given commit.
         Useful for AUR sha256sums=() entries."""
         import hashlib
-        data = self.runner.run_bytes(["archive", "--format=tar.gz", hash], timeout=120)
+        data = self.runner.run_bytes(["archive", "--format=tar.gz", hash])
         return hashlib.sha256(data).hexdigest()
 
     def get_commit_detail(self, hash: str) -> CommitRecord:
@@ -146,11 +146,25 @@ class GitRepo:
     def stage_file(self, path: str) -> None:
         self.runner.run(["add", "--", path])
 
+    def stage_files(self, paths: list[str]) -> None:
+        """Stage multiple files in a single atomic git add call."""
+        if paths:
+            self.runner.run(["add", "--"] + paths)
+
     def unstage_file(self, path: str) -> None:
         try:
             self.runner.run(["restore", "--staged", "--", path])
         except GitCommandError:
             self.runner.run(["reset", "HEAD", "--", path])
+
+    def unstage_files(self, paths: list[str]) -> None:
+        """Unstage multiple files in a single atomic call."""
+        if not paths:
+            return
+        try:
+            self.runner.run(["restore", "--staged", "--"] + paths)
+        except GitCommandError:
+            self.runner.run(["reset", "HEAD", "--"] + paths)
 
     def stage_all(self) -> None:
         self.runner.run(["add", "-A"])
@@ -196,10 +210,10 @@ class GitRepo:
         if squash:
             args.append("--squash")
         args.append(branch)
-        self.runner.run(args, timeout=60)
+        self.runner.run(args)
 
     def rebase(self, branch: str) -> None:
-        self.runner.run(["rebase", branch], timeout=60)
+        self.runner.run(["rebase", branch])
 
     # --------------------------------------------------------------- Remotes
 
@@ -227,7 +241,7 @@ class GitRepo:
             args.append(remote)
         else:
             args.append("--all")
-        return self.runner.run(args, timeout=120)
+        return self.runner.run(args)
 
     def pull(self, remote: str = "", branch: str = "", rebase: bool = False) -> str:
         args = ["pull"]
@@ -255,7 +269,7 @@ class GitRepo:
             args.append(remote)
         if branch:
             args.append(branch)
-        return self.runner.run(args, timeout=120)
+        return self.runner.run(args)
 
     # ----------------------------------------------------------------- Stash
 
@@ -312,6 +326,48 @@ class GitRepo:
     def reset_to_commit(self, hash: str, mode: str = "mixed") -> None:
         """Reset current branch HEAD to hash. mode: soft | mixed | hard."""
         self.runner.run(["reset", f"--{mode}", hash])
+
+    def safe_reset_hard(self, hash: str) -> str:
+        """Reset --hard after saving uncommitted changes to a named stash.
+
+        Always attempts to stash before resetting — no TOCTOU window.
+        Returns the stash label if changes were stashed, empty string if
+        the working tree was already clean.
+        Raises GitCommandError on any git failure.
+        """
+        from datetime import datetime
+        label = f"pre-reset-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+
+        # Count stash entries before: push on a clean tree is a no-op
+        # and does NOT add an entry, so we detect that by comparing counts.
+        count_before = len(
+            [l for l in self.runner.run(["stash", "list"]).splitlines() if l.strip()]
+        )
+        self.runner.run(["stash", "push", "-u", "-m", label])
+        count_after = len(
+            [l for l in self.runner.run(["stash", "list"]).splitlines() if l.strip()]
+        )
+
+        stash_created = count_after > count_before
+        self.runner.run(["reset", "--hard", hash])
+        return label if stash_created else ""
+
+    def safe_discard_files(self, paths: list[str]) -> str:
+        """Save files to a named stash, then remove from working tree.
+
+        This is a recoverable alternative to 'git checkout -- file' /
+        'git clean -f -- file'.  The files vanish from the working tree
+        (what the user asked for) but are retrievable via 'git stash pop'.
+
+        Returns the stash label on success.
+        Raises GitCommandError if the stash push fails — in that case the
+        working tree is left untouched.
+        """
+        from datetime import datetime
+        label = f"pre-discard-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+        # -u includes untracked files; pathspec scopes it to only these paths
+        self.runner.run(["stash", "push", "-u", "-m", label, "--"] + paths)
+        return label
 
     def cherry_pick(self, hash: str) -> None:
         self.runner.run(["cherry-pick", hash])
@@ -404,7 +460,8 @@ class GitRepo:
                 git_dir = os.path.join(self.path, git_dir)
             msg_file = os.path.join(git_dir, "MERGE_MSG")
             if os.path.exists(msg_file):
-                return open(msg_file, encoding="utf-8", errors="replace").read().strip()
+                with open(msg_file, encoding="utf-8", errors="replace") as f:
+                    return f.read().strip()
         except Exception:
             pass
         return ""
@@ -433,13 +490,13 @@ class GitRepo:
         self.runner.run(["rebase", "--abort"])
 
     def rebase_continue(self) -> None:
-        self.runner.run(["rebase", "--continue"], timeout=60)
+        self.runner.run(["rebase", "--continue"])
 
     def abort_cherry_pick(self) -> None:
         self.runner.run(["cherry-pick", "--abort"])
 
     def cherry_pick_continue(self) -> None:
-        self.runner.run(["cherry-pick", "--continue"], timeout=60)
+        self.runner.run(["cherry-pick", "--continue"])
 
     def get_last_commit_message(self) -> str:
         """Return full commit message (subject + body) of HEAD."""
@@ -462,6 +519,7 @@ class GitRepo:
         import glob as _glob
         import signal
         import subprocess as _sp
+        import time
 
         result: dict = {"locks_removed": [], "pids_killed": [], "errors": []}
 
@@ -503,6 +561,20 @@ class GitRepo:
                         pass
             except OSError as e:
                 result["errors"].append(f"proc scan: {e}")
+
+        # ── 1b. Wait for killed processes to exit before touching lock files ─
+        # Deleting a .lock file while the process is still writing it corrupts
+        # .git/index.  Poll /proc/<pid> existence for up to 2 seconds.
+        if result["pids_killed"]:
+            deadline = time.monotonic() + 2.0
+            while time.monotonic() < deadline:
+                still_alive = [
+                    pid for pid in result["pids_killed"]
+                    if os.path.exists(f"/proc/{pid}")
+                ]
+                if not still_alive:
+                    break
+                time.sleep(0.1)
 
         # ── 2. Remove .lock files ────────────────────────────────────────────
         git_dir_raw = ""
@@ -633,40 +705,98 @@ class GitRepo:
 
     def split_commit(self, sha: str, batches: list[list[str]], message: str) -> None:
         """Split a commit into multiple commits, one per batch."""
-        _T = 1800  # 30-minute timeout for large staging/commit operations
+        # Hold the write lock for the entire multi-step operation so no concurrent
+        # git write (e.g. a stage triggered from the UI) can interleave with our
+        # reset --hard / cherry-pick sequence.
+        with self.runner.write_lock:
+            self._split_commit_locked(sha, batches, message)
+
+    def _split_commit_locked(self, sha: str, batches: list[list[str]], message: str) -> None:
         n = len(batches)
         # Resolve HEAD sha for comparison
         head_sha = self.runner.run(["rev-parse", "HEAD"]).strip()
         is_head = (sha == head_sha or sha.startswith(head_sha) or head_sha.startswith(sha))
+        is_root = self._is_root_commit(sha)
 
-        if is_head:
-            if self._is_root_commit(sha):
-                # Root commit has no parent — delete the branch ref to get an unborn branch,
-                # then recreate history from scratch (working tree stays intact).
-                self.runner.run(["rm", "-r", "--cached", "."], timeout=_T)
-                self.runner.run(["update-ref", "-d", "HEAD"])
-            else:
-                self.runner.run(["reset", "--mixed", "HEAD~"], timeout=_T)
-            for i, batch in enumerate(batches, 1):
-                self.runner.run(["add", "--"] + batch, timeout=_T)
-                self.runner.run(["commit", "-m", f"{message} ({i}/{n})"], timeout=_T)
-        else:
-            # Collect commits after sha
-            after_raw = self.runner.run(
-                ["log", f"{sha}..HEAD", "--format=%H", "--reverse"]
+        # Auto-stash: protect uncommitted working-tree changes from git reset --hard
+        # in the non-HEAD path. Without this, files like Unity scenes get silently wiped.
+        #
+        # We always stash unconditionally (no dirty check) to avoid a TOCTOU race where
+        # files change between the dirty check and the actual stash command.  A stash on a
+        # clean tree is a safe no-op but it does NOT appear in the stash list, so we
+        # compare the stash count before/after to know whether one was created.
+        stash_created = False
+        if not is_head:
+            stash_count_before = len(
+                [l for l in self.runner.run(["stash", "list"]).splitlines() if l.strip()]
             )
-            after_shas = [s.strip() for s in after_raw.splitlines() if s.strip()]
-            # Reset to parent of sha
-            self.runner.run(["reset", "--hard", f"{sha}^"], timeout=_T)
-            # Cherry-pick sha without committing
-            self.runner.run(["cherry-pick", "--no-commit", sha], timeout=_T)
-            # Unstage everything (keep in worktree)
-            self.runner.run(["reset", "HEAD", "--"], timeout=_T)
-            for i, batch in enumerate(batches, 1):
-                self.runner.run(["add", "--"] + batch, timeout=_T)
-                self.runner.run(["commit", "-m", f"{message} ({i}/{n})"], timeout=_T)
-            for after_sha in after_shas:
-                self.runner.run(["cherry-pick", after_sha], timeout=_T)
+            self.runner.run(["stash", "push", "-u", "-m", "split_commit_autostash"])
+            stash_count_after = len(
+                [l for l in self.runner.run(["stash", "list"]).splitlines() if l.strip()]
+            )
+            stash_created = stash_count_after > stash_count_before
+
+        try:
+            if is_head:
+                if is_root:
+                    # Root commit has no parent — delete the branch ref to get an unborn branch,
+                    # then recreate history from scratch (working tree stays intact).
+                    self.runner.run(["rm", "-r", "--cached", "."])
+                    self.runner.run(["update-ref", "-d", "HEAD"])
+                else:
+                    self.runner.run(["reset", "--mixed", "HEAD~"])
+                for i, batch in enumerate(batches, 1):
+                    self.runner.run(["add", "--"] + batch)
+                    self.runner.run(["commit", "-m", f"{message} ({i}/{n})"])
+            else:
+                # Collect commits after sha
+                after_raw = self.runner.run(
+                    ["log", f"{sha}..HEAD", "--format=%H", "--reverse"]
+                )
+                after_shas = [s.strip() for s in after_raw.splitlines() if s.strip()]
+                # Reset to parent of sha
+                self.runner.run(["reset", "--hard", f"{sha}^"])
+                # Cherry-pick sha without committing
+                self.runner.run(["cherry-pick", "--no-commit", sha])
+                # Unstage everything (keep in worktree)
+                self.runner.run(["reset", "HEAD", "--"])
+                for i, batch in enumerate(batches, 1):
+                    self.runner.run(["add", "--"] + batch)
+                    self.runner.run(["commit", "-m", f"{message} ({i}/{n})"])
+                for after_sha in after_shas:
+                    self.runner.run(["cherry-pick", after_sha])
+        except Exception as original_err:
+            # Restore original HEAD on any failure (skip for root — no HEAD to restore)
+            if not is_root:
+                try:
+                    self.runner.run(["reset", "--hard", head_sha])
+                except Exception:
+                    pass
+            # Restore uncommitted changes that were auto-stashed
+            if stash_created:
+                try:
+                    self.runner.run(["stash", "pop"])
+                except Exception as pop_err:
+                    # stash pop failed (e.g. conflicts) — the user's work is still safe
+                    # in the stash. Raise a clear message rather than swallowing silently.
+                    raise RuntimeError(
+                        "Split commit failed and restoring your uncommitted changes "
+                        "was not possible automatically.\n\n"
+                        "Your work is safe — run  git stash pop  to restore it.\n"
+                        f"(Original error: {original_err})"
+                    ) from pop_err
+            raise
+
+        # Success: restore auto-stashed uncommitted changes
+        if stash_created:
+            try:
+                self.runner.run(["stash", "pop"])
+            except Exception as pop_err:
+                raise RuntimeError(
+                    "Split commit succeeded, but restoring your uncommitted changes "
+                    "failed (likely a merge conflict).\n\n"
+                    "Your work is safe — run  git stash pop  to restore it."
+                ) from pop_err
 
     # ------------------------------------------------- Streaming remote ops
 

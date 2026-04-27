@@ -262,5 +262,26 @@
     "conflict.rebase_ready": "✓ すべての競合が解決されました — 「リベースを続行」をクリック",
     "conflict.continue_rebase": "リベースを続行",
     "conflict.cherry_pick_ready": "✓ すべての競合が解決されました — 「Cherry-pickを続行」をクリック",
-    "conflict.continue_cherry_pick": "Cherry-pickを続行"
+    "conflict.continue_cherry_pick": "Cherry-pickを続行",
+
+    "hard_reset.dialog_title": "ハードリセット",
+    "hard_reset.dialog_text": "ブランチをコミット {hash} にHARDモードでリセットしますか？\n\nコミットされていない変更はすべて一時領域（Stash）に\n自動的に保存され、Stash → 右クリック → Popで復元できます。\n\n続行しますか？",
+    "hard_reset.done_title": "ハードリセット完了",
+    "hard_reset.done_text": "ハードリセットが完了しました。\n\n✅ 未保存の変更は次の場所に保存されました：\n  「{label}」\n\n復元するには：\n  Stashパネル → 右クリック → Pop",
+    "hard_reset.done_status": "ハードリセット完了",
+
+    "stash_pop.dialog_title": "Stash Pop — 変更を復元",
+    "stash_pop.dialog_text": "スタッシュから変更を復元してエントリを削除しますか？\n\n変更は作業コピーに戻ります。スタッシュエントリは削除されます。\n\nエントリを保持する場合は「Pop」の代わりに「Apply」を使用してください。",
+    "stash_pop.success": "✅ スタッシュから変更を復元しました",
+
+    "stash_drop.dialog_title": "スタッシュエントリを削除しますか？",
+    "stash_drop.dialog_text": "このスタッシュエントリを削除しますか？\n\n⚠ このエントリに保存された変更は完全に失われます。\n\n先に復元したい場合はキャンセルを押して「Pop」を使用してください。",
+    "stash_drop.success": "スタッシュエントリを削除しました",
+
+    "discard.dialog_title": "変更を破棄",
+    "discard.dialog_text_one": "変更を破棄します：\n  • {path}\n\n✅ 変更は一時領域（Stash）に保存され、\n次の方法で復元できます：\n  Stash → 右クリック → Pop\n\n続行しますか？",
+    "discard.dialog_text_many": "{n}ファイルの変更を破棄します：\n{names}\n\n✅ 変更は一時領域（Stash）に保存され、\n次の方法で復元できます：\n  Stash → 右クリック → Pop\n\n続行しますか？",
+    "discard.success": "✅ スタッシュ「{label}」に保存しました — Stash → Popで復元できます",
+    "discard.error_title": "スタッシュへの保存に失敗",
+    "discard.error_text": "変更は破棄されませんでした — ファイルは安全です。\n\n理由：{error}"
 }

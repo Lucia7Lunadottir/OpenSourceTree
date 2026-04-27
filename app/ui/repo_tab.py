@@ -157,7 +157,7 @@ class RepoTab(QWidget):
         self._setup_fs_watcher()
 
     def _setup_fs_watcher(self):
-        """Watch .git/index and .git/HEAD so the UI auto-updates on external changes."""
+        """Watch .git state files/dirs so the UI auto-updates on external changes."""
         self._refresh_timer = QTimer(self)
         self._refresh_timer.setSingleShot(True)
         self._refresh_timer.setInterval(400)
@@ -165,11 +165,34 @@ class RepoTab(QWidget):
 
         self._fs_watcher = QFileSystemWatcher(self)
         git_dir = os.path.join(self._repo_path, ".git")
-        for name in ("index", "HEAD"):
+
+        # Files that change on every write operation or state change
+        for name in ("index", "HEAD", "MERGE_HEAD", "MERGE_MSG", "CHERRY_PICK_HEAD"):
             p = os.path.join(git_dir, name)
             if os.path.exists(p):
                 self._fs_watcher.addPath(p)
+
+        # Directories that appear/disappear during rebase
+        for name in ("rebase-merge", "rebase-apply"):
+            p = os.path.join(git_dir, name)
+            if os.path.isdir(p):
+                self._fs_watcher.addPath(p)
+
+        # Watch the .git dir itself so we notice when MERGE_HEAD / CHERRY_PICK_HEAD
+        # are created or deleted (files that don't exist yet can't be watched directly)
+        self._fs_watcher.addPath(git_dir)
+
         self._fs_watcher.fileChanged.connect(self._schedule_fs_refresh)
+        self._fs_watcher.directoryChanged.connect(self._on_git_dir_changed)
+
+    def _on_git_dir_changed(self, path: str):
+        """Re-register any newly appeared state files and schedule a refresh."""
+        git_dir = os.path.join(self._repo_path, ".git")
+        for name in ("index", "HEAD", "MERGE_HEAD", "MERGE_MSG", "CHERRY_PICK_HEAD"):
+            p = os.path.join(git_dir, name)
+            if os.path.exists(p) and p not in self._fs_watcher.files():
+                self._fs_watcher.addPath(p)
+        self._refresh_timer.start()
 
     def _schedule_fs_refresh(self, path: str):
         # Re-add path in case git replaced the file atomically

@@ -262,5 +262,26 @@
     "conflict.rebase_ready": "✓ Todos los conflictos resueltos — haga clic en Continuar Rebase",
     "conflict.continue_rebase": "Continuar Rebase",
     "conflict.cherry_pick_ready": "✓ Todos los conflictos resueltos — haga clic en Continuar Cherry-pick",
-    "conflict.continue_cherry_pick": "Continuar Cherry-pick"
+    "conflict.continue_cherry_pick": "Continuar Cherry-pick",
+
+    "hard_reset.dialog_title": "Hard Reset",
+    "hard_reset.dialog_text": "¿Restablecer la rama al commit {hash} en modo HARD?\n\nTodos los cambios sin confirmar se guardarán AUTOMÁTICAMENTE\nen el almacenamiento temporal (Stash) y podrán\nrecuperarse desde Stash → clic derecho → Pop.\n\n¿Continuar?",
+    "hard_reset.done_title": "Hard Reset completado",
+    "hard_reset.done_text": "Hard reset completado.\n\n✅ Tus cambios sin confirmar están guardados en:\n  \"{label}\"\n\nPara recuperarlos:\n  Panel Stash → clic derecho → Pop",
+    "hard_reset.done_status": "Hard reset completado",
+
+    "stash_pop.dialog_title": "Stash Pop — Restaurar cambios",
+    "stash_pop.dialog_text": "¿Restaurar cambios del stash y eliminar la entrada?\n\nLos cambios volverán a la copia de trabajo. La entrada del stash se eliminará.\n\nPara conservar la entrada — usa «Apply» en lugar de «Pop».",
+    "stash_pop.success": "✅ Cambios restaurados del stash",
+
+    "stash_drop.dialog_title": "¿Eliminar entrada del stash?",
+    "stash_drop.dialog_text": "¿Eliminar esta entrada del stash?\n\n⚠ Los cambios guardados en esta entrada se perderán definitivamente.\n\nPara restaurarlos primero — pulsa Cancelar y usa «Pop».",
+    "stash_drop.success": "Entrada del stash eliminada",
+
+    "discard.dialog_title": "Descartar cambios",
+    "discard.dialog_text_one": "Descartar cambios en:\n  • {path}\n\n✅ Los cambios se GUARDARÁN en almacenamiento temporal (Stash)\ny podrán recuperarse desde:\n  Panel Stash → clic derecho → Pop\n\n¿Continuar?",
+    "discard.dialog_text_many": "Descartar cambios en {n} archivo(s):\n{names}\n\n✅ Los cambios se GUARDARÁN en almacenamiento temporal (Stash)\ny podrán recuperarse desde:\n  Panel Stash → clic derecho → Pop\n\n¿Continuar?",
+    "discard.success": "✅ Guardado en stash \"{label}\" — recuperar desde Stash → Pop",
+    "discard.error_title": "No se pudo guardar en el stash",
+    "discard.error_text": "Los cambios NO se descartaron — tus archivos están seguros.\n\nMotivo: {error}"
 }

@@ -2,6 +2,7 @@ import os
 import shlex
 import shutil
 import subprocess
+import threading
 from typing import Iterator, Optional
 
 
@@ -44,6 +45,9 @@ def find_terminal() -> str:
 class GitRunner:
     def __init__(self, repo_path: str):
         self.repo_path = repo_path
+        # Held for the duration of multi-step write operations (e.g. split_commit)
+        # to prevent concurrent writes from interleaving.
+        self.write_lock = threading.Lock()
 
     def _base_cmd(self, args: list[str]) -> list[str]:
         return ["git", "-C", self.repo_path, "-c", "core.quotePath=false"] + args
@@ -62,7 +66,7 @@ class GitRunner:
             env["SSH_ASKPASS"] = askpass
         return env
 
-    def run(self, args: list[str], input: Optional[str] = None, timeout: int = 30) -> str:
+    def run(self, args: list[str], input: Optional[str] = None, timeout: Optional[int] = None) -> str:
         cmd = self._base_cmd(args)
         env = self._build_env()
         try:
@@ -84,7 +88,7 @@ class GitRunner:
             raise GitCommandError(cmd, result.returncode, result.stderr, result.stdout)
         return result.stdout
 
-    def run_bytes(self, args: list[str], timeout: int = 30) -> bytes:
+    def run_bytes(self, args: list[str], timeout: Optional[int] = None) -> bytes:
         cmd = self._base_cmd(args)
         env = self._build_env()
         try:

@@ -442,5 +442,26 @@
     "conflict.rebase_ready": "✓ All conflicts resolved — click Continue Rebase to proceed",
     "conflict.continue_rebase": "Continue Rebase",
     "conflict.cherry_pick_ready": "✓ All conflicts resolved — click Continue Cherry-pick to proceed",
-    "conflict.continue_cherry_pick": "Continue Cherry-pick"
+    "conflict.continue_cherry_pick": "Continue Cherry-pick",
+
+    "hard_reset.dialog_title": "Hard Reset",
+    "hard_reset.dialog_text": "Reset branch to commit {hash} in HARD mode?\n\nAll uncommitted changes will be AUTOMATICALLY SAVED\nto temporary storage (Stash) and can be restored\nvia Stash panel → right-click → Pop.\n\nContinue?",
+    "hard_reset.done_title": "Hard Reset Complete",
+    "hard_reset.done_text": "Hard reset complete.\n\n✅ Your uncommitted changes are saved in:\n  \"{label}\"\n\nTo restore them:\n  Stash panel → right-click → Pop",
+    "hard_reset.done_status": "Hard reset complete",
+
+    "stash_pop.dialog_title": "Stash Pop — Restore Changes",
+    "stash_pop.dialog_text": "Restore changes from stash and delete the entry?\n\nChanges will return to your working copy. The stash entry will be deleted.\n\nTo keep the entry — use «Apply» instead of «Pop».",
+    "stash_pop.success": "✅ Changes restored from stash",
+
+    "stash_drop.dialog_title": "Delete Stash Entry?",
+    "stash_drop.dialog_text": "Delete this stash entry?\n\n⚠ Changes saved in this entry will be permanently lost.\n\nTo restore them first — press Cancel and use «Pop».",
+    "stash_drop.success": "Stash entry deleted",
+
+    "discard.dialog_title": "Discard Changes",
+    "discard.dialog_text_one": "Discard changes to:\n  • {path}\n\n✅ Changes will be SAVED to temporary storage (Stash)\nand can be restored via:\n  Stash panel → right-click → Pop\n\nContinue?",
+    "discard.dialog_text_many": "Discard changes to {n} file(s):\n{names}\n\n✅ Changes will be SAVED to temporary storage (Stash)\nand can be restored via:\n  Stash panel → right-click → Pop\n\nContinue?",
+    "discard.success": "✅ Saved to stash \"{label}\" — restore via Stash → Pop",
+    "discard.error_title": "Could Not Save to Stash",
+    "discard.error_text": "Changes were NOT discarded — your files are safe.\n\nReason: {error}"
 }
