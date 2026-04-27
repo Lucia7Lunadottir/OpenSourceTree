@@ -262,5 +262,26 @@
     "conflict.rebase_ready": "✓ Alle Konflikte gelöst — klicken Sie auf «Rebase fortsetzen»",
     "conflict.continue_rebase": "Rebase fortsetzen",
     "conflict.cherry_pick_ready": "✓ Alle Konflikte gelöst — klicken Sie auf «Cherry-pick fortsetzen»",
-    "conflict.continue_cherry_pick": "Cherry-pick fortsetzen"
+    "conflict.continue_cherry_pick": "Cherry-pick fortsetzen",
+
+    "hard_reset.dialog_title": "Hard Reset",
+    "hard_reset.dialog_text": "Branch auf Commit {hash} im HARD-Modus zurücksetzen?\n\nAlle nicht committeten Änderungen werden AUTOMATISCH GESPEICHERT\nin den temporären Speicher (Stash) und können\nüber Stash-Panel → Rechtsklick → Pop wiederhergestellt werden.\n\nFortfahren?",
+    "hard_reset.done_title": "Hard Reset abgeschlossen",
+    "hard_reset.done_text": "Hard Reset durchgeführt.\n\n✅ Ihre nicht gespeicherten Änderungen wurden gespeichert in:\n  \"{label}\"\n\nZum Wiederherstellen:\n  Stash-Panel → Rechtsklick → Pop",
+    "hard_reset.done_status": "Hard Reset durchgeführt",
+
+    "stash_pop.dialog_title": "Stash Pop — Änderungen wiederherstellen",
+    "stash_pop.dialog_text": "Änderungen aus dem Stash wiederherstellen und Eintrag löschen?\n\nÄnderungen kehren in die Arbeitskopie zurück. Der Stash-Eintrag wird gelöscht.\n\nUm den Eintrag zu behalten — verwende «Apply» statt «Pop».",
+    "stash_pop.success": "✅ Änderungen aus dem Stash wiederhergestellt",
+
+    "stash_drop.dialog_title": "Stash-Eintrag löschen?",
+    "stash_drop.dialog_text": "Diesen Stash-Eintrag löschen?\n\n⚠ Gespeicherte Änderungen in diesem Eintrag werden unwiderruflich gelöscht.\n\nZum vorherigen Wiederherstellen — Abbrechen drücken und «Pop» verwenden.",
+    "stash_drop.success": "Stash-Eintrag gelöscht",
+
+    "discard.dialog_title": "Änderungen verwerfen",
+    "discard.dialog_text_one": "Änderungen in folgender Datei verwerfen:\n  • {path}\n\n✅ Änderungen werden im temporären Speicher (Stash) GESPEICHERT\nund können wiederhergestellt werden über:\n  Stash-Panel → Rechtsklick → Pop\n\nFortfahren?",
+    "discard.dialog_text_many": "Änderungen in {n} Datei(en) verwerfen:\n{names}\n\n✅ Änderungen werden im temporären Speicher (Stash) GESPEICHERT\nund können wiederhergestellt werden über:\n  Stash-Panel → Rechtsklick → Pop\n\nFortfahren?",
+    "discard.success": "✅ Im Stash gespeichert \"{label}\" — wiederherstellen über Stash → Pop",
+    "discard.error_title": "Speichern im Stash fehlgeschlagen",
+    "discard.error_text": "Änderungen wurden NICHT verworfen — Ihre Dateien sind sicher.\n\nGrund: {error}"
 }

@@ -18,7 +18,6 @@ from app.git.repo import GitRepo
 from app.git.models import FileStatusEntry
 from app.constants import STATUS_COLORS
 from app.workers.git_worker import GitWorker
-from app.workers.batch_worker import BatchWorker
 
 LFS_ICON = "⬡"
 
@@ -596,8 +595,7 @@ class WorkingCopyWidget(QWidget):
         if resolve_action and action == resolve_action:
             self._open_conflict_dialog(entries[0].path)
         elif action == unstage_action:
-            for entry in entries:
-                self._run_op(self._repo.unstage_file, entry.path)
+            self._run_batch(self._repo.unstage_file, [e.path for e in entries], "unstaging")
 
     def _unstaged_context_menu(self, pos: QPoint):
         sender_view = self.sender()
@@ -634,32 +632,9 @@ class WorkingCopyWidget(QWidget):
         if resolve_action and action == resolve_action:
             self._open_conflict_dialog(entries[0].path)
         elif action == stage_action:
-            for entry in entries:
-                self._run_op(self._repo.stage_file, entry.path)
+            self._run_batch(self._repo.stage_file, [e.path for e in entries], "staging")
         elif action == discard_action:
-            if len(entries) == 1:
-                msg = t("working_copy.discard_confirm_one", path=entries[0].path)
-            else:
-                names = "\n".join(f"  \u2022 {e.path}" for e in entries)
-                msg = t("working_copy.discard_confirm_many", n=len(entries), names=names)
-            ret = QMessageBox.question(
-                self, t("working_copy.discard"), msg,
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            )
-            if ret == QMessageBox.StandardButton.Yes:
-                def do_discard(ents=entries):
-                    errors = []
-                    for e in ents:
-                        try:
-                            if e.status == "?":
-                                self._repo.runner.run(["clean", "-f", "-q", "--", e.path])
-                            else:
-                                self._repo.runner.run(["checkout", "--", e.path])
-                        except Exception as ex:
-                            errors.append(f"{e.path}: {ex}")
-                    if errors:
-                        raise RuntimeError("\n".join(errors))
-                self._run_op(do_discard)
+            self._safe_discard(entries)
 
     def _open_conflict_dialog(self, path: str):
         from app.ui.dialogs.conflict_dialog import ConflictDialog
@@ -693,6 +668,43 @@ class WorkingCopyWidget(QWidget):
             # A conflict during --continue means more conflicts remain
             self.refresh()
             self.status_message.emit(str(e))
+
+    def _safe_discard(self, entries: list):
+        """Discard changes but save them to a named stash first (recoverable)."""
+        if not entries:
+            return
+
+        if len(entries) == 1:
+            msg = t("discard.dialog_text_one", path=entries[0].path)
+        else:
+            names = "\n".join(f"  \u2022 {e.path}" for e in entries)
+            msg = t("discard.dialog_text_many", n=len(entries), names=names)
+
+        ret = QMessageBox.question(
+            self, t("discard.dialog_title"), msg,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if ret != QMessageBox.StandardButton.Yes:
+            return
+
+        paths = [e.path for e in entries]
+        worker = GitWorker(self._repo.safe_discard_files, paths)
+        worker.signals.result.connect(self._on_discard_done)
+        worker.signals.error.connect(self._on_discard_error)
+        QThreadPool.globalInstance().start(worker)
+
+    def _on_discard_done(self, stash_label: str):
+        self.status_message.emit(t("discard.success", label=stash_label))
+        self.refresh()
+
+    def _on_discard_error(self, error_msg: str):
+        # safe_discard_files failed — working tree is untouched, user's work is safe
+        QMessageBox.warning(
+            self, t("discard.error_title"),
+            t("discard.error_text", error=error_msg),
+        )
+        self.refresh()
 
     def _on_stage_all(self):
         try:
@@ -767,24 +779,16 @@ class WorkingCopyWidget(QWidget):
         QThreadPool.globalInstance().start(worker)
 
     def _run_batch(self, fn, paths: list[str], op: str):
-        key = "progress.staging" if op == "staging" else "progress.unstaging"
-        self._progress_bar.setMaximum(len(paths))
-        self._progress_bar.setValue(0)
-        self._progress_bar.setVisible(True)
-        self._progress_label.setVisible(True)
-        self._progress_label.setText(t(key, current=0, total=len(paths)))
-        worker = BatchWorker(fn, paths)
-        worker.signals.progress.connect(
-            lambda cur, tot: self._on_batch_progress(cur, tot, key)
-        )
+        # Use a single atomic git add/restore call instead of one process per file.
+        # This prevents partial staging on crash and avoids index.lock contention.
+        if op == "staging":
+            atomic_fn = self._repo.stage_files
+        else:
+            atomic_fn = self._repo.unstage_files
+        worker = GitWorker(atomic_fn, paths)
         worker.signals.result.connect(lambda _: self._on_batch_done())
         worker.signals.error.connect(self._on_error)
         QThreadPool.globalInstance().start(worker)
-
-    def _on_batch_progress(self, current: int, total: int, key: str):
-        self._progress_bar.setMaximum(total)
-        self._progress_bar.setValue(current)
-        self._progress_label.setText(t(key, current=current, total=total))
 
     def _on_batch_done(self):
         self._progress_bar.setVisible(False)

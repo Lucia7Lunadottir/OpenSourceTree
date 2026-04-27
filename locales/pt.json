@@ -262,5 +262,26 @@
     "conflict.rebase_ready": "✓ Todos os conflitos resolvidos — clique em Continuar Rebase",
     "conflict.continue_rebase": "Continuar Rebase",
     "conflict.cherry_pick_ready": "✓ Todos os conflitos resolvidos — clique em Continuar Cherry-pick",
-    "conflict.continue_cherry_pick": "Continuar Cherry-pick"
+    "conflict.continue_cherry_pick": "Continuar Cherry-pick",
+
+    "hard_reset.dialog_title": "Hard Reset",
+    "hard_reset.dialog_text": "Redefinir branch para o commit {hash} com modo HARD?\n\nTodas as alterações não confirmadas serão AUTOMATICAMENTE SALVAS\nno armazenamento temporário (Stash) e poderão\nser restauradas pelo painel Stash → botão direito → Pop.\n\nContinuar?",
+    "hard_reset.done_title": "Hard Reset concluído",
+    "hard_reset.done_text": "Hard reset concluído.\n\n✅ Suas alterações não salvas estão em:\n  \"{label}\"\n\nPara restaurá-las:\n  Painel Stash → botão direito → Pop",
+    "hard_reset.done_status": "Hard reset concluído",
+
+    "stash_pop.dialog_title": "Stash Pop — Restaurar alterações",
+    "stash_pop.dialog_text": "Restaurar alterações do stash e excluir a entrada?\n\nAs alterações voltarão para a cópia de trabalho. A entrada do stash será excluída.\n\nPara manter a entrada — use «Apply» em vez de «Pop».",
+    "stash_pop.success": "✅ Alterações restauradas do stash",
+
+    "stash_drop.dialog_title": "Excluir entrada do stash?",
+    "stash_drop.dialog_text": "Excluir esta entrada do stash?\n\n⚠ As alterações salvas nesta entrada serão perdidas permanentemente.\n\nPara restaurá-las primeiro — pressione Cancelar e use «Pop».",
+    "stash_drop.success": "Entrada do stash excluída",
+
+    "discard.dialog_title": "Descartar alterações",
+    "discard.dialog_text_one": "Descartar alterações em:\n  • {path}\n\n✅ As alterações serão SALVAS no armazenamento temporário (Stash)\ne poderão ser restauradas por:\n  Painel Stash → botão direito → Pop\n\nContinuar?",
+    "discard.dialog_text_many": "Descartar alterações em {n} arquivo(s):\n{names}\n\n✅ As alterações serão SALVAS no armazenamento temporário (Stash)\ne poderão ser restauradas por:\n  Painel Stash → botão direito → Pop\n\nContinuar?",
+    "discard.success": "✅ Salvo no stash \"{label}\" — restaurar por Stash → Pop",
+    "discard.error_title": "Não foi possível salvar no stash",
+    "discard.error_text": "As alterações NÃO foram descartadas — seus arquivos estão seguros.\n\nMotivo: {error}"
 }

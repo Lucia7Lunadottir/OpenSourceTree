@@ -275,10 +275,24 @@ class BranchPanel(QTreeWidget):
         self._run(self._repo.pull, "", name, success_msg=f"Pulled {name}")
 
     def _stash_apply(self, index: int):
-        self._run(self._repo.stash_apply, index, success_msg="Stash applied")
+        self._run(self._repo.stash_apply, index, success_msg=t("stash_pop.success"))
 
     def _stash_pop(self, index: int):
-        self._run(self._repo.stash_pop, index, success_msg="Stash popped")
+        ret = QMessageBox.question(
+            self, t("stash_pop.dialog_title"),
+            t("stash_pop.dialog_text"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes,
+        )
+        if ret == QMessageBox.StandardButton.Yes:
+            self._run(self._repo.stash_pop, index, success_msg=t("stash_pop.success"))
 
     def _stash_drop(self, index: int):
-        self._run(self._repo.stash_drop, index, success_msg="Stash dropped")
+        ret = QMessageBox.warning(
+            self, t("stash_drop.dialog_title"),
+            t("stash_drop.dialog_text"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if ret == QMessageBox.StandardButton.Yes:
+            self._run(self._repo.stash_drop, index, success_msg=t("stash_drop.success"))

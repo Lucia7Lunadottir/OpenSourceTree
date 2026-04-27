@@ -107,7 +107,7 @@ class CloneDialog(QDialog):
                 if not os.path.isdir(os.path.join(target_path, ".git")):
                     raise RuntimeError(t("clone.error.ssh_failed"))
             else:
-                runner.run(["clone", url, target_path], timeout=300)
+                runner.run(["clone", url, target_path])
             return target_path
 
         worker = GitWorker(do_clone)

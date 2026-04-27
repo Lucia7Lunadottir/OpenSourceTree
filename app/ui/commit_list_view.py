@@ -240,16 +240,26 @@ class CommitListView(QWidget):
 
     def _reset_hard(self, hash: str):
         ret = QMessageBox.warning(
-            self, "Hard Reset — ВСЕ ИЗМЕНЕНИЯ БУДУТ УДАЛЕНЫ",
-            f"Сбросить ветку на {hash[:8]} с режимом HARD?\n\n"
-            "Все незакоммиченные изменения будут безвозвратно удалены!\n\n"
-            "Продолжить?",
+            self, t("hard_reset.dialog_title"),
+            t("hard_reset.dialog_text", hash=hash[:8]),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
         if ret == QMessageBox.StandardButton.Yes:
-            self._run_op(self._repo.reset_to_commit, hash, "hard",
-                         success=f"Hard reset до {hash[:8]} выполнен")
+            worker = GitWorker(self._repo.safe_reset_hard, hash)
+            worker.signals.result.connect(self._on_hard_reset_done)
+            worker.signals.error.connect(self._on_op_error)
+            QThreadPool.globalInstance().start(worker)
+
+    def _on_hard_reset_done(self, stash_label: str):
+        if stash_label:
+            QMessageBox.information(
+                self, t("hard_reset.done_title"),
+                t("hard_reset.done_text", label=stash_label),
+            )
+        self.status_message.emit(t("hard_reset.done_status"))
+        self.refresh_requested.emit()
+        self.refresh()
 
     @staticmethod
     def _reset_description(mode: str) -> str:

@@ -262,5 +262,26 @@
     "conflict.rebase_ready": "✓ Усі конфлікти вирішено — натисніть «Продовжити Rebase»",
     "conflict.continue_rebase": "Продовжити Rebase",
     "conflict.cherry_pick_ready": "✓ Усі конфлікти вирішено — натисніть «Продовжити Cherry-pick»",
-    "conflict.continue_cherry_pick": "Продовжити Cherry-pick"
+    "conflict.continue_cherry_pick": "Продовжити Cherry-pick",
+
+    "hard_reset.dialog_title": "Hard Reset",
+    "hard_reset.dialog_text": "Скинути гілку на коміт {hash} у режимі HARD?\n\nУсі незакомічені зміни будуть АВТОМАТИЧНО ЗБЕРЕЖЕНІ\nу тимчасовому сховищі (Stash) і залишаться доступними\nдля відновлення через Stash → правий клік → Pop.\n\nПродовжити?",
+    "hard_reset.done_title": "Hard Reset виконано",
+    "hard_reset.done_text": "Hard reset виконано.\n\n✅ Ваші незбережені зміни збережено в:\n  «{label}»\n\nЩоб їх відновити:\n  Панель Stash → правий клік → Pop",
+    "hard_reset.done_status": "Hard reset виконано",
+
+    "stash_pop.dialog_title": "Stash Pop — відновити зміни",
+    "stash_pop.dialog_text": "Відновити зміни зі сташу та видалити запис?\n\nЗміни повернуться до робочої копії. Запис сташу буде видалено.\n\nЯкщо хочеш зберегти запис — використовуй «Apply» замість «Pop».",
+    "stash_pop.success": "✅ Зміни відновлено зі сташу",
+
+    "stash_drop.dialog_title": "Видалити запис сташу?",
+    "stash_drop.dialog_text": "Видалити цей запис сташу?\n\n⚠ Зміни, збережені в цьому записі, будуть безповоротно втрачені.\n\nЯкщо хочеш спочатку відновити їх — натисни «Скасувати» і використовуй «Pop».",
+    "stash_drop.success": "Запис сташу видалено",
+
+    "discard.dialog_title": "Скасувати зміни",
+    "discard.dialog_text_one": "Скасувати зміни у файлі:\n  • {path}\n\n✅ Зміни будуть ЗБЕРЕЖЕНІ у тимчасовому сховищі (Stash)\nі залишаться доступними для відновлення:\n  Панель Stash → правий клік → Pop\n\nПродовжити?",
+    "discard.dialog_text_many": "Скасувати зміни у {n} файл(ах):\n{names}\n\n✅ Зміни будуть ЗБЕРЕЖЕНІ у тимчасовому сховищі (Stash)\nі залишаться доступними для відновлення:\n  Панель Stash → правий клік → Pop\n\nПродовжити?",
+    "discard.success": "✅ Збережено в стеш «{label}» — відновити через Stash → Pop",
+    "discard.error_title": "Не вдалося зберегти в стеш",
+    "discard.error_text": "Зміни НЕ були скасовані — ваші файли в безпеці.\n\nПричина: {error}"
 }
