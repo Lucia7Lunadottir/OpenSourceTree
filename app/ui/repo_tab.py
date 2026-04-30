@@ -276,8 +276,9 @@ class RepoTab(QWidget):
 
     def _on_pull(self):
         dlg = RemoteDialog(self._repo, mode="pull", parent=self)
-        if dlg.exec():
-            self._refresh_all()
+        accepted = dlg.exec()
+        self._refresh_all()  # always refresh — pull may have left conflicts on disk
+        if accepted:
             self.status_message.emit(t("status.pull_done"))
 
     def _on_push(self):

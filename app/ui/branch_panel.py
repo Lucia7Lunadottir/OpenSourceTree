@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (
-    QTreeWidget, QTreeWidgetItem, QMenu, QMessageBox, QInputDialog,
+    QTreeWidget, QTreeWidgetItem, QTreeWidgetItemIterator, QMenu, QMessageBox, QInputDialog,
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QDialogButtonBox
 )
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -33,6 +33,15 @@ class BranchPanel(QTreeWidget):
         self.setIndentation(12)
 
     def refresh(self):
+        # Save selected item identity so we can restore it after rebuild
+        selected = self.currentItem()
+        saved_key = None
+        if selected:
+            d = selected.data(0, Qt.ItemDataRole.UserRole)
+            if d:
+                kind, obj = d
+                saved_key = (kind, obj.name)
+
         self.clear()
         try:
             branches = self._repo.get_branches()
@@ -82,6 +91,19 @@ class BranchPanel(QTreeWidget):
             stash_root.addChild(item)
 
         self.expandAll()
+
+        # Restore previously selected item
+        if saved_key:
+            it = QTreeWidgetItemIterator(self)
+            while it.value():
+                item = it.value()
+                d = item.data(0, Qt.ItemDataRole.UserRole)
+                if d:
+                    kind, obj = d
+                    if (kind, obj.name) == saved_key:
+                        self.setCurrentItem(item)
+                        break
+                it += 1
 
     def _make_section(self, title: str) -> QTreeWidgetItem:
         item = QTreeWidgetItem(self, [title])
@@ -143,10 +165,13 @@ class BranchPanel(QTreeWidget):
         def on_result(_):
             self.status_message.emit(success_msg)
             if refresh:
-                self.refresh()
                 self.refresh_requested.emit()
+        def on_error(e):
+            self.error_occurred.emit(e)
+            if refresh:
+                self.refresh_requested.emit()  # refresh even on error — conflicts must be shown
         worker.signals.result.connect(on_result)
-        worker.signals.error.connect(lambda e: self.error_occurred.emit(e))
+        worker.signals.error.connect(on_error)
         QThreadPool.globalInstance().start(worker)
 
     def _checkout(self, name: str):

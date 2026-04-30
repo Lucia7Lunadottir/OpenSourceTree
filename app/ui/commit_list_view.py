@@ -97,10 +97,35 @@ class CommitListView(QWidget):
     # ── Public ────────────────────────────────────────────────────────────────
 
     def load_commits(self, branch: str = ""):
+        saved = self._selected_hash()
         self._model.load_initial(branch=branch)
+        if saved:
+            self._restore_selection(saved)
 
     def refresh(self):
+        saved = self._selected_hash()
         self._model.load_initial(branch="", search=self._filter_edit.text())
+        if saved:
+            self._restore_selection(saved)
+
+    def _selected_hash(self) -> str:
+        idx = self._view.selectionModel().currentIndex()
+        if not idx.isValid():
+            return ""
+        commit = self._model.get_commit(idx.row())
+        return commit.hash if commit else ""
+
+    def _restore_selection(self, hash: str):
+        for row in range(self._model.rowCount()):
+            commit = self._model.get_commit(row)
+            if commit and commit.hash == hash:
+                idx = self._model.index(row, 0)
+                self._view.selectionModel().setCurrentIndex(
+                    idx, self._view.selectionModel().SelectionFlag.ClearAndSelect |
+                         self._view.selectionModel().SelectionFlag.Rows
+                )
+                self._view.scrollTo(idx)
+                break
 
     # ── Row selection ─────────────────────────────────────────────────────────
 
@@ -293,3 +318,4 @@ class CommitListView(QWidget):
         lines = [l for l in error.splitlines() if l.strip()]
         self.status_message.emit("Ошибка: " + (lines[-1] if lines else ""))
         QMessageBox.critical(self, "Git Error", error)
+        self.refresh_requested.emit()  # conflicts (cherry-pick/revert) must appear in UI
