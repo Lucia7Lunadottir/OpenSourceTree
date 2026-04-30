@@ -184,7 +184,7 @@ class BranchDialog(QDialog):
         self._set_running(False)
 
         err_lower = error.lower()
-        is_conflict = "conflict" in err_lower or "conflicts" in err_lower
+        is_conflict = any(kw in err_lower for kw in ("conflict", "conflicts", "конфликт"))
 
         if is_conflict and self._mode == "merge":
             QMessageBox.warning(
