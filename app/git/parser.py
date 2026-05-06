@@ -195,22 +195,29 @@ def parse_stashes(raw: str) -> list[StashInfo]:
         line = line.strip()
         if not line:
             continue
-        # format: index:stash@{N}: On branch: message
-        parts = line.split(":", 3)
-        if len(parts) < 3:
+        # git stash list format: stash@{N}: [On <branch>: ]<message>
+        colon_idx = line.find(":")
+        if colon_idx < 0:
+            continue
+        name_part = line[:colon_idx].strip()   # "stash@{0}"
+        rest = line[colon_idx + 1:].strip()    # "On main: WIP" or "WIP on main: abc msg"
+        if not (name_part.startswith("stash@{") and name_part.endswith("}")):
             continue
         try:
-            index = int(parts[0])
+            index = int(name_part[7:-1])       # extract N from stash@{N}
         except ValueError:
             continue
-        name = f"stash@{{{index}}}"
         branch = ""
-        message = parts[2].strip() if len(parts) > 2 else ""
-        if message.lower().startswith("on "):
-            branch_and_msg = message[3:].split(":", 1)
-            branch = branch_and_msg[0].strip()
-            message = branch_and_msg[1].strip() if len(branch_and_msg) > 1 else ""
-        stashes.append(StashInfo(index=index, name=name, message=message, branch=branch))
+        message = rest
+        if rest.lower().startswith("on "):
+            parts = rest[3:].split(":", 1)
+            branch = parts[0].strip()
+            message = parts[1].strip() if len(parts) > 1 else ""
+        elif rest.lower().startswith("wip on "):
+            parts = rest[7:].split(":", 1)
+            branch = parts[0].strip()
+            message = parts[1].strip() if len(parts) > 1 else ""
+        stashes.append(StashInfo(index=index, name=name_part, message=message, branch=branch))
     return stashes
 
 

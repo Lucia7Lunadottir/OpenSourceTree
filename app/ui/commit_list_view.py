@@ -264,15 +264,25 @@ class CommitListView(QWidget):
                          success=f"Reset {label} до {hash[:8]} выполнен")
 
     def _reset_hard(self, hash: str):
-        ret = QMessageBox.warning(
-            self, t("hard_reset.dialog_title"),
-            t("hard_reset.dialog_text", hash=hash[:8]),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        )
-        if ret == QMessageBox.StandardButton.Yes:
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Warning)
+        box.setWindowTitle(t("hard_reset.dialog_title"))
+        box.setText(t("hard_reset.dialog_text", hash=hash[:8]))
+        stash_btn   = box.addButton(t("hard_reset.btn_stash"),   QMessageBox.ButtonRole.AcceptRole)
+        discard_btn = box.addButton(t("hard_reset.btn_discard"), QMessageBox.ButtonRole.DestructiveRole)
+        cancel_btn  = box.addButton(QMessageBox.StandardButton.Cancel)
+        box.setDefaultButton(cancel_btn)
+        box.exec()
+
+        clicked = box.clickedButton()
+        if clicked == stash_btn:
             worker = GitWorker(self._repo.safe_reset_hard, hash)
             worker.signals.result.connect(self._on_hard_reset_done)
+            worker.signals.error.connect(self._on_op_error)
+            QThreadPool.globalInstance().start(worker)
+        elif clicked == discard_btn:
+            worker = GitWorker(self._repo.reset_to_commit, hash, "hard")
+            worker.signals.result.connect(lambda _: self._on_hard_reset_done(""))
             worker.signals.error.connect(self._on_op_error)
             QThreadPool.globalInstance().start(worker)
 

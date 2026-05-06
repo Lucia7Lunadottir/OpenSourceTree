@@ -265,7 +265,9 @@
     "conflict.continue_cherry_pick": "继续 Cherry-pick",
 
     "hard_reset.dialog_title": "硬重置",
-    "hard_reset.dialog_text": "将分支重置到提交 {hash}（HARD 模式）？\n\n所有未提交的更改将被自动保存\n到临时存储（Stash），可通过\nStash → 右键 → Pop 恢复。\n\n是否继续？",
+    "hard_reset.dialog_text": "将分支重置到提交 {hash}（HARD 模式）？\n\n您有未提交的更改，请选择处理方式：",
+    "hard_reset.btn_stash": "保存到 Stash + 重置",
+    "hard_reset.btn_discard": "丢弃更改 + 重置",
     "hard_reset.done_title": "硬重置完成",
     "hard_reset.done_text": "硬重置已完成。\n\n✅ 您未保存的更改已保存至：\n  「{label}」\n\n要恢复它们：\n  Stash 面板 → 右键 → Pop",
     "hard_reset.done_status": "硬重置完成",
@@ -277,6 +279,14 @@
     "stash_drop.dialog_title": "删除 Stash 条目？",
     "stash_drop.dialog_text": "删除此 Stash 条目？\n\n⚠ 保存在此条目中的更改将被永久删除。\n\n若要先恢复它们，请按取消并使用「Pop」。",
     "stash_drop.success": "Stash 条目已删除",
+
+    "stash_apply.dialog_title": "应用储藏",
+    "stash_apply.dialog_text": "将储藏的更改应用到工作副本？\n\n储藏条目将被保留（使用 Pop 来应用并删除它）。",
+
+    "branch.merge_confirm.title": "合并分支",
+    "branch.merge_confirm.text": "将 '{branch}' 合并到 '{current}'？\n\n这将把 '{branch}' 的更改合并到当前分支 '{current}'。",
+    "branch.rebase_confirm.title": "变基分支",
+    "branch.rebase_confirm.text": "将 '{current}' 变基到 '{branch}' 上？\n\n这将重写 '{current}' 的提交历史。",
 
     "discard.dialog_title": "放弃更改",
     "discard.dialog_text_one": "放弃以下文件的更改：\n  • {path}\n\n✅ 更改将保存至临时存储（Stash），\n可通过以下方式恢复：\n  Stash → 右键 → Pop\n\n是否继续？",

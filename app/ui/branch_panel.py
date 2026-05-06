@@ -189,10 +189,34 @@ class BranchPanel(QTreeWidget):
         self.branch_checked_out.emit(local_name)
 
     def _merge(self, name: str):
-        self._run(self._repo.merge, name, success_msg=f"Merged {name}")
+        try:
+            current = self._repo.get_head()
+        except Exception:
+            current = "HEAD"
+        ret = QMessageBox.question(
+            self,
+            t("branch.merge_confirm.title"),
+            t("branch.merge_confirm.text", branch=name, current=current),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if ret == QMessageBox.StandardButton.Yes:
+            self._run(self._repo.merge, name, success_msg=f"Merged {name}")
 
     def _rebase(self, name: str):
-        self._run(self._repo.rebase, name, success_msg=f"Rebased onto {name}")
+        try:
+            current = self._repo.get_head()
+        except Exception:
+            current = "HEAD"
+        ret = QMessageBox.question(
+            self,
+            t("branch.rebase_confirm.title"),
+            t("branch.rebase_confirm.text", branch=name, current=current),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if ret == QMessageBox.StandardButton.Yes:
+            self._run(self._repo.rebase, name, success_msg=f"Rebased onto {name}")
 
     def _rename_branch(self, old_name: str):
         new_name, ok = QInputDialog.getText(
@@ -300,7 +324,14 @@ class BranchPanel(QTreeWidget):
         self._run(self._repo.pull, "", name, success_msg=f"Pulled {name}")
 
     def _stash_apply(self, index: int):
-        self._run(self._repo.stash_apply, index, success_msg=t("stash_pop.success"))
+        ret = QMessageBox.question(
+            self, t("stash_apply.dialog_title"),
+            t("stash_apply.dialog_text"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes,
+        )
+        if ret == QMessageBox.StandardButton.Yes:
+            self._run(self._repo.stash_apply, index, success_msg=t("stash_pop.success"))
 
     def _stash_pop(self, index: int):
         ret = QMessageBox.question(

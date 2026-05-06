@@ -265,7 +265,9 @@
     "conflict.continue_cherry_pick": "Continuer le Cherry-pick",
 
     "hard_reset.dialog_title": "Hard Reset",
-    "hard_reset.dialog_text": "Réinitialiser la branche au commit {hash} en mode HARD ?\n\nTous les changements non validés seront AUTOMATIQUEMENT SAUVEGARDÉS\ndans le stockage temporaire (Stash) et pourront\nêtre restaurés via Stash → clic droit → Pop.\n\nContinuer ?",
+    "hard_reset.dialog_text": "Réinitialiser la branche au commit {hash} en mode HARD ?\n\nVous avez des modifications non validées. Que souhaitez-vous en faire ?",
+    "hard_reset.btn_stash": "Sauvegarder dans Stash + Réinitialiser",
+    "hard_reset.btn_discard": "Supprimer les modifications + Réinitialiser",
     "hard_reset.done_title": "Hard Reset terminé",
     "hard_reset.done_text": "Hard reset effectué.\n\n✅ Vos modifications non sauvegardées sont dans :\n  « {label} »\n\nPour les restaurer :\n  Panneau Stash → clic droit → Pop",
     "hard_reset.done_status": "Hard reset effectué",
@@ -277,6 +279,14 @@
     "stash_drop.dialog_title": "Supprimer l'entrée du stash ?",
     "stash_drop.dialog_text": "Supprimer cette entrée du stash ?\n\n⚠ Les modifications sauvegardées dans cette entrée seront définitivement perdues.\n\nPour les restaurer d'abord — appuyez sur Annuler et utilisez «Pop».",
     "stash_drop.success": "Entrée du stash supprimée",
+
+    "stash_apply.dialog_title": "Appliquer le Stash",
+    "stash_apply.dialog_text": "Appliquer les modifications du stash à la copie de travail ?\n\nL'entrée du stash sera conservée (utilisez Pop pour appliquer et supprimer).",
+
+    "branch.merge_confirm.title": "Fusionner la branche",
+    "branch.merge_confirm.text": "Fusionner '{branch}' dans '{current}' ?\n\nCela combinera les modifications de '{branch}' dans votre branche actuelle '{current}'.",
+    "branch.rebase_confirm.title": "Rebaser la branche",
+    "branch.rebase_confirm.text": "Rebaser '{current}' sur '{branch}' ?\n\nCela réécrira l'historique des commits de '{current}'.",
 
     "discard.dialog_title": "Annuler les modifications",
     "discard.dialog_text_one": "Annuler les modifications dans :\n  • {path}\n\n✅ Les modifications seront SAUVEGARDÉES dans le stockage temporaire (Stash)\net pourront être restaurées via :\n  Panneau Stash → clic droit → Pop\n\nContinuer ?",

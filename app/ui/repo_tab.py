@@ -227,11 +227,21 @@ class RepoTab(QWidget):
         self._working_copy_widget.refresh()
 
     def _load_commit_files(self, commit: CommitRecord):
+        # Save current selection so it can be restored after reload
+        cur = self._commit_files_list.currentItem()
+        saved_path = None
+        if cur:
+            e = cur.data(Qt.ItemDataRole.UserRole)
+            if e:
+                saved_path = e.path
+
+        self._commit_files_list.blockSignals(True)
         self._commit_files_list.clear()
-        self._diff_viewer.clear_diff()
         try:
             files = self._repo.get_commit_files(commit.hash)
         except Exception:
+            self._commit_files_list.blockSignals(False)
+            self._diff_viewer.clear_diff()
             return
         for entry in files:
             label = STATUS_LABELS.get(entry.status, entry.status)
@@ -243,6 +253,20 @@ class RepoTab(QWidget):
             )
             item.setForeground(color)
             self._commit_files_list.addItem(item)
+        self._commit_files_list.blockSignals(False)
+
+        # Restore previously selected file, or clear diff if none
+        restored = False
+        if saved_path:
+            for i in range(self._commit_files_list.count()):
+                item = self._commit_files_list.item(i)
+                e = item.data(Qt.ItemDataRole.UserRole)
+                if e and e.path == saved_path:
+                    self._commit_files_list.setCurrentItem(item)  # fires signal → reloads diff
+                    restored = True
+                    break
+        if not restored:
+            self._diff_viewer.clear_diff()
 
     def _on_commit_file_selected(self, current, previous):
         if current is None or self._current_commit is None:

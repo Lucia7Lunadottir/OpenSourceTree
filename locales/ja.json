@@ -265,7 +265,9 @@
     "conflict.continue_cherry_pick": "Cherry-pickを続行",
 
     "hard_reset.dialog_title": "ハードリセット",
-    "hard_reset.dialog_text": "ブランチをコミット {hash} にHARDモードでリセットしますか？\n\nコミットされていない変更はすべて一時領域（Stash）に\n自動的に保存され、Stash → 右クリック → Popで復元できます。\n\n続行しますか？",
+    "hard_reset.dialog_text": "ブランチをコミット {hash} にHARDモードでリセットしますか？\n\nコミットされていない変更があります。どうしますか？",
+    "hard_reset.btn_stash": "Stashに保存してリセット",
+    "hard_reset.btn_discard": "変更を破棄してリセット",
     "hard_reset.done_title": "ハードリセット完了",
     "hard_reset.done_text": "ハードリセットが完了しました。\n\n✅ 未保存の変更は次の場所に保存されました：\n  「{label}」\n\n復元するには：\n  Stashパネル → 右クリック → Pop",
     "hard_reset.done_status": "ハードリセット完了",
@@ -277,6 +279,14 @@
     "stash_drop.dialog_title": "スタッシュエントリを削除しますか？",
     "stash_drop.dialog_text": "このスタッシュエントリを削除しますか？\n\n⚠ このエントリに保存された変更は完全に失われます。\n\n先に復元したい場合はキャンセルを押して「Pop」を使用してください。",
     "stash_drop.success": "スタッシュエントリを削除しました",
+
+    "stash_apply.dialog_title": "スタッシュを適用",
+    "stash_apply.dialog_text": "スタッシュの変更をワーキングコピーに適用しますか？\n\nスタッシュエントリは保持されます（適用して削除するにはPopを使用してください）。",
+
+    "branch.merge_confirm.title": "ブランチをマージ",
+    "branch.merge_confirm.text": "'{branch}'を'{current}'にマージしますか？\n\n'{branch}'の変更が現在のブランチ'{current}'に統合されます。",
+    "branch.rebase_confirm.title": "ブランチをリベース",
+    "branch.rebase_confirm.text": "'{current}'を'{branch}'にリベースしますか？\n\n'{current}'のコミット履歴が書き換えられます。",
 
     "discard.dialog_title": "変更を破棄",
     "discard.dialog_text_one": "変更を破棄します：\n  • {path}\n\n✅ 変更は一時領域（Stash）に保存され、\n次の方法で復元できます：\n  Stash → 右クリック → Pop\n\n続行しますか？",

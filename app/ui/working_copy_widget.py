@@ -3,7 +3,7 @@ import fnmatch as _fnmatch
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
-    QTreeWidget, QTreeWidgetItem,
+    QTreeWidget, QTreeWidgetItem, QTreeWidgetItemIterator,
     QListWidget, QListWidgetItem,
     QStackedWidget,
     QLabel, QTextEdit, QPushButton, QCheckBox,
@@ -52,8 +52,19 @@ class FileListWidget(QListWidget):
         self.currentItemChanged.connect(self._on_item_changed)
 
     def set_files(self, entries: list[FileStatusEntry], lfs_patterns: list[str] = ()):
+        # Save current selection so it can be restored after rebuild
+        cur = self.currentItem()
+        cur_entry = cur.data(Qt.ItemDataRole.UserRole) if cur else None
+        cur_path = cur_entry.path if cur_entry else None
+        sel_paths = {
+            item.data(Qt.ItemDataRole.UserRole).path
+            for item in self.selectedItems()
+            if item.data(Qt.ItemDataRole.UserRole)
+        }
+
         self._pending_files = None
         self.setUpdatesEnabled(False)
+        self.blockSignals(True)
         self.clear()
         for entry in entries:
             sc = entry.status
@@ -72,6 +83,20 @@ class FileListWidget(QListWidget):
             elif lfs_mark:
                 item.setToolTip(f"Git LFS: {entry.path}")
             self.addItem(item)
+        self.blockSignals(False)
+
+        # Restore multi-selection without firing signals, then set current once
+        new_current = None
+        for i in range(self.count()):
+            item = self.item(i)
+            entry = item.data(Qt.ItemDataRole.UserRole)
+            if entry:
+                if entry.path in sel_paths:
+                    item.setSelected(True)
+                if entry.path == cur_path:
+                    new_current = item
+        if new_current:
+            self.setCurrentItem(new_current)  # fires signal once → reloads diff
         self.setUpdatesEnabled(True)
 
     def apply_filter(self, text: str):
@@ -157,7 +182,13 @@ class FileTreeWidget(QTreeWidget):
         super().mousePressEvent(event)
 
     def _rebuild(self):
+        # Save current selection path
+        cur = self.currentItem()
+        cur_entry = cur.data(0, Qt.ItemDataRole.UserRole) if cur else None
+        cur_path = cur_entry.path if cur_entry else None
+
         self.setUpdatesEnabled(False)
+        self.blockSignals(True)
         self.clear()
         dir_items: dict[str, QTreeWidgetItem] = {}
 
@@ -200,6 +231,18 @@ class FileTreeWidget(QTreeWidget):
                 item.setToolTip(0, "⚠ Merge conflict — right-click to resolve")
             elif lfs_mark:
                 item.setToolTip(0, f"Git LFS: {entry.path}")
+        self.blockSignals(False)
+
+        # Restore previously selected file
+        if cur_path:
+            it = QTreeWidgetItemIterator(self)
+            while it.value():
+                node = it.value()
+                entry = node.data(0, Qt.ItemDataRole.UserRole)
+                if entry and entry.path == cur_path:
+                    self.setCurrentItem(node)  # fires signal once → reloads diff
+                    break
+                it += 1
         self.setUpdatesEnabled(True)
 
     def _filter_tree(self, text: str):

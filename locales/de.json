@@ -265,7 +265,9 @@
     "conflict.continue_cherry_pick": "Cherry-pick fortsetzen",
 
     "hard_reset.dialog_title": "Hard Reset",
-    "hard_reset.dialog_text": "Branch auf Commit {hash} im HARD-Modus zurücksetzen?\n\nAlle nicht committeten Änderungen werden AUTOMATISCH GESPEICHERT\nin den temporären Speicher (Stash) und können\nüber Stash-Panel → Rechtsklick → Pop wiederhergestellt werden.\n\nFortfahren?",
+    "hard_reset.dialog_text": "Branch auf Commit {hash} im HARD-Modus zurücksetzen?\n\nSie haben nicht committete Änderungen. Was möchten Sie damit tun?",
+    "hard_reset.btn_stash": "Im Stash speichern + Zurücksetzen",
+    "hard_reset.btn_discard": "Änderungen verwerfen + Zurücksetzen",
     "hard_reset.done_title": "Hard Reset abgeschlossen",
     "hard_reset.done_text": "Hard Reset durchgeführt.\n\n✅ Ihre nicht gespeicherten Änderungen wurden gespeichert in:\n  \"{label}\"\n\nZum Wiederherstellen:\n  Stash-Panel → Rechtsklick → Pop",
     "hard_reset.done_status": "Hard Reset durchgeführt",
@@ -277,6 +279,14 @@
     "stash_drop.dialog_title": "Stash-Eintrag löschen?",
     "stash_drop.dialog_text": "Diesen Stash-Eintrag löschen?\n\n⚠ Gespeicherte Änderungen in diesem Eintrag werden unwiderruflich gelöscht.\n\nZum vorherigen Wiederherstellen — Abbrechen drücken und «Pop» verwenden.",
     "stash_drop.success": "Stash-Eintrag gelöscht",
+
+    "stash_apply.dialog_title": "Stash anwenden",
+    "stash_apply.dialog_text": "Stash-Änderungen auf die Arbeitskopie anwenden?\n\nDer Stash-Eintrag bleibt erhalten (Pop verwenden, um anzuwenden und zu löschen).",
+
+    "branch.merge_confirm.title": "Branch zusammenführen",
+    "branch.merge_confirm.text": "'{branch}' in '{current}' zusammenführen?\n\nDies kombiniert Änderungen aus '{branch}' in den aktuellen Branch '{current}'.",
+    "branch.rebase_confirm.title": "Branch rebasieren",
+    "branch.rebase_confirm.text": "'{current}' auf '{branch}' rebasieren?\n\nDies schreibt die Commit-Historie von '{current}' um.",
 
     "discard.dialog_title": "Änderungen verwerfen",
     "discard.dialog_text_one": "Änderungen in folgender Datei verwerfen:\n  • {path}\n\n✅ Änderungen werden im temporären Speicher (Stash) GESPEICHERT\nund können wiederhergestellt werden über:\n  Stash-Panel → Rechtsklick → Pop\n\nFortfahren?",
