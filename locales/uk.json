@@ -265,7 +265,9 @@
     "conflict.continue_cherry_pick": "Продовжити Cherry-pick",
 
     "hard_reset.dialog_title": "Hard Reset",
-    "hard_reset.dialog_text": "Скинути гілку на коміт {hash} у режимі HARD?\n\nУсі незакомічені зміни будуть АВТОМАТИЧНО ЗБЕРЕЖЕНІ\nу тимчасовому сховищі (Stash) і залишаться доступними\nдля відновлення через Stash → правий клік → Pop.\n\nПродовжити?",
+    "hard_reset.dialog_text": "Скинути гілку на коміт {hash} у режимі HARD?\n\nЄ незакомічені зміни. Що з ними зробити?",
+    "hard_reset.btn_stash": "Зберегти в Stash + Скинути",
+    "hard_reset.btn_discard": "Видалити зміни + Скинути",
     "hard_reset.done_title": "Hard Reset виконано",
     "hard_reset.done_text": "Hard reset виконано.\n\n✅ Ваші незбережені зміни збережено в:\n  «{label}»\n\nЩоб їх відновити:\n  Панель Stash → правий клік → Pop",
     "hard_reset.done_status": "Hard reset виконано",
@@ -277,6 +279,14 @@
     "stash_drop.dialog_title": "Видалити запис сташу?",
     "stash_drop.dialog_text": "Видалити цей запис сташу?\n\n⚠ Зміни, збережені в цьому записі, будуть безповоротно втрачені.\n\nЯкщо хочеш спочатку відновити їх — натисни «Скасувати» і використовуй «Pop».",
     "stash_drop.success": "Запис сташу видалено",
+
+    "stash_apply.dialog_title": "Застосувати стеш",
+    "stash_apply.dialog_text": "Застосувати зміни зі стешу до робочої копії?\n\nЗапис стешу залишиться (використовуй Pop, щоб застосувати та видалити).",
+
+    "branch.merge_confirm.title": "Злиття гілок",
+    "branch.merge_confirm.text": "Злити '{branch}' у '{current}'?\n\nЗміни з '{branch}' будуть додані до поточної гілки '{current}'.",
+    "branch.rebase_confirm.title": "Rebase гілки",
+    "branch.rebase_confirm.text": "Виконати rebase '{current}' на '{branch}'?\n\nЦе перепише історію комітів '{current}'.",
 
     "discard.dialog_title": "Скасувати зміни",
     "discard.dialog_text_one": "Скасувати зміни у файлі:\n  • {path}\n\n✅ Зміни будуть ЗБЕРЕЖЕНІ у тимчасовому сховищі (Stash)\nі залишаться доступними для відновлення:\n  Панель Stash → правий клік → Pop\n\nПродовжити?",

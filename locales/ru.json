@@ -436,7 +436,9 @@
     "conflict.continue_cherry_pick": "Продолжить Cherry-pick",
 
     "hard_reset.dialog_title": "Hard Reset",
-    "hard_reset.dialog_text": "Сбросить ветку на коммит {hash} в режиме HARD?\n\nВсе незакоммиченные изменения будут АВТОМАТИЧЕСКИ СОХРАНЕНЫ\nво временное хранилище (Stash) и останутся доступны\nдля восстановления через Stash → правая кнопка → Pop.\n\nПродолжить?",
+    "hard_reset.dialog_text": "Сбросить ветку на коммит {hash} в режиме HARD?\n\nЕсть незакоммиченные изменения. Что с ними сделать?",
+    "hard_reset.btn_stash": "Сохранить в Stash + Сбросить",
+    "hard_reset.btn_discard": "Удалить изменения + Сбросить",
     "hard_reset.done_title": "Hard Reset выполнен",
     "hard_reset.done_text": "Hard reset выполнен.\n\n✅ Ваши несохранённые изменения сохранены в:\n  «{label}»\n\nЧтобы вернуть их:\n  Панель Stash → правая кнопка → Pop",
     "hard_reset.done_status": "Hard reset выполнен",
@@ -448,6 +450,14 @@
     "stash_drop.dialog_title": "Удалить запись стеша?",
     "stash_drop.dialog_text": "Удалить эту запись из стеша?\n\n⚠ Изменения, сохранённые в этой записи, будут безвозвратно удалены.\n\nЕсли хочешь сначала восстановить их — нажми «Отмена» и используй «Pop».",
     "stash_drop.success": "Запись стеша удалена",
+
+    "stash_apply.dialog_title": "Применить стеш",
+    "stash_apply.dialog_text": "Применить изменения из стеша в рабочую копию?\n\nЗапись стеша останется (используй Pop, чтобы применить и удалить).",
+
+    "branch.merge_confirm.title": "Слияние веток",
+    "branch.merge_confirm.text": "Слить '{branch}' в '{current}'?\n\nИзменения из '{branch}' будут добавлены в текущую ветку '{current}'.",
+    "branch.rebase_confirm.title": "Rebase ветки",
+    "branch.rebase_confirm.text": "Выполнить rebase '{current}' на '{branch}'?\n\nЭто перепишет историю коммитов '{current}'.",
 
     "discard.dialog_title": "Отменить изменения",
     "discard.dialog_text_one": "Отменить изменения в файле:\n  • {path}\n\n✅ Изменения будут СОХРАНЕНЫ во временное хранилище (Stash)\nи останутся доступны для восстановления:\n  Панель Stash → правая кнопка → Pop\n\nПродолжить?",

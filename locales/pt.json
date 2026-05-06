@@ -265,7 +265,9 @@
     "conflict.continue_cherry_pick": "Continuar Cherry-pick",
 
     "hard_reset.dialog_title": "Hard Reset",
-    "hard_reset.dialog_text": "Redefinir branch para o commit {hash} com modo HARD?\n\nTodas as alterações não confirmadas serão AUTOMATICAMENTE SALVAS\nno armazenamento temporário (Stash) e poderão\nser restauradas pelo painel Stash → botão direito → Pop.\n\nContinuar?",
+    "hard_reset.dialog_text": "Redefinir branch para o commit {hash} com modo HARD?\n\nVocê tem alterações não confirmadas. O que deseja fazer com elas?",
+    "hard_reset.btn_stash": "Salvar no Stash + Redefinir",
+    "hard_reset.btn_discard": "Descartar alterações + Redefinir",
     "hard_reset.done_title": "Hard Reset concluído",
     "hard_reset.done_text": "Hard reset concluído.\n\n✅ Suas alterações não salvas estão em:\n  \"{label}\"\n\nPara restaurá-las:\n  Painel Stash → botão direito → Pop",
     "hard_reset.done_status": "Hard reset concluído",
@@ -277,6 +279,14 @@
     "stash_drop.dialog_title": "Excluir entrada do stash?",
     "stash_drop.dialog_text": "Excluir esta entrada do stash?\n\n⚠ As alterações salvas nesta entrada serão perdidas permanentemente.\n\nPara restaurá-las primeiro — pressione Cancelar e use «Pop».",
     "stash_drop.success": "Entrada do stash excluída",
+
+    "stash_apply.dialog_title": "Aplicar Stash",
+    "stash_apply.dialog_text": "Aplicar as mudanças do stash à cópia de trabalho?\n\nA entrada do stash será mantida (use Pop para aplicar e excluir).",
+
+    "branch.merge_confirm.title": "Mesclar Branch",
+    "branch.merge_confirm.text": "Mesclar '{branch}' em '{current}'?\n\nIsso combinará as mudanças de '{branch}' no branch atual '{current}'.",
+    "branch.rebase_confirm.title": "Rebase de Branch",
+    "branch.rebase_confirm.text": "Fazer rebase de '{current}' sobre '{branch}'?\n\nIsso reescreverá o histórico de commits de '{current}'.",
 
     "discard.dialog_title": "Descartar alterações",
     "discard.dialog_text_one": "Descartar alterações em:\n  • {path}\n\n✅ As alterações serão SALVAS no armazenamento temporário (Stash)\ne poderão ser restauradas por:\n  Painel Stash → botão direito → Pop\n\nContinuar?",
