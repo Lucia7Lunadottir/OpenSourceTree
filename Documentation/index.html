@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenSourceTree — Документация для разработчика</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════════════ -->
+<header class="site-header">
+  <a href="#top" class="logo">
+    <div class="logo-icon">🌿</div>
+    OpenSourceTree
+  </a>
+  <span class="badge">v1.2.15</span>
+  <div class="header-spacer"></div>
+  <nav class="header-links">
+    <a href="#overview">Обзор</a>
+    <a href="#architecture">Архитектура</a>
+    <a href="#api">API</a>
+    <a href="#ui">UI</a>
+    <a href="#build">Сборка</a>
+  </nav>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════
+     LAYOUT
+════════════════════════════════════════════════════════ -->
+<div class="layout">
+
+  <!-- ── Sidebar ──────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Начало работы</div>
+      <nav>
+        <a href="#overview" class="active">Обзор проекта</a>
+        <a href="#structure">Структура файлов</a>
+        <a href="#tech-stack">Стек технологий</a>
+        <a href="#install">Установка и запуск</a>
+      </nav>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Архитектура</div>
+      <nav>
+        <a href="#architecture">Общая архитектура</a>
+        <a href="#data-flow">Потоки данных</a>
+        <a href="#async">Async / Workers</a>
+        <a href="#auth">Аутентификация</a>
+      </nav>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Модели данных</div>
+      <nav>
+        <a href="#models">Git-модели</a>
+        <a href="#config-models">Config-модели</a>
+      </nav>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Git API</div>
+      <nav>
+        <a href="#git-runner">GitRunner</a>
+        <a href="#git-repo">GitRepo</a>
+        <a href="#api-commits" class="sub">Коммиты</a>
+        <a href="#api-staging" class="sub">Стейджинг</a>
+        <a href="#api-branches" class="sub">Ветки</a>
+        <a href="#api-remote" class="sub">Remotes</a>
+        <a href="#api-stash" class="sub">Stash</a>
+        <a href="#api-tags" class="sub">Теги</a>
+        <a href="#api-conflicts" class="sub">Конфликты</a>
+        <a href="#api-lfs" class="sub">LFS</a>
+      </nav>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">UI-компоненты</div>
+      <nav>
+        <a href="#ui">Компоненты</a>
+        <a href="#main-window" class="sub">MainWindow</a>
+        <a href="#repo-tab" class="sub">RepoTab</a>
+        <a href="#commit-list" class="sub">CommitListView</a>
+        <a href="#branch-panel" class="sub">BranchPanel</a>
+        <a href="#working-copy" class="sub">WorkingCopyWidget</a>
+        <a href="#diff-viewer" class="sub">DiffViewer</a>
+        <a href="#dialogs" class="sub">Диалоги</a>
+      </nav>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Дополнительно</div>
+      <nav>
+        <a href="#graph">Graph Layout</a>
+        <a href="#i18n">Интернационализация</a>
+        <a href="#theming">Темизация</a>
+        <a href="#config-system">Конфигурация</a>
+        <a href="#build">Сборка и пакетирование</a>
+      </nav>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Обучение</div>
+      <nav>
+        <a href="#learn">Что изучать</a>
+        <a href="#learn-python" class="sub">↳ Python</a>
+        <a href="#learn-pyqt6" class="sub">↳ PyQt6</a>
+        <a href="#learn-git" class="sub">↳ Git internals</a>
+        <a href="#learn-mvc" class="sub">↳ MVC / Model-View</a>
+        <a href="#learn-async" class="sub">↳ Многопоточность</a>
+        <a href="#learn-extras" class="sub">↳ Доп. библиотеки</a>
+        <a href="#learn-roadmap" class="sub">↳ Дорожная карта</a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- ── Main Content ──────────────────────────────────── -->
+  <main class="main-content" id="top">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-eyebrow">Документация для разработчика</div>
+      <h1>OpenSource<span>Tree</span></h1>
+      <p>Git GUI-клиент, вдохновлённый SourceTree, написанный на Python с использованием
+         PyQt6. Поддерживает тёмную тему Equestria OS Purple, 10 языков интерфейса
+         и полный набор функций для работы с Git-репозиториями.</p>
+      <div class="hero-tags">
+        <span class="tag tag-purple">Python 3</span>
+        <span class="tag tag-blue">PyQt6</span>
+        <span class="tag tag-green">Git</span>
+        <span class="tag tag-peach">NumPy</span>
+        <span class="tag tag-teal">Pygments</span>
+        <span class="tag tag-purple">GPL-3.0</span>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: OVERVIEW
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="overview">
+      <h2 class="section-title">
+        <span class="section-icon">📋</span>
+        Обзор проекта
+      </h2>
+      <p class="section-subtitle">
+        OpenSourceTree — это десктопное приложение для управления Git-репозиториями
+        с графическим интерфейсом.
+      </p>
+
+      <div class="card-grid">
+        <div class="card-sm">
+          <h4><span class="card-icon">📦</span> Репозиторий</h4>
+          <p>github.com/Lucia7Lunadottir/OpenSourceTree<br/>Лицензия: GPL-3.0-only</p>
+        </div>
+        <div class="card-sm">
+          <h4><span class="card-icon">🔢</span> Версия</h4>
+          <p>Текущая: <code>1.2.15</code><br/>~40 Python-файлов, ~3 400+ строк кода</p>
+        </div>
+        <div class="card-sm">
+          <h4><span class="card-icon">🎯</span> Целевая платформа</h4>
+          <p>Linux (первоклассная поддержка Arch), упаковка через makepkg и PyInstaller</p>
+        </div>
+        <div class="card-sm">
+          <h4><span class="card-icon">🌍</span> Языки интерфейса</h4>
+          <p>10 локалей: EN, RU, DE, ES, FR, JA, PT, PL, UK, ZH</p>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Основные возможности</h3>
+        <div class="card-grid">
+          <div class="card-sm">
+            <h4>🌿 Управление ветками</h4>
+            <p>Создание, переименование, удаление, merge, rebase. Отображение ahead/behind относительно upstream.</p>
+          </div>
+          <div class="card-sm">
+            <h4>📜 История коммитов</h4>
+            <p>Топологически упорядоченный граф коммитов с lane-визуализацией. Поиск по сообщению и автору.</p>
+          </div>
+          <div class="card-sm">
+            <h4>📁 Working Copy</h4>
+            <p>Stage/unstage файлов по отдельности или всех сразу. Коммит с поддержкой amend.</p>
+          </div>
+          <div class="card-sm">
+            <h4>🔀 Remote-операции</h4>
+            <p>Fetch, pull, push со стриминговым прогрессом. Force-push с защитой <code>--force-with-lease</code>.</p>
+          </div>
+          <div class="card-sm">
+            <h4>🔑 Аутентификация</h4>
+            <p>SSH-профили с автоматическим SSH config. HTTPS через ASKPASS-скрипт. Поддержка 4 провайдеров.</p>
+          </div>
+          <div class="card-sm">
+            <h4>📦 Git LFS</h4>
+            <p>Полная поддержка: список файлов, track/untrack, pull/push/fetch, prune.</p>
+          </div>
+          <div class="card-sm">
+            <h4>✂️ Split Commit</h4>
+            <p>Разбивка одного коммита на несколько батчей файлов с переписыванием истории.</p>
+          </div>
+          <div class="card-sm">
+            <h4>⚔️ Конфликты</h4>
+            <p>Разрешение merge-конфликтов: ours / theirs / mark resolved. Abort/continue для merge и rebase.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: STRUCTURE
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="structure">
+      <h2 class="section-title">
+        <span class="section-icon">📂</span>
+        Структура файлов
+      </h2>
+
+      <div class="file-tree">
+        <div><span class="tree-dir">OpenSourceTree/</span></div>
+        <div class="tree-indent">
+          <div><span class="tree-dir">app/</span> <span class="tree-desc">— основной пакет приложения</span></div>
+          <div class="tree-indent">
+            <div><span class="tree-file">__init__.py</span> <span class="tree-desc">— инициализация, тема, QSS-загрузчик</span></div>
+            <div><span class="tree-file">config.py</span> <span class="tree-desc">— вся конфигурация (~3 335 строк)</span></div>
+            <div><span class="tree-file">constants.py</span> <span class="tree-desc">— цветовые константы, перечисления</span></div>
+            <div><span class="tree-file">i18n.py</span> <span class="tree-desc">— движок интернационализации</span></div>
+            <div><span class="tree-dir">git/</span> <span class="tree-desc">— Git-абстракция</span></div>
+            <div class="tree-indent">
+              <div><span class="tree-file">models.py</span> <span class="tree-desc">— CommitRecord, BranchInfo, FileStatusEntry …</span></div>
+              <div><span class="tree-file">parser.py</span> <span class="tree-desc">— парсинг вывода git log/status</span></div>
+              <div><span class="tree-file">repo.py</span> <span class="tree-desc">— GitRepo (~950 строк, главный API)</span></div>
+              <div><span class="tree-file">runner.py</span> <span class="tree-desc">— GitRunner — subprocess обёртка</span></div>
+              <div><span class="tree-file">graph_layout.py</span> <span class="tree-desc">— алгоритм lane-визуализации графа</span></div>
+            </div>
+            <div><span class="tree-dir">ui/</span> <span class="tree-desc">— PyQt6 компоненты</span></div>
+            <div class="tree-indent">
+              <div><span class="tree-file">main_window.py</span> <span class="tree-desc">— главное окно приложения</span></div>
+              <div><span class="tree-file">repo_tab.py</span> <span class="tree-desc">— вкладка репозитория</span></div>
+              <div><span class="tree-file">commit_list_view.py</span> <span class="tree-desc">— список коммитов</span></div>
+              <div><span class="tree-file">commit_table_model.py</span> <span class="tree-desc">— QAbstractTableModel</span></div>
+              <div><span class="tree-file">commit_graph_delegate.py</span> <span class="tree-desc">— рисование графа коммитов</span></div>
+              <div><span class="tree-file">branch_panel.py</span> <span class="tree-desc">— дерево веток/тегов/stash</span></div>
+              <div><span class="tree-file">working_copy_widget.py</span> <span class="tree-desc">— stage/commit панель</span></div>
+              <div><span class="tree-file">bookmarks_panel.py</span> <span class="tree-desc">— боковая панель закладок</span></div>
+              <div><span class="tree-file">diff_viewer.py</span> <span class="tree-desc">— diff с подсветкой синтаксиса</span></div>
+              <div><span class="tree-dir">dialogs/</span> <span class="tree-desc">— 13 модальных диалогов</span></div>
+            </div>
+            <div><span class="tree-dir">workers/</span> <span class="tree-desc">— фоновые потоки</span></div>
+            <div class="tree-indent">
+              <div><span class="tree-file">base_worker.py</span> <span class="tree-desc">— базовый класс Worker</span></div>
+              <div><span class="tree-file">git_worker.py</span> <span class="tree-desc">— одиночный async git-вызов</span></div>
+              <div><span class="tree-file">streaming_worker.py</span> <span class="tree-desc">— стриминг для fetch/push/pull</span></div>
+              <div><span class="tree-file">batch_worker.py</span> <span class="tree-desc">— батч-операции</span></div>
+            </div>
+          </div>
+          <div><span class="tree-dir">locales/</span> <span class="tree-desc">— JSON-файлы переводов (10 языков)</span></div>
+          <div><span class="tree-dir">assets/</span> <span class="tree-desc">— иконки и ресурсы</span></div>
+          <div><span class="tree-file">main.py</span> <span class="tree-desc">— точка входа</span></div>
+          <div><span class="tree-file">style.qss</span> <span class="tree-desc">— Qt stylesheet (~15 КБ)</span></div>
+          <div><span class="tree-file">build.sh</span> <span class="tree-desc">— PyInstaller + makepkg скрипт</span></div>
+          <div><span class="tree-file">PKGBUILD</span> <span class="tree-desc">— Arch Linux пакет</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: TECH STACK
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="tech-stack">
+      <h2 class="section-title">
+        <span class="section-icon">🔧</span>
+        Стек технологий
+      </h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Зависимость</th>
+              <th>Версия</th>
+              <th>Назначение</th>
+              <th>Обязательна</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Python</td>
+              <td class="type-cell">3.x</td>
+              <td class="desc-cell">Основной язык приложения</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>PyQt6</td>
+              <td class="type-cell">≥ 6.4</td>
+              <td class="desc-cell">GUI-фреймворк: виджеты, сигналы, потоки</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>NumPy</td>
+              <td class="type-cell">≥ 1.24</td>
+              <td class="desc-cell">Вычисление lane-позиций в graph_layout.py</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>Pygments</td>
+              <td class="type-cell">≥ 2.14</td>
+              <td class="desc-cell">Подсветка синтаксиса в diff-viewer</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>git</td>
+              <td class="type-cell">≥ 2.30</td>
+              <td class="desc-cell">Внешняя CLI-зависимость для всех операций</td>
+              <td>✅</td>
+            </tr>
+            <tr>
+              <td>git-lfs</td>
+              <td class="type-cell">любая</td>
+              <td class="desc-cell">Поддержка Git Large File Storage</td>
+              <td>⚪ опц.</td>
+            </tr>
+            <tr>
+              <td>konsole / xterm</td>
+              <td class="type-cell">любая</td>
+              <td class="desc-cell">Интерактивный терминал для SSH-passphrase</td>
+              <td>⚪ опц.</td>
+            </tr>
+            <tr>
+              <td>PyInstaller</td>
+              <td class="type-cell">≥ 5.0</td>
+              <td class="desc-cell">Упаковка в standalone-бинарник</td>
+              <td>⚙️ сборка</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: INSTALL
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="install">
+      <h2 class="section-title">
+        <span class="section-icon">🚀</span>
+        Установка и запуск
+      </h2>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Запуск из исходников</h3>
+        <div class="pre-wrap">
+          <div class="pre-header"><span>bash</span></div>
+          <pre><code><span class="cm"># 1. Клонировать репозиторий</span>
+git clone https://github.com/Lucia7Lunadottir/OpenSourceTree.git
+cd OpenSourceTree
+
+<span class="cm"># 2. Установить зависимости (Arch Linux)</span>
+sudo pacman -S python-pyqt6 python-numpy python-pygments git
+
+<span class="cm"># 3. Запустить</span>
+python main.py
+<span class="cm"># или через скрипт</span>
+bash start.sh</code></pre>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Точка входа — main.py</h3>
+        <div class="pre-wrap">
+          <div class="pre-header"><span>app/main.py</span></div>
+          <pre><code><span class="kw">def</span> <span class="fn">main</span>():
+    app = QApplication(sys.argv)
+    app.setApplicationName(<span class="st">"OpenSourceTree"</span>)
+
+    <span class="cm"># Применить тёмную палитру Equestria OS Purple</span>
+    <span class="fn">apply_dark_palette</span>(app)
+
+    <span class="cm"># Загрузить QSS из style.qss</span>
+    <span class="fn">load_stylesheet</span>(app)
+
+    <span class="cm"># Загрузить переводы из locales/</span>
+    <span class="fn">load_language</span>()
+
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: ARCHITECTURE
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="architecture">
+      <h2 class="section-title">
+        <span class="section-icon">🏗️</span>
+        Общая архитектура
+      </h2>
+      <p class="section-subtitle">
+        Приложение построено на трёхслойной модели: Git-абстракция, Worker-слой и UI.
+      </p>
+
+      <div class="flow-diagram">
+        <div class="flow-row">
+          <div class="flow-node ui">MainWindow</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node ui">RepoTab</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node worker">GitWorker / StreamingWorker</div>
+        </div>
+        <div class="flow-row">
+          <div class="flow-node ui">BookmarksPanel</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node main">repo_selected signal</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node ui">RepoTab (новая вкладка)</div>
+        </div>
+        <div class="flow-row">
+          <div class="flow-node worker">Worker.run(fn, args)</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node git">GitRepo.method()</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node git">GitRunner.run(["git", ...])</div>
+        </div>
+        <div class="flow-row">
+          <div class="flow-node git">GitRunner</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node out">subprocess → git process</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node out">stdout / stderr</div>
+        </div>
+        <div class="flow-row">
+          <div class="flow-node worker">Worker.result signal</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node ui">UI callback (main thread)</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node ui">Model / Widget update</div>
+        </div>
+      </div>
+
+      <div class="callout callout-info">
+        <span class="callout-icon">ℹ️</span>
+        <div>Все взаимодействия с <code>GitRepo</code> из UI-слоя <strong>всегда</strong> проходят через
+        Worker. Прямые вызовы из главного потока допустимы только для быстрых read-only операций
+        (например, <code>get_head()</code>).</div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: DATA FLOW
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="data-flow">
+      <h2 class="section-title">
+        <span class="section-icon">🔄</span>
+        Потоки данных
+      </h2>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Открытие репозитория</h3>
+        <div class="flow-diagram">
+          <div class="flow-row">
+            <div class="flow-node start">BookmarksPanel.add_repo(path)</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-arrow">↓</div>
+            <div class="flow-note">GitRepo.is_git_repo(path) — проверка</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node main">repo_selected.emit(path)</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-arrow">↓</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node ui">MainWindow._open_repo(path) → RepoTab(path)</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-arrow">↓</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node worker">_refresh_all(): load_commits + load_branches + load_working_copy</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Получение и отрисовка коммитов</h3>
+        <div class="flow-diagram">
+          <div class="flow-row">
+            <div class="flow-node git">GitRepo.get_commits(branch, skip, limit)</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-arrow">↓</div>
+            <div class="flow-note">git log --format=... --topo-order</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node git">parse_commits() → list[CommitRecord]</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-arrow">↓</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node git">compute_graph_layout() → lane + LaneData</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-arrow">↓</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node ui">CommitTableModel → CommitListView</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-arrow">↓</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node ui">CommitGraphDelegate.paint() → QPainter рисует граф</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Streaming-операции (Fetch / Pull / Push)</h3>
+        <div class="flow-diagram">
+          <div class="flow-row">
+            <div class="flow-node ui">RemoteDialog кнопка "Fetch"</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-arrow">↓</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node worker">StreamingWorker(GitRepo.fetch_streaming, args)</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-arrow">↓</div>
+            <div class="flow-note">итерирует строки вывода git fetch</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node worker">progress_text.emit(line) → каждая строка</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-arrow">↓</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node ui">ProgressLabel / Log обновляется в реальном времени</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: ASYNC / WORKERS
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="async">
+      <h2 class="section-title">
+        <span class="section-icon">⚡</span>
+        Async / Workers
+      </h2>
+      <p class="section-subtitle">
+        Все блокирующие git-операции выполняются в отдельных потоках через QThreadPool.
+      </p>
+
+      <div class="card-grid">
+        <div class="card-sm">
+          <h4><span class="card-icon">🔵</span> GitWorker</h4>
+          <p>Выполняет одиночный вызов <code>fn(*args)</code> в потоке. Эмитирует <code>result</code>, <code>error</code>, <code>finished</code>.</p>
+        </div>
+        <div class="card-sm">
+          <h4><span class="card-icon">🟢</span> StreamingWorker</h4>
+          <p>Итерирует генератор <code>fn()</code>. Каждая строка вывода — сигнал <code>progress_text(str)</code>.</p>
+        </div>
+        <div class="card-sm">
+          <h4><span class="card-icon">🟡</span> BatchWorker</h4>
+          <p>Выполняет список операций последовательно в одном потоке. Используется для multi-step действий.</p>
+        </div>
+      </div>
+
+      <div class="pre-wrap">
+        <div class="pre-header"><span>Пример использования GitWorker</span></div>
+        <pre><code><span class="kw">def</span> <span class="fn">_do_commit</span>(<span class="at">self</span>, message: <span class="cl">str</span>):
+    worker = GitWorker(<span class="at">self</span>.repo.commit, message)
+    worker.signals.result.connect(<span class="at">self</span>._on_commit_done)
+    worker.signals.error.connect(<span class="at">self</span>._on_error)
+    QThreadPool.globalInstance().start(worker)
+
+<span class="kw">def</span> <span class="fn">_do_fetch_streaming</span>(<span class="at">self</span>, remote: <span class="cl">str</span>):
+    worker = StreamingWorker(<span class="at">self</span>.repo.fetch_streaming, remote)
+    worker.signals.progress_text.connect(<span class="at">self</span>.log_label.setText)
+    worker.signals.finished.connect(<span class="at">self</span>._on_fetch_done)
+    QThreadPool.globalInstance().start(worker)</code></pre>
+      </div>
+
+      <div class="callout callout-warn">
+        <span class="callout-icon">⚠️</span>
+        <div>Для multi-step операций (Split Commit, Safe Reset) используется <strong>write lock</strong>
+        — мьютекс, который блокирует параллельные git-вызовы до завершения всей операции.</div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: AUTH
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="auth">
+      <h2 class="section-title">
+        <span class="section-icon">🔐</span>
+        Аутентификация
+      </h2>
+
+      <div class="subsection">
+        <h3 class="subsection-title">SSH-аутентификация</h3>
+        <div class="flow-diagram">
+          <div class="flow-row">
+            <div class="flow-node ui">GitRunner._build_env()</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-note">при наличии SSH-профилей</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node git">get_git_ssh_command(profiles)</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node git">_write_openssh_config(profiles) → ~/.config/OpenSourceTree/ssh_config (chmod 600)</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node out">GIT_SSH_COMMAND = "ssh -F ~/.config/OpenSourceTree/ssh_config"</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-arrow">↓ при ошибке аутентификации</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node ui">"Retry in Terminal" → GitRunner.run_in_terminal()</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node out">konsole / xterm / alacritty</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">HTTPS-аутентификация</h3>
+        <div class="flow-diagram">
+          <div class="flow-row">
+            <div class="flow-node ui">При сохранении Account</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node git">_write_askpass_script(accounts)</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node git">Генерирует Python-скрипт с токенами → ~/.config/OpenSourceTree/askpass.py (chmod 700)</div>
+          </div>
+          <div class="flow-row">
+            <div class="flow-node out">GIT_ASKPASS = ~/.config/OpenSourceTree/askpass.py</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-note">git вызывает скрипт → скрипт возвращает токен</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">💡</span>
+        <div>Переменная <code>GIT_TERMINAL_PROMPT=0</code> устанавливается всегда — git <strong>не будет</strong>
+        интерактивно запрашивать пароль в консоли. При ошибке аутентификации отображается кнопка
+        «Retry in Terminal» для fallback-авторизации.</div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: DATA MODELS
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="models">
+      <h2 class="section-title">
+        <span class="section-icon">📐</span>
+        Git-модели данных
+      </h2>
+      <p class="section-subtitle">
+        Все модели — Python <code>@dataclass</code>, определены в <code>app/git/models.py</code>.
+      </p>
+
+      <div class="subsection">
+        <h3 class="subsection-title">CommitRecord</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+            <tbody>
+              <tr><td>hash</td><td class="type-cell">str</td><td class="desc-cell">Полный SHA-1 хэш коммита</td></tr>
+              <tr><td>short_hash</td><td class="type-cell">str</td><td class="desc-cell">Сокращённый хэш (7 символов)</td></tr>
+              <tr><td>parents</td><td class="type-cell">list[str]</td><td class="desc-cell">Список SHA родительских коммитов</td></tr>
+              <tr><td>author</td><td class="type-cell">str</td><td class="desc-cell">Имя автора коммита</td></tr>
+              <tr><td>author_email</td><td class="type-cell">str</td><td class="desc-cell">Email автора</td></tr>
+              <tr><td>date</td><td class="type-cell">datetime</td><td class="desc-cell">Дата и время коммита</td></tr>
+              <tr><td>message</td><td class="type-cell">str</td><td class="desc-cell">Тема коммита (subject line)</td></tr>
+              <tr><td>body</td><td class="type-cell">str = ""</td><td class="desc-cell">Полное тело сообщения коммита</td></tr>
+              <tr><td>refs</td><td class="type-cell">list[str]</td><td class="desc-cell">Ссылки: ветки, теги, HEAD</td></tr>
+              <tr><td>lane</td><td class="type-cell">int = -1</td><td class="desc-cell">Номер lane для визуализации графа</td></tr>
+              <tr><td>lane_data</td><td class="type-cell">LaneData</td><td class="desc-cell">Соединения с соседними lane'ами</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">BranchInfo</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+            <tbody>
+              <tr><td>name</td><td class="type-cell">str</td><td class="desc-cell">Имя ветки</td></tr>
+              <tr><td>is_current</td><td class="type-cell">bool</td><td class="desc-cell">Является ли текущей (HEAD)</td></tr>
+              <tr><td>is_remote</td><td class="type-cell">bool</td><td class="desc-cell">Удалённая ветка?</td></tr>
+              <tr><td>remote</td><td class="type-cell">str</td><td class="desc-cell">Имя remote (например, "origin")</td></tr>
+              <tr><td>tracking</td><td class="type-cell">str</td><td class="desc-cell">Upstream-ветка</td></tr>
+              <tr><td>ahead</td><td class="type-cell">int</td><td class="desc-cell">Коммитов впереди upstream</td></tr>
+              <tr><td>behind</td><td class="type-cell">int</td><td class="desc-cell">Коммитов позади upstream</td></tr>
+              <tr><td>commit_hash</td><td class="type-cell">str</td><td class="desc-cell">SHA последнего коммита ветки</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">FileStatusEntry</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+            <tbody>
+              <tr><td>status</td><td class="type-cell">str</td><td class="desc-cell">Статус: M, A, D, R, C, ?, U, T</td></tr>
+              <tr><td>path</td><td class="type-cell">str</td><td class="desc-cell">Путь к файлу</td></tr>
+              <tr><td>old_path</td><td class="type-cell">str</td><td class="desc-cell">Старый путь (для переименований R)</td></tr>
+              <tr><td>staged</td><td class="type-cell">bool</td><td class="desc-cell">Находится ли в индексе (stage)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <p style="font-size:.9rem; margin-bottom: 10px; color: var(--text-muted);">Значения поля <code>status</code>:</p>
+          <div class="swatch-grid" style="gap: 8px;">
+            <span class="tag tag-purple">M — modified</span>
+            <span class="tag tag-green">A — added</span>
+            <span class="tag" style="color:var(--red);border-color:rgba(243,139,168,.3);background:rgba(243,139,168,.08)">D — deleted</span>
+            <span class="tag tag-teal">R — renamed</span>
+            <span class="tag tag-blue">C — copied</span>
+            <span class="tag" style="color:var(--text-muted);border-color:var(--panel-border);background:var(--surface)">? — untracked</span>
+            <span class="tag tag-peach">U — unmerged</span>
+            <span class="tag tag-purple">T — type change</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Прочие модели</h3>
+        <div class="card-grid">
+          <div class="card-sm">
+            <h4>StashInfo</h4>
+            <p>index, message, branch, date, hash</p>
+          </div>
+          <div class="card-sm">
+            <h4>TagInfo</h4>
+            <p>name, commit_hash, is_annotated, message, date</p>
+          </div>
+          <div class="card-sm">
+            <h4>RemoteInfo</h4>
+            <p>name, fetch_url, push_url</p>
+          </div>
+          <div class="card-sm">
+            <h4>LfsFileEntry</h4>
+            <p>path, oid, size, pointer_path</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: CONFIG MODELS
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="config-models">
+      <h2 class="section-title">
+        <span class="section-icon">⚙️</span>
+        Config-модели
+      </h2>
+      <p class="section-subtitle">Определены в <code>app/config.py</code>. Сериализуются в JSON.</p>
+
+      <div class="subsection">
+        <h3 class="subsection-title">SSHProfile</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Поле</th><th>Тип / Default</th><th>Описание</th></tr></thead>
+            <tbody>
+              <tr><td>id</td><td class="type-cell">str (UUID)</td><td class="desc-cell">Уникальный идентификатор профиля</td></tr>
+              <tr><td>name</td><td class="type-cell">str</td><td class="desc-cell">Отображаемое имя профиля</td></tr>
+              <tr><td>key_path</td><td class="type-cell">str</td><td class="desc-cell">Путь к приватному SSH-ключу</td></tr>
+              <tr><td>host_alias</td><td class="type-cell">str</td><td class="desc-cell">Псевдоним хоста в SSH config</td></tr>
+              <tr><td>hostname</td><td class="type-cell">str</td><td class="desc-cell">Реальный hostname git-сервера</td></tr>
+              <tr><td>username</td><td class="type-cell">str = "git"</td><td class="desc-cell">Пользователь SSH</td></tr>
+              <tr><td>port</td><td class="type-cell">int = 22</td><td class="desc-cell">SSH-порт</td></tr>
+              <tr><td>strict_host_checking</td><td class="type-cell">str = "accept-new"</td><td class="desc-cell">StrictHostKeyChecking</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Account</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Поле</th><th>Тип</th><th>Описание</th></tr></thead>
+            <tbody>
+              <tr><td>id</td><td class="type-cell">str (UUID)</td><td class="desc-cell">Уникальный идентификатор</td></tr>
+              <tr><td>provider</td><td class="type-cell">str</td><td class="desc-cell">github / gitlab / bitbucket / gitea / custom</td></tr>
+              <tr><td>label</td><td class="type-cell">str</td><td class="desc-cell">Отображаемое имя учётной записи</td></tr>
+              <tr><td>username</td><td class="type-cell">str</td><td class="desc-cell">Логин пользователя</td></tr>
+              <tr><td>email</td><td class="type-cell">str</td><td class="desc-cell">Email для git author</td></tr>
+              <tr><td>token</td><td class="type-cell">str</td><td class="desc-cell">Personal Access Token</td></tr>
+              <tr><td>api_url</td><td class="type-cell">str</td><td class="desc-cell">URL API (для custom провайдеров)</td></tr>
+              <tr><td>host</td><td class="type-cell">str</td><td class="desc-cell">Git hostname</td></tr>
+              <tr><td>avatar_path</td><td class="type-cell">str</td><td class="desc-cell">Путь к кэшированному аватару</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pre-wrap">
+          <div class="pre-header"><span>PROVIDERS — встроенные провайдеры</span></div>
+          <pre><code>PROVIDERS = {
+    <span class="st">"github"</span>:    {<span class="st">"label"</span>: <span class="st">"GitHub"</span>,    <span class="st">"api_url"</span>: <span class="st">"https://api.github.com"</span>,            <span class="st">"host"</span>: <span class="st">"github.com"</span>},
+    <span class="st">"gitlab"</span>:    {<span class="st">"label"</span>: <span class="st">"GitLab"</span>,    <span class="st">"api_url"</span>: <span class="st">"https://gitlab.com/api/v4"</span>,         <span class="st">"host"</span>: <span class="st">"gitlab.com"</span>},
+    <span class="st">"bitbucket"</span>: {<span class="st">"label"</span>: <span class="st">"Bitbucket"</span>, <span class="st">"api_url"</span>: <span class="st">"https://api.bitbucket.org/2.0"</span>,    <span class="st">"host"</span>: <span class="st">"bitbucket.org"</span>},
+    <span class="st">"gitea"</span>:     {<span class="st">"label"</span>: <span class="st">"Gitea"</span>,     <span class="st">"api_url"</span>: <span class="st">""</span>,                                <span class="st">"host"</span>: <span class="st">""</span>},
+    <span class="st">"custom"</span>:    {<span class="st">"label"</span>: <span class="st">"Custom"</span>,    <span class="st">"api_url"</span>: <span class="st">""</span>,                                <span class="st">"host"</span>: <span class="st">""</span>},
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: GitRunner
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="git-runner">
+      <h2 class="section-title">
+        <span class="section-icon">🖥️</span>
+        GitRunner
+      </h2>
+      <p class="section-subtitle">
+        Низкоуровневая обёртка над <code>subprocess</code>. Файл: <code>app/git/runner.py</code>.
+      </p>
+
+      <div class="method-block">
+        <div class="method-sig">
+          <span class="kw-def">def</span>
+          <span class="fn-name">__init__</span>(<span class="param">self</span>, <span class="param">repo_path</span>: <span class="ret-type">str</span>)
+        </div>
+        <div class="method-desc">
+          Создаёт runner для конкретного репозитория. Устанавливает <code>cwd</code> для всех дочерних процессов.
+          Вызывает <code>_build_env()</code> для подготовки окружения с SSH и ASKPASS переменными.
+        </div>
+      </div>
+
+      <div class="method-block">
+        <div class="method-sig">
+          <span class="kw-def">def</span>
+          <span class="fn-name">run</span>(<span class="param">self</span>, <span class="param">args</span>: <span class="ret-type">list[str]</span>, <span class="param">input</span>: <span class="ret-type">str | None</span> = None, <span class="param">timeout</span>: <span class="ret-type">int | None</span> = None) → <span class="ret-type">str</span>
+        </div>
+        <div class="method-desc">
+          Запускает <code>git *args</code>, возвращает <code>stdout.decode()</code>.
+          При ненулевом коде возврата бросает <code>GitError</code> с stderr.
+          <br><strong>Параметры:</strong><br>
+          <code>input</code> — строка, передаваемая в stdin процесса<br>
+          <code>timeout</code> — таймаут в секундах (по умолчанию 60 с)
+        </div>
+      </div>
+
+      <div class="method-block">
+        <div class="method-sig">
+          <span class="kw-def">def</span>
+          <span class="fn-name">run_bytes</span>(<span class="param">self</span>, <span class="param">args</span>: <span class="ret-type">list[str]</span>, <span class="param">timeout</span>: <span class="ret-type">int | None</span> = None) → <span class="ret-type">bytes</span>
+        </div>
+        <div class="method-desc">
+          Аналог <code>run()</code>, но возвращает сырые байты. Используется для команд,
+          работающих с бинарными данными (например, <code>git cat-file -p</code> для LFS).
+        </div>
+      </div>
+
+      <div class="method-block">
+        <div class="method-sig">
+          <span class="kw-def">def</span>
+          <span class="fn-name">run_streaming</span>(<span class="param">self</span>, <span class="param">args</span>: <span class="ret-type">list[str]</span>) → <span class="ret-type">Iterator[str]</span>
+        </div>
+        <div class="method-desc">
+          Запускает git-процесс и yielding'ует строки stdout по мере их появления.
+          Используется в fetch/pull/push для real-time прогресса в UI.
+        </div>
+      </div>
+
+      <div class="method-block">
+        <div class="method-sig">
+          <span class="kw-def">def</span>
+          <span class="fn-name">run_in_terminal</span>(<span class="param">self</span>, <span class="param">args</span>: <span class="ret-type">list[str]</span>) → <span class="ret-type">None</span>
+        </div>
+        <div class="method-desc">
+          Открывает интерактивный эмулятор терминала (konsole → xterm → alacritty → kitty → foot)
+          для выполнения git-команды с интерактивным вводом (SSH passphrase).
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: GitRepo
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="git-repo">
+      <h2 class="section-title">
+        <span class="section-icon">📚</span>
+        GitRepo — главный API
+      </h2>
+      <p class="section-subtitle">
+        Высокоуровневая абстракция над git. Файл: <code>app/git/repo.py</code> (~950 строк).
+      </p>
+
+      <div class="callout callout-info">
+        <span class="callout-icon">ℹ️</span>
+        <div>Конструктор: <code>GitRepo(path: str)</code> — принимает путь к директории репозитория.
+        Создаёт внутренний <code>GitRunner(path)</code>. Метод класса <code>GitRepo.is_git_repo(path)</code>
+        проверяет, является ли директория git-репозиторием.</div>
+      </div>
+
+      <!-- Commits -->
+      <div class="subsection" id="api-commits">
+        <h3 class="subsection-title">Операции с коммитами</h3>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">get_commits</span>(<span class="param">skip</span>=<span class="nu">0</span>, <span class="param">limit</span>=<span class="nu">200</span>, <span class="param">branch</span>=<span class="st">""</span>, <span class="param">search</span>=<span class="st">""</span>) → <span class="ret-type">list[CommitRecord]</span>
+          </div>
+          <div class="method-desc">Загружает историю коммитов в топологическом порядке.
+          Применяет graph_layout. <code>search</code> фильтрует по сообщению и автору.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">get_commit_detail</span>(<span class="param">hash</span>: <span class="ret-type">str</span>) → <span class="ret-type">CommitRecord</span>
+          </div>
+          <div class="method-desc">Детальная информация о коммите включая полное тело сообщения.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">get_commit_files</span>(<span class="param">hash</span>: <span class="ret-type">str</span>) → <span class="ret-type">list[FileStatusEntry]</span>
+          </div>
+          <div class="method-desc">Список файлов, изменённых в данном коммите.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">get_diff</span>(<span class="param">hash</span>: <span class="ret-type">str</span>, <span class="param">file_path</span>=<span class="st">""</span>) → <span class="ret-type">str</span>
+          </div>
+          <div class="method-desc">Возвращает diff коммита. Если <code>file_path</code> указан — diff только для этого файла.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">commit</span>(<span class="param">message</span>: <span class="ret-type">str</span>, <span class="param">amend</span>: <span class="ret-type">bool</span> = <span class="nu">False</span>) → <span class="ret-type">str</span>
+          </div>
+          <div class="method-desc">Создаёт коммит из staged файлов. При <code>amend=True</code> изменяет последний коммит.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">cherry_pick</span>(<span class="param">hash</span>: <span class="ret-type">str</span>) → <span class="ret-type">None</span>
+          </div>
+          <div class="method-desc">Cherry-pick указанного коммита на текущую ветку.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">split_commit</span>(<span class="param">sha</span>: <span class="ret-type">str</span>, <span class="param">batches</span>: <span class="ret-type">list[list[str]]</span>, <span class="param">message</span>: <span class="ret-type">str</span>) → <span class="ret-type">None</span>
+          </div>
+          <div class="method-desc">
+            Разбивает коммит <code>sha</code> на несколько коммитов по батчам файлов.
+            Использует write lock. Работает как для HEAD, так и для коммитов в истории.
+          </div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">safe_reset_hard</span>(<span class="param">hash</span>: <span class="ret-type">str</span>) → <span class="ret-type">str</span>
+          </div>
+          <div class="method-desc">
+            Безопасный reset: сохраняет незакоммиченные изменения в stash
+            перед <code>git reset --hard</code>. Возвращает метку stash.
+          </div>
+        </div>
+      </div>
+
+      <!-- Staging -->
+      <div class="subsection" id="api-staging">
+        <h3 class="subsection-title">Staging (индекс)</h3>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">get_working_copy_status</span>() → <span class="ret-type">tuple[list[FileStatusEntry], list[FileStatusEntry]]</span>
+          </div>
+          <div class="method-desc">Возвращает кортеж <code>(staged_files, unstaged_files)</code>. Парсит <code>git status --porcelain=v1</code>.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">stage_file</span>(<span class="param">path</span>: <span class="ret-type">str</span>)  /
+            <span class="fn-name">stage_files</span>(<span class="param">paths</span>: <span class="ret-type">list[str]</span>)  /
+            <span class="fn-name">stage_all</span>()
+          </div>
+          <div class="method-desc">Добавляет файл(ы) или все файлы в индекс (<code>git add</code>).</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">unstage_file</span>(<span class="param">path</span>: <span class="ret-type">str</span>)  /
+            <span class="fn-name">unstage_files</span>(<span class="param">paths</span>: <span class="ret-type">list[str]</span>)  /
+            <span class="fn-name">unstage_all</span>()
+          </div>
+          <div class="method-desc">Удаляет файл(ы) из индекса (<code>git reset HEAD</code>).</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">get_working_copy_diff</span>(<span class="param">path</span>: <span class="ret-type">str</span>, <span class="param">staged</span>: <span class="ret-type">bool</span>) → <span class="ret-type">str</span>
+          </div>
+          <div class="method-desc">Diff файла в рабочей копии. <code>staged=True</code> → <code>git diff --cached</code>, иначе <code>git diff</code>.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">safe_discard_files</span>(<span class="param">paths</span>: <span class="ret-type">list[str]</span>) → <span class="ret-type">str</span>
+          </div>
+          <div class="method-desc">
+            Безопасный discard: сохраняет файлы в stash с меткой, затем удаляет из рабочей копии.
+            Изменения восстанавливаемы через stash pop.
+          </div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">stage_hunk</span>(<span class="param">patch</span>: <span class="ret-type">str</span>) → <span class="ret-type">None</span>
+          </div>
+          <div class="method-desc">Применяет патч частично (<code>git apply --cached</code>) для stage отдельных hunk'ов.</div>
+        </div>
+      </div>
+
+      <!-- Branches -->
+      <div class="subsection" id="api-branches">
+        <h3 class="subsection-title">Ветки</h3>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">get_branches</span>() → <span class="ret-type">list[BranchInfo]</span>
+          </div>
+          <div class="method-desc">Возвращает все локальные и удалённые ветки с ahead/behind, tracking.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">create_branch</span>(<span class="param">name</span>: <span class="ret-type">str</span>, <span class="param">from_ref</span>: <span class="ret-type">str</span> = <span class="st">"HEAD"</span>) → <span class="ret-type">None</span>
+          </div>
+          <div class="method-desc">Создаёт новую ветку от <code>from_ref</code> и переключается на неё.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">merge</span>(<span class="param">branch</span>: <span class="ret-type">str</span>, <span class="param">no_ff</span>: <span class="ret-type">bool</span> = <span class="nu">False</span>, <span class="param">squash</span>: <span class="ret-type">bool</span> = <span class="nu">False</span>) → <span class="ret-type">None</span>
+          </div>
+          <div class="method-desc">Выполняет merge ветки <code>branch</code> в текущую. Поддерживает флаги <code>--no-ff</code> и <code>--squash</code>.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">rebase</span>(<span class="param">branch</span>: <span class="ret-type">str</span>) → <span class="ret-type">None</span>
+          </div>
+          <div class="method-desc">Выполняет rebase текущей ветки поверх <code>branch</code>.</div>
+        </div>
+      </div>
+
+      <!-- Remotes -->
+      <div class="subsection" id="api-remote">
+        <h3 class="subsection-title">Remote-операции</h3>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">fetch_streaming</span>(<span class="param">remote</span>=<span class="st">""</span>, <span class="param">prune</span>=<span class="nu">False</span>, <span class="param">tags</span>=<span class="nu">True</span>) → <span class="ret-type">Iterator[str]</span>
+          </div>
+          <div class="method-desc">Стриминговый fetch с real-time прогрессом. <code>prune=True</code> удаляет устаревшие remote-ветки.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">pull_streaming</span>(<span class="param">remote</span>=<span class="st">""</span>, <span class="param">branch</span>=<span class="st">""</span>, <span class="param">rebase</span>=<span class="nu">False</span>) → <span class="ret-type">Iterator[str]</span>
+          </div>
+          <div class="method-desc">Стриминговый pull. <code>rebase=True</code> использует <code>git pull --rebase</code>.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">push_streaming</span>(<span class="param">remote</span>=<span class="st">""</span>, <span class="param">branch</span>=<span class="st">""</span>, <span class="param">force</span>=<span class="nu">False</span>, <span class="param">tags</span>=<span class="nu">False</span>) → <span class="ret-type">Iterator[str]</span>
+          </div>
+          <div class="method-desc">Стриминговый push. <code>force=True</code> использует <code>--force-with-lease</code> (безопасная force-push).</div>
+        </div>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">💡</span>
+          <div>Нестриминговые версии (<code>fetch</code>, <code>pull</code>, <code>push</code>) также существуют
+          и возвращают <code>str</code> — используются реже, в основном для тестирования.</div>
+        </div>
+      </div>
+
+      <!-- Stash -->
+      <div class="subsection" id="api-stash">
+        <h3 class="subsection-title">Stash</h3>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">stash_save</span>(<span class="param">message</span>=<span class="st">""</span>, <span class="param">include_untracked</span>=<span class="nu">True</span>) → <span class="ret-type">None</span>
+          </div>
+          <div class="method-desc">Сохраняет изменения в stash. <code>include_untracked=True</code> добавляет неотслеживаемые файлы (<code>-u</code>).</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">stash_pop</span>(<span class="param">index</span>: <span class="ret-type">int</span> = <span class="nu">0</span>) /
+            <span class="fn-name">stash_apply</span>(<span class="param">index</span>: <span class="ret-type">int</span> = <span class="nu">0</span>) /
+            <span class="fn-name">stash_drop</span>(<span class="param">index</span>: <span class="ret-type">int</span> = <span class="nu">0</span>)
+          </div>
+          <div class="method-desc">Pop восстанавливает и удаляет stash. Apply — только восстанавливает. Drop — только удаляет.</div>
+        </div>
+      </div>
+
+      <!-- Tags -->
+      <div class="subsection" id="api-tags">
+        <h3 class="subsection-title">Теги</h3>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">create_tag</span>(<span class="param">name</span>: <span class="ret-type">str</span>, <span class="param">ref</span>=<span class="st">"HEAD"</span>, <span class="param">message</span>=<span class="st">""</span>) → <span class="ret-type">None</span>
+          </div>
+          <div class="method-desc">Создаёт тег. Если <code>message</code> задан — annotated tag (<code>-a -m</code>), иначе lightweight.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">push_tag_streaming</span>(<span class="param">name</span>: <span class="ret-type">str</span>, <span class="param">remote</span>=<span class="st">"origin"</span>) → <span class="ret-type">Iterator[str]</span>
+          </div>
+          <div class="method-desc">Push тега на remote с прогрессом.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">delete_remote_tag</span>(<span class="param">name</span>: <span class="ret-type">str</span>, <span class="param">remote</span>=<span class="st">"origin"</span>) → <span class="ret-type">None</span>
+          </div>
+          <div class="method-desc">Удаляет тег с remote (<code>git push remote :refs/tags/name</code>).</div>
+        </div>
+      </div>
+
+      <!-- Conflicts -->
+      <div class="subsection" id="api-conflicts">
+        <h3 class="subsection-title">Конфликты</h3>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">get_conflicted_files</span>() → <span class="ret-type">list[str]</span>
+          </div>
+          <div class="method-desc">Список файлов с конфликтами (статус U, AA, DD, AU, UA и т.д.).</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">resolve_ours</span>(<span class="param">path</span>: <span class="ret-type">str</span>) /
+            <span class="fn-name">resolve_theirs</span>(<span class="param">path</span>: <span class="ret-type">str</span>)
+          </div>
+          <div class="method-desc">Разрешение конфликта в пользу нашей или их версии файла.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">is_merging</span>() / <span class="fn-name">is_rebasing</span>() / <span class="fn-name">is_cherry_picking</span>() → <span class="ret-type">bool</span>
+          </div>
+          <div class="method-desc">Проверяет текущее состояние репозитория по наличию служебных файлов Git.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">abort_merge</span>() /
+            <span class="fn-name">abort_rebase</span>() /
+            <span class="fn-name">abort_cherry_pick</span>()
+          </div>
+          <div class="method-desc">Прерывает текущую операцию слияния/rebase/cherry-pick.</div>
+        </div>
+      </div>
+
+      <!-- LFS -->
+      <div class="subsection" id="api-lfs">
+        <h3 class="subsection-title">Git LFS</h3>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">lfs_is_enabled</span>() → <span class="ret-type">bool</span>
+          </div>
+          <div class="method-desc">Проверяет, инициализирован ли LFS в репозитории (наличие <code>.gitattributes</code> с lfs-фильтрами).</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">lfs_list_files</span>() → <span class="ret-type">list[LfsFileEntry]</span>
+          </div>
+          <div class="method-desc">Список файлов под управлением LFS с их OID и размерами.</div>
+        </div>
+
+        <div class="method-block">
+          <div class="method-sig">
+            <span class="fn-name">lfs_pull</span>(<span class="param">paths</span>: <span class="ret-type">list[str]</span> = <span class="nu">[]</span>) /
+            <span class="fn-name">lfs_fetch</span>(<span class="param">remote</span>=<span class="st">""</span>, <span class="param">all_</span>=<span class="nu">False</span>) /
+            <span class="fn-name">lfs_push</span>(<span class="param">remote</span>=<span class="st">"origin"</span>) → <span class="ret-type">Iterator[str]</span>
+          </div>
+          <div class="method-desc">Стриминговые LFS-операции. <code>lfs_pull</code> без аргументов загружает все LFS-файлы.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: UI COMPONENTS
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="ui">
+      <h2 class="section-title">
+        <span class="section-icon">🖼️</span>
+        UI-компоненты
+      </h2>
+      <p class="section-subtitle">
+        Все компоненты — PyQt6 виджеты. Расположены в <code>app/ui/</code>.
+      </p>
+
+      <!-- MainWindow -->
+      <div class="subsection" id="main-window">
+        <h3 class="subsection-title">MainWindow</h3>
+        <p style="color:var(--text-muted); font-size:.9rem; margin-bottom: 12px;">
+          Файл: <code>app/ui/main_window.py</code>
+        </p>
+        <div class="card">
+          <p style="font-size:.9rem; margin-bottom: 12px;">Главное окно приложения. Содержит:</p>
+          <ul style="color:var(--text-muted); font-size:.88rem; line-height:2; padding-left:20px;">
+            <li>Горизонтальный splitter: <strong>BookmarksPanel</strong> (слева) + <strong>QTabWidget</strong> (справа)</li>
+            <li>Menu bar: <em>File</em> (открыть/клонировать/закрыть), <em>Settings</em> (аккаунты/SSH/идентификация/язык), <em>View</em>, <em>Help</em></li>
+            <li>Status bar для кратких уведомлений</li>
+            <li>Метод <code>_open_repo(path)</code> — создаёт <code>RepoTab</code> и добавляет во вкладки</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- RepoTab -->
+      <div class="subsection" id="repo-tab">
+        <h3 class="subsection-title">RepoTab</h3>
+        <p style="color:var(--text-muted); font-size:.9rem; margin-bottom: 12px;">
+          Файл: <code>app/ui/repo_tab.py</code>
+        </p>
+        <div class="card">
+          <p style="font-size:.9rem; margin-bottom: 12px;">Вкладка репозитория. Компоновка:</p>
+          <div class="file-tree" style="padding:14px 18px;">
+            <div><span class="tree-dir">RepoTab (QWidget)</span></div>
+            <div class="tree-indent">
+              <div><span class="tree-file">Toolbar</span> <span class="tree-desc">— fetch / pull / push / branch / stash / tag / remotes / cleanup</span></div>
+              <div><span class="tree-file">QSplitter (горизонтальный)</span></div>
+              <div class="tree-indent">
+                <div><span class="tree-file">BranchPanel</span> <span class="tree-desc">— слева</span></div>
+                <div><span class="tree-dir">QSplitter (вертикальный)</span> <span class="tree-desc">— центр + правая часть</span></div>
+                <div class="tree-indent">
+                  <div><span class="tree-file">CommitListView + SearchBar</span> <span class="tree-desc">— сверху</span></div>
+                  <div><span class="tree-dir">QSplitter (горизонтальный)</span> <span class="tree-desc">— снизу</span></div>
+                  <div class="tree-indent">
+                    <div><span class="tree-file">FileListWidget</span> <span class="tree-desc">— список файлов коммита</span></div>
+                    <div><span class="tree-file">DiffViewer</span> <span class="tree-desc">— diff файла</span></div>
+                  </div>
+                </div>
+                <div><span class="tree-file">WorkingCopyWidget</span> <span class="tree-desc">— справа</span></div>
+              </div>
+            </div>
+          </div>
+          <p style="font-size:.85rem; color:var(--text-muted); margin-top:12px;">
+            Метод <code>_refresh_all()</code> вызывается при открытии и после каждой изменяющей операции.
+          </p>
+        </div>
+      </div>
+
+      <!-- CommitListView -->
+      <div class="subsection" id="commit-list">
+        <h3 class="subsection-title">CommitListView + CommitTableModel</h3>
+        <p style="color:var(--text-muted); font-size:.9rem; margin-bottom: 12px;">
+          Файлы: <code>commit_list_view.py</code>, <code>commit_table_model.py</code>, <code>commit_graph_delegate.py</code>
+        </p>
+        <div class="card-grid">
+          <div class="card-sm">
+            <h4>CommitTableModel</h4>
+            <p>Наследует <code>QAbstractTableModel</code>. Колонки: Graph | Hash | Message | Author | Date. Поддерживает пагинацию через <code>canFetchMore()</code>.</p>
+          </div>
+          <div class="card-sm">
+            <h4>CommitGraphDelegate</h4>
+            <p>Наследует <code>QStyledItemDelegate</code>. Рисует цветные lane'ы и соединения в колонке Graph через <code>QPainter</code>.</p>
+          </div>
+          <div class="card-sm">
+            <h4>Контекстное меню</h4>
+            <p>Checkout, Cherry-pick, Revert, Reset, Split Commit. Доступность зависит от контекста.</p>
+          </div>
+          <div class="card-sm">
+            <h4>Поиск с debounce</h4>
+            <p>SearchBar обновляет фильтр с задержкой 300 мс через <code>QTimer</code>. Перезапускает загрузку коммитов с параметром <code>search</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- BranchPanel -->
+      <div class="subsection" id="branch-panel">
+        <h3 class="subsection-title">BranchPanel</h3>
+        <p style="color:var(--text-muted); font-size:.9rem; margin-bottom: 12px;">
+          Файл: <code>app/ui/branch_panel.py</code>
+        </p>
+        <div class="card">
+          <p style="font-size:.9rem; margin-bottom: 8px;">QTreeWidget с разделами:</p>
+          <ul style="color:var(--text-muted); font-size:.87rem; line-height:2; padding-left:20px;">
+            <li><strong>LOCAL BRANCHES</strong> — локальные ветки, текущая выделена жирным</li>
+            <li><strong>REMOTE BRANCHES</strong> — ветки сгруппированы по remote</li>
+            <li><strong>TAGS</strong> — аннотированные теги с датой</li>
+            <li><strong>STASHES</strong> — список stash'ей</li>
+          </ul>
+          <p style="font-size:.85rem; color:var(--text-muted); margin-top:8px;">
+            Двойной клик — checkout. Контекстное меню — merge, rebase, rename, delete, push, pull.
+          </p>
+        </div>
+      </div>
+
+      <!-- WorkingCopy -->
+      <div class="subsection" id="working-copy">
+        <h3 class="subsection-title">WorkingCopyWidget</h3>
+        <p style="color:var(--text-muted); font-size:.9rem; margin-bottom: 12px;">
+          Файл: <code>app/ui/working_copy_widget.py</code>
+        </p>
+        <div class="card">
+          <p style="font-size:.9rem; margin-bottom: 8px;">Панель управления рабочей копией:</p>
+          <ul style="color:var(--text-muted); font-size:.87rem; line-height:2; padding-left:20px;">
+            <li>Верхняя половина: <strong>Staged Files</strong> — файлы в индексе</li>
+            <li>Нижняя половина: <strong>Unstaged Files</strong> — изменённые файлы</li>
+            <li>Переключатель Tree / Flat list для каждого раздела</li>
+            <li>Кнопки Stage All / Unstage All / Discard</li>
+            <li>Текстовое поле сообщения коммита + чекбокс Amend</li>
+            <li>Кнопка Commit (активна при наличии staged файлов или amend)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- DiffViewer -->
+      <div class="subsection" id="diff-viewer">
+        <h3 class="subsection-title">DiffViewer</h3>
+        <p style="color:var(--text-muted); font-size:.9rem; margin-bottom: 12px;">
+          Файл: <code>app/ui/diff_viewer.py</code>
+        </p>
+        <div class="card">
+          <p style="font-size:.9rem;">
+            <code>QTextEdit</code> в режиме read-only с подсветкой синтаксиса через <strong>Pygments</strong>.
+            Строки с <code>+</code> подсвечиваются зелёным, с <code>-</code> — красным, заголовки hunk'ов — синим.
+            Поддерживает выбор текста для stage отдельных hunk'ов (через <code>stage_hunk()</code>).
+          </p>
+        </div>
+      </div>
+
+      <!-- Dialogs -->
+      <div class="subsection" id="dialogs">
+        <h3 class="subsection-title">Диалоги</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Файл</th><th>Назначение</th></tr></thead>
+            <tbody>
+              <tr><td>clone_dialog.py</td><td class="desc-cell">Клонирование репозитория: URL, имя, директория назначения</td></tr>
+              <tr><td>accounts_dialog.py</td><td class="desc-cell">Управление аккаунтами GitHub/GitLab/Bitbucket/Gitea с загрузкой аватаров</td></tr>
+              <tr><td>ssh_dialog.py</td><td class="desc-cell">Настройка SSH-профилей: ключ, хост, алиас, порт</td></tr>
+              <tr><td>identity_dialog.py</td><td class="desc-cell">git user.name и user.email (глобально или локально)</td></tr>
+              <tr><td>language_dialog.py</td><td class="desc-cell">Выбор языка интерфейса (10 языков)</td></tr>
+              <tr><td>branch_dialog.py</td><td class="desc-cell">Создание и переименование веток</td></tr>
+              <tr><td>remote_dialog.py</td><td class="desc-cell">Fetch / Pull / Push с настройками (prune, force, tags, rebase)</td></tr>
+              <tr><td>stash_dialog.py</td><td class="desc-cell">Сохранение stash с сообщением</td></tr>
+              <tr><td>tag_dialog.py</td><td class="desc-cell">Создание annotated / lightweight тегов</td></tr>
+              <tr><td>conflict_dialog.py</td><td class="desc-cell">Разрешение конфликтов: ours / theirs / mark resolved</td></tr>
+              <tr><td>remotes_dialog.py</td><td class="desc-cell">Управление remote-репозиториями: add, rename, delete, edit URL</td></tr>
+              <tr><td>lfs_dialog.py</td><td class="desc-cell">LFS файлы: список, track/untrack паттерны, pull/push/fetch</td></tr>
+              <tr><td>split_commit_dialog.py</td><td class="desc-cell">Разбивка коммита на батчи файлов</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: GRAPH LAYOUT
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="graph">
+      <h2 class="section-title">
+        <span class="section-icon">🕸️</span>
+        Алгоритм Graph Layout
+      </h2>
+      <p class="section-subtitle">
+        Файл: <code>app/git/graph_layout.py</code>. Визуализация истории в виде DAG-графа с lane'ами.
+      </p>
+
+      <div class="card">
+        <h4 style="color:var(--text); margin-bottom:12px;">Принцип работы</h4>
+        <ol style="color:var(--text-muted); font-size:.88rem; line-height:2.2; padding-left:20px;">
+          <li>Коммиты принимаются в топологическом порядке (новые первые)</li>
+          <li>Для каждого коммита определяется lane: либо переиспользуется lane первого родителя, либо выделяется новый</li>
+          <li>Отслеживаются <strong>open_lanes</strong> — lane'ы, ожидающие продолжения (родитель ещё не встречен)</li>
+          <li>Записываются соединения: от каких lane'ов приходят и к каким уходят линии</li>
+          <li>Когда последний ребёнок коммита встречен — lane освобождается (MAX_LANES = 32)</li>
+          <li>Результат: каждый <code>CommitRecord</code> получает <code>lane</code> и <code>LaneData</code></li>
+        </ol>
+      </div>
+
+      <div class="pre-wrap">
+        <div class="pre-header"><span>LaneData — структура соединений</span></div>
+        <pre><code><span class="de">@dataclass</span>
+<span class="kw">class</span> <span class="cl">LaneData</span>:
+    connections: <span class="cl">list</span>[<span class="cl">tuple</span>[<span class="cl">int</span>, <span class="cl">int</span>]]  <span class="cm"># (from_lane, to_lane) — линии между строками</span>
+    active_lanes: <span class="cl">list</span>[<span class="cl">int</span>]            <span class="cm"># lane'ы, проходящие сквозь эту строку</span>
+    merge_lanes: <span class="cl">list</span>[<span class="cl">int</span>]             <span class="cm"># входящие lane'ы для merge-коммитов</span></code></pre>
+      </div>
+
+      <div class="callout callout-info">
+        <span class="callout-icon">ℹ️</span>
+        <div>NumPy используется для эффективного отслеживания массива <code>open_lanes</code> как
+        бинарного вектора длиной MAX_LANES=32. Это позволяет быстро найти свободный lane (<code>np.argmin</code>)
+        и проверить занятость.</div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: I18N
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="i18n">
+      <h2 class="section-title">
+        <span class="section-icon">🌍</span>
+        Интернационализация (i18n)
+      </h2>
+      <p class="section-subtitle">
+        Файл: <code>app/i18n.py</code>. Локали: <code>locales/*.json</code>.
+      </p>
+
+      <div class="card-grid">
+        <div class="card-sm"><h4>🇬🇧 English</h4><p>en.json — базовый язык (fallback)</p></div>
+        <div class="card-sm"><h4>🇷🇺 Русский</h4><p>ru.json</p></div>
+        <div class="card-sm"><h4>🇩🇪 Deutsch</h4><p>de.json</p></div>
+        <div class="card-sm"><h4>🇪🇸 Español</h4><p>es.json</p></div>
+        <div class="card-sm"><h4>🇫🇷 Français</h4><p>fr.json</p></div>
+        <div class="card-sm"><h4>🇯🇵 日本語</h4><p>ja.json</p></div>
+        <div class="card-sm"><h4>🇵🇹 Português</h4><p>pt.json</p></div>
+        <div class="card-sm"><h4>🇵🇱 Polski</h4><p>pl.json</p></div>
+        <div class="card-sm"><h4>🇺🇦 Українська</h4><p>uk.json</p></div>
+        <div class="card-sm"><h4>🇨🇳 中文</h4><p>zh.json</p></div>
+      </div>
+
+      <div class="pre-wrap">
+        <div class="pre-header"><span>Использование i18n API</span></div>
+        <pre><code><span class="kw">from</span> app.i18n <span class="kw">import</span> t, load_language, set_language
+
+<span class="cm"># Загрузить язык при старте</span>
+<span class="fn">load_language</span>()  <span class="cm"># читает ~/.config/OpenSourceTree/app_config.json</span>
+
+<span class="cm"># Получить строку по ключу</span>
+label = <span class="fn">t</span>(<span class="st">"toolbar.fetch"</span>)          <span class="cm"># → "Fetch" / "Получить" / "Holen" …</span>
+
+<span class="cm"># С параметрами (str.format)</span>
+msg = <span class="fn">t</span>(<span class="st">"branch.deleted"</span>, name=<span class="st">"feature/x"</span>)  <span class="cm"># → "Branch 'feature/x' deleted"</span>
+
+<span class="cm"># Сменить язык</span>
+<span class="fn">set_language</span>(<span class="st">"ru"</span>)</code></pre>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Структура ключей</h3>
+        <div class="pre-wrap">
+          <div class="pre-header"><span>locales/en.json (фрагмент)</span></div>
+          <pre><code>{
+  <span class="st">"menu"</span>: {
+    <span class="st">"file"</span>: <span class="st">"File"</span>,
+    <span class="st">"file.open"</span>: <span class="st">"Open Repository..."</span>,
+    <span class="st">"file.clone"</span>: <span class="st">"Clone Repository..."</span>
+  },
+  <span class="st">"toolbar"</span>: {
+    <span class="st">"fetch"</span>: <span class="st">"Fetch"</span>,
+    <span class="st">"pull"</span>: <span class="st">"Pull"</span>,
+    <span class="st">"push"</span>: <span class="st">"Push"</span>
+  },
+  <span class="st">"branch_panel"</span>: {
+    <span class="st">"local"</span>: <span class="st">"LOCAL BRANCHES"</span>,
+    <span class="st">"remote"</span>: <span class="st">"REMOTE BRANCHES"</span>
+  }
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: THEMING
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="theming">
+      <h2 class="section-title">
+        <span class="section-icon">🎨</span>
+        Темизация и цветовая палитра
+      </h2>
+      <p class="section-subtitle">
+        Тёмная тема Equestria OS Purple с акцентами Catppuccin Mocha.
+        Загрузчик: <code>app/__init__.py</code>, QSS: <code>style.qss</code>.
+      </p>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Основные цвета фона</h3>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="swatch-dot" style="background:#1a1829;"></div><div class="swatch-info"><span class="swatch-name">Root Background</span><span class="swatch-hex">#1a1829</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#1e1c30;"></div><div class="swatch-info"><span class="swatch-name">Alt Background</span><span class="swatch-hex">#1e1c30</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#28243e;"></div><div class="swatch-info"><span class="swatch-name">Input BG</span><span class="swatch-hex">#28243e</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#302d55;"></div><div class="swatch-info"><span class="swatch-name">Surface</span><span class="swatch-hex">#302d55</span></div></div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Акцентные и текстовые цвета</h3>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="swatch-dot" style="background:#7b5cad;"></div><div class="swatch-info"><span class="swatch-name">Accent</span><span class="swatch-hex">#7b5cad</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#cba6f7;"></div><div class="swatch-info"><span class="swatch-name">Link / Lavender</span><span class="swatch-hex">#cba6f7</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#dcd7f5;"></div><div class="swatch-info"><span class="swatch-name">Text</span><span class="swatch-hex">#dcd7f5</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#8a85b0;"></div><div class="swatch-info"><span class="swatch-name">Text Muted</span><span class="swatch-hex">#8a85b0</span></div></div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Lane-цвета графа (Catppuccin Mocha)</h3>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="swatch-dot" style="background:#cba6f7;"></div><div class="swatch-info"><span class="swatch-name">Lavender</span><span class="swatch-hex">#cba6f7</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#89dceb;"></div><div class="swatch-info"><span class="swatch-name">Sky</span><span class="swatch-hex">#89dceb</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#a6e3a1;"></div><div class="swatch-info"><span class="swatch-name">Green</span><span class="swatch-hex">#a6e3a1</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#fab387;"></div><div class="swatch-info"><span class="swatch-name">Peach</span><span class="swatch-hex">#fab387</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#f38ba8;"></div><div class="swatch-info"><span class="swatch-name">Red</span><span class="swatch-hex">#f38ba8</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#89b4fa;"></div><div class="swatch-info"><span class="swatch-name">Blue</span><span class="swatch-hex">#89b4fa</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#f9e2af;"></div><div class="swatch-info"><span class="swatch-name">Yellow</span><span class="swatch-hex">#f9e2af</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#94e2d5;"></div><div class="swatch-info"><span class="swatch-name">Teal</span><span class="swatch-hex">#94e2d5</span></div></div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Цвета статусов файлов</h3>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="swatch-dot" style="background:#f9e2af;"></div><div class="swatch-info"><span class="swatch-name">M — Modified</span><span class="swatch-hex">#f9e2af</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#a6e3a1;"></div><div class="swatch-info"><span class="swatch-name">A — Added</span><span class="swatch-hex">#a6e3a1</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#f38ba8;"></div><div class="swatch-info"><span class="swatch-name">D — Deleted</span><span class="swatch-hex">#f38ba8</span></div></div>
+          <div class="swatch"><div class="swatch-dot" style="background:#89dceb;"></div><div class="swatch-info"><span class="swatch-name">R — Renamed</span><span class="swatch-hex">#89dceb</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: CONFIG SYSTEM
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="config-system">
+      <h2 class="section-title">
+        <span class="section-icon">💾</span>
+        Система конфигурации
+      </h2>
+
+      <p style="color:var(--text-muted); font-size:.9rem; margin-bottom: 16px;">
+        Все данные хранятся в <code>~/.config/OpenSourceTree/</code>.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Файл</th><th>Содержимое</th><th>Формат</th></tr></thead>
+          <tbody>
+            <tr><td>bookmarks.json</td><td class="desc-cell">Список путей к репозиториям (закладки)</td><td>JSON array</td></tr>
+            <tr><td>ssh_profiles.json</td><td class="desc-cell">SSH-профили (SSHProfile dataclass)</td><td>JSON array</td></tr>
+            <tr><td>accounts.json</td><td class="desc-cell">Git-аккаунты с токенами (Account dataclass)</td><td>JSON array</td></tr>
+            <tr><td>app_config.json</td><td class="desc-cell">Настройки приложения (язык)</td><td>JSON object</td></tr>
+            <tr><td>ssh_config</td><td class="desc-cell">Сгенерированный OpenSSH config</td><td>SSH config, chmod 600</td></tr>
+            <tr><td>askpass.py</td><td class="desc-cell">HTTPS credential helper скрипт</td><td>Python, chmod 700</td></tr>
+            <tr><td>avatars/</td><td class="desc-cell">Кэшированные аватары пользователей</td><td>PNG/JPEG</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-danger">
+        <span class="callout-icon">🔒</span>
+        <div><code>accounts.json</code> содержит Personal Access Tokens в открытом виде.
+        Файл доступен только владельцу (Unix permissions 600 на директории).
+        <code>askpass.py</code> также содержит токены — chmod 700.</div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: BUILD
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="build">
+      <h2 class="section-title">
+        <span class="section-icon">📦</span>
+        Сборка и пакетирование
+      </h2>
+
+      <div class="subsection">
+        <h3 class="subsection-title">build.sh — флаги</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Команда</th><th>Действие</th></tr></thead>
+            <tbody>
+              <tr><td>./build.sh</td><td class="desc-cell">Сборка PyInstaller bundle → <code>dist/opensourcetree/</code></td></tr>
+              <tr><td>./build.sh --run</td><td class="desc-cell">Сборка и немедленный запуск бинарника</td></tr>
+              <tr><td>./build.sh --size</td><td class="desc-cell">Показать размер bundle</td></tr>
+              <tr><td>./build.sh --clean</td><td class="desc-cell">Удалить артефакты сборки (build/, dist/)</td></tr>
+              <tr><td>./build.sh --pkg</td><td class="desc-cell">Собрать Arch Linux пакет через <code>makepkg</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Desktop Entry</h3>
+        <div class="pre-wrap">
+          <div class="pre-header"><span>opensourcetree.desktop</span></div>
+          <pre><code>[Desktop Entry]
+<span class="at">Name</span>=OpenSourceTree
+<span class="at">Exec</span>=/usr/bin/opensourcetree
+<span class="at">Icon</span>=OpenSourceTreeIcon
+<span class="at">Type</span>=Application
+<span class="at">Categories</span>=Development;VersionControl;</code></pre>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">PKGBUILD — Arch Linux</h3>
+        <div class="pre-wrap">
+          <div class="pre-header"><span>Ключевые поля PKGBUILD</span></div>
+          <pre><code><span class="at">pkgname</span>=opensourcetree
+<span class="at">pkgver</span>=1.2.15
+<span class="at">pkgrel</span>=1
+<span class="at">depends</span>=(python-pyqt6 python-numpy python-pygments git)
+<span class="at">optdepends</span>=(<span class="st">'git-lfs: Git LFS support'</span>
+            <span class="st">'konsole: SSH interactive auth'</span>)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: PATTERNS
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="patterns">
+      <h2 class="section-title">
+        <span class="section-icon">🧩</span>
+        Паттерны и соглашения
+      </h2>
+
+      <div class="card-grid">
+        <div class="card-sm">
+          <h4>Signal/Slot</h4>
+          <p>Весь UI-реактивности через PyQt6 сигналы. Сигналы из Workers эмитируются в Worker-потоке, принимаются в main thread.</p>
+        </div>
+        <div class="card-sm">
+          <h4>Model-View</h4>
+          <p><code>CommitTableModel</code> + <code>QTableView</code>. Модель хранит данные, view запрашивает через <code>data(index, role)</code>.</p>
+        </div>
+        <div class="card-sm">
+          <h4>Dataclasses</h4>
+          <p>Все модели данных — <code>@dataclass</code>. Конвертация в/из JSON через <code>dataclasses.asdict()</code> и ручной <code>from_dict()</code>.</p>
+        </div>
+        <div class="card-sm">
+          <h4>Context Menus</h4>
+          <p>Все операции доступны через правую кнопку. Доступность действий вычисляется динамически по состоянию репозитория.</p>
+        </div>
+        <div class="card-sm">
+          <h4>Write Lock</h4>
+          <p>Мьютекс <code>_write_lock</code> в GitRepo предотвращает параллельные multi-step операции (split commit, safe reset).</p>
+        </div>
+        <div class="card-sm">
+          <h4>Debounce</h4>
+          <p>Поиск в CommitListView использует <code>QTimer</code> с задержкой 300 мс чтобы не перегружать git при быстром вводе.</p>
+        </div>
+      </div>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">💡</span>
+        <div>При добавлении новых git-операций: реализуйте метод в <code>GitRepo</code>,
+        добавьте вызов через <code>GitWorker</code> или <code>StreamingWorker</code> в соответствующем UI-компоненте,
+        добавьте ключ перевода в все 10 локалей.</div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION: LEARN
+    ═══════════════════════════════════════════════════ -->
+    <section class="section" id="learn">
+      <h2 class="section-title">
+        <span class="section-icon">🎓</span>
+        Что изучать
+      </h2>
+      <p class="section-subtitle">
+        Карта знаний для разработчика, который хочет понимать, изменять или развивать OpenSourceTree.
+        От фундамента — к специфике каждого слоя.
+      </p>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">💡</span>
+        <div>Python + Git — обязательная основа. PyQt6 — главная специфика проекта.
+        Остальные темы можно изучать по мере того, как работаешь с конкретным модулем.</div>
+      </div>
+
+      <!-- ── Python ─────────────────────────────────────── -->
+      <div class="subsection" id="learn-python">
+        <h3 class="subsection-title">1. Python — фундамент</h3>
+        <div class="card-grid">
+          <div class="card-sm">
+            <h4>🐍 Базовый Python</h4>
+            <p>Без этого читать код невозможно:</p>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Типы данных, list comprehensions</li>
+              <li>Функции, аргументы, <code>*args</code>, <code>**kwargs</code></li>
+              <li>Классы, наследование, <code>super()</code></li>
+              <li>Исключения: <code>try/except/raise</code></li>
+              <li>Модули и пакеты: <code>import</code>, <code>__init__.py</code></li>
+              <li>Контекстные менеджеры: <code>with</code></li>
+              <li>f-строки и форматирование строк</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>📦 Dataclasses</h4>
+            <p>Все модели данных (CommitRecord, BranchInfo и др.) — это dataclasses:</p>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Декоратор <code>@dataclass</code></li>
+              <li>Поля с типами и дефолтами</li>
+              <li><code>field(default_factory=...)</code></li>
+              <li><code>dataclasses.asdict()</code> для JSON</li>
+              <li>Сравнение vs обычные классы</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>⚡ Генераторы и итераторы</h4>
+            <p>Стриминговые операции (fetch/push/pull) используют генераторы:</p>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li><code>yield</code> и генераторные функции</li>
+              <li><code>Iterator[str]</code> тип из <code>typing</code></li>
+              <li>Разница между <code>return</code> и <code>yield</code></li>
+              <li>Итерирование генератора в цикле</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🔧 subprocess</h4>
+            <p>GitRunner построен на subprocess — нужно понимать:</p>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li><code>subprocess.run()</code>, <code>Popen()</code></li>
+              <li><code>stdout</code>, <code>stderr</code>, <code>stdin</code></li>
+              <li><code>capture_output</code>, <code>text</code>, <code>encoding</code></li>
+              <li>Коды возврата: <code>returncode</code>, <code>check=True</code></li>
+              <li>Переменные окружения: <code>env=</code></li>
+              <li>Стриминг вывода построчно</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🗂️ Работа с файлами и os</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li><code>pathlib.Path</code> — современная работа с путями</li>
+              <li><code>os.path</code>, <code>os.makedirs</code></li>
+              <li>Чтение/запись JSON: <code>json.load</code>, <code>json.dump</code></li>
+              <li><code>os.chmod</code> — права файлов</li>
+              <li><code>tempfile</code> — временные файлы</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🔒 Threading и Locks</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li><code>threading.Lock()</code> — мьютекс</li>
+              <li><code>with lock:</code> — контекстный захват</li>
+              <li>Зачем нужен write lock в GitRepo</li>
+              <li>Race condition — что это и как избежать</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="pre-wrap">
+          <div class="pre-header"><span>Что почитать</span></div>
+          <pre><code><span class="cm"># Python официальная документация</span>
+docs.python.org/3/library/dataclasses.html
+docs.python.org/3/library/subprocess.html
+docs.python.org/3/library/threading.html
+
+<span class="cm"># Книги</span>
+"Fluent Python" — Luciano Ramalho (глубокое понимание языка)
+"Python Cookbook" — Beazley & Jones (практические рецепты)</code></pre>
+        </div>
+      </div>
+
+      <!-- ── PyQt6 ───────────────────────────────────────── -->
+      <div class="subsection" id="learn-pyqt6">
+        <h3 class="subsection-title">2. PyQt6 — главная специфика проекта</h3>
+        <p style="color:var(--text-muted);font-size:.88rem;margin-bottom:14px;">
+          Это самая объёмная тема. Весь UI написан на PyQt6 — без понимания Qt работать с кодом сложно.
+        </p>
+        <div class="card-grid">
+          <div class="card-sm">
+            <h4>🧱 Базовые концепции Qt</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li><code>QApplication</code> — цикл событий</li>
+              <li><code>QWidget</code> — базовый виджет</li>
+              <li>Иерархия parent/child виджетов</li>
+              <li>Показ: <code>show()</code>, <code>exec()</code></li>
+              <li>Layout'ы: <code>QVBoxLayout</code>, <code>QHBoxLayout</code>, <code>QGridLayout</code></li>
+              <li><code>QSplitter</code> — изменяемые панели</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>📡 Signals & Slots</h4>
+            <p>Главный механизм реактивности в Qt — <em>нужно понимать в первую очередь</em>:</p>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Определение сигнала: <code>pyqtSignal(type)</code></li>
+              <li>Подключение: <code>signal.connect(slot)</code></li>
+              <li>Эмит: <code>signal.emit(value)</code></li>
+              <li>Сигналы между потоками (thread-safe)</li>
+              <li>Отключение: <code>signal.disconnect()</code></li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🗂️ Model-View архитектура</h4>
+            <p>CommitTableModel — это <code>QAbstractTableModel</code>:</p>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li><code>QAbstractTableModel</code> — пользовательская модель</li>
+              <li>Методы: <code>rowCount</code>, <code>columnCount</code>, <code>data</code>, <code>headerData</code></li>
+              <li>Роли: <code>Qt.ItemDataRole</code></li>
+              <li><code>QTableView</code> — отображение таблицы</li>
+              <li><code>QTreeWidget</code> — дерево (BranchPanel)</li>
+              <li>Пагинация: <code>canFetchMore</code>, <code>fetchMore</code></li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🎨 Delegates (отрисовка ячеек)</h4>
+            <p>CommitGraphDelegate — кастомная отрисовка колонки графа:</p>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li><code>QStyledItemDelegate</code></li>
+              <li>Метод <code>paint(painter, option, index)</code></li>
+              <li><code>QPainter</code>: линии, эллипсы, цвета</li>
+              <li><code>QPen</code>, <code>QBrush</code>, <code>QColor</code></li>
+              <li>Координаты внутри ячейки</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>⚙️ QThreadPool + QRunnable</h4>
+            <p>Worker-слой построен на этом:</p>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li><code>QRunnable</code> — задача для пула</li>
+              <li><code>QThreadPool.globalInstance().start(worker)</code></li>
+              <li>Почему нельзя обновлять UI из не-главного потока</li>
+              <li>Передача результатов через сигналы</li>
+              <li><code>QObject</code> + <code>pyqtSignal</code> для Signals в worker'е</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🕐 QTimer и debounce</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li><code>QTimer.singleShot(ms, callback)</code></li>
+              <li>Паттерн debounce через <code>timer.start()</code></li>
+              <li><code>timer.stop()</code> при новом событии</li>
+              <li>Разница: <code>singleShot</code> vs repeating</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>💄 Стилизация: QSS</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Qt Style Sheets — аналог CSS для Qt</li>
+              <li>Селекторы: класс, <code>objectName</code>, псевдосостояния</li>
+              <li><code>:hover</code>, <code>:checked</code>, <code>:disabled</code></li>
+              <li><code>app.setStyleSheet(qss)</code></li>
+              <li>QPalette — программная тема цветов</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>📝 Текстовые виджеты</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li><code>QTextEdit</code> — rich text, read-only</li>
+              <li>HTML в <code>QTextEdit</code></li>
+              <li><code>QPlainTextEdit</code> — моноширинный текст</li>
+              <li><code>QLineEdit</code> — однострочный ввод</li>
+              <li>Шрифты: <code>QFont</code>, monospacе</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="pre-wrap">
+          <div class="pre-header"><span>Что почитать</span></div>
+          <pre><code><span class="cm"># PyQt6 официальная документация</span>
+www.riverbankcomputing.com/static/Docs/PyQt6/
+
+<span class="cm"># Qt6 документация (C++, но логика та же)</span>
+doc.qt.io/qt-6/
+
+<span class="cm"># Хорошие практические руководства</span>
+www.pythonguis.com/pyqt6-tutorial/   <span class="cm"># от основ до продвинутых тем</span>
+doc.qt.io/qt-6/model-view-programming.html   <span class="cm"># Model-View</span>
+doc.qt.io/qt-6/signalsandslots.html  <span class="cm"># Signals & Slots подробно</span></code></pre>
+        </div>
+      </div>
+
+      <!-- ── Git internals ──────────────────────────────── -->
+      <div class="subsection" id="learn-git">
+        <h3 class="subsection-title">3. Git internals — чтобы понимать что делает GitRepo</h3>
+        <div class="card-grid">
+          <div class="card-sm">
+            <h4>🌿 Базовые концепции Git</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Объектная модель: blob, tree, commit, tag</li>
+              <li>SHA-1 хэши — идентификаторы объектов</li>
+              <li>HEAD, refs, ветки как указатели</li>
+              <li>Индекс (staging area) — зачем он</li>
+              <li>Working tree vs index vs repository</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>📜 git log и форматы</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li><code>--format=</code> и placeholders (<code>%H</code>, <code>%P</code>, <code>%an</code>...)</li>
+              <li><code>--topo-order</code> — топологическая сортировка</li>
+              <li><code>--skip</code>, <code>--max-count</code> — пагинация</li>
+              <li>Разделители записей для парсинга</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>📁 git status и porcelain</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li><code>--porcelain=v1</code> — машиночитаемый формат</li>
+              <li>Коды статусов: M, A, D, R, C, ?, U</li>
+              <li>XY формат: индекс + рабочее дерево</li>
+              <li>Конфликтные статусы: AA, DD, AU, UA</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🔀 Merge, rebase, cherry-pick</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Разница merge vs rebase — концептуально</li>
+              <li><code>--no-ff</code> vs fast-forward</li>
+              <li><code>--squash</code> — объединение коммитов</li>
+              <li>Cherry-pick: перенос коммита</li>
+              <li>MERGE_HEAD, REBASE_HEAD — служебные файлы</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>📦 Stash</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Как stash хранится (специальные refs)</li>
+              <li><code>stash push -u</code> — включая untracked</li>
+              <li><code>stash pop</code> vs <code>stash apply</code></li>
+              <li>Зачем safe_reset_hard автоматически stash'ит</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🌍 Remotes и push/pull</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Tracking-ветки: upstream</li>
+              <li>ahead/behind счётчики</li>
+              <li><code>--force-with-lease</code> — безопасный force push</li>
+              <li>refspecs: <code>refs/heads/*:refs/remotes/origin/*</code></li>
+              <li>GIT_SSH_COMMAND, GIT_ASKPASS</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>📂 Git LFS</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Что такое LFS pointer файл</li>
+              <li><code>.gitattributes</code> и lfs-фильтры</li>
+              <li>OID (content hash) в LFS</li>
+              <li><code>git lfs install</code>, <code>track</code>, <code>ls-files</code></li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🔧 Переменные окружения Git</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li><code>GIT_SSH_COMMAND</code> — кастомный SSH</li>
+              <li><code>GIT_ASKPASS</code> — credential helper</li>
+              <li><code>GIT_TERMINAL_PROMPT=0</code></li>
+              <li><code>GIT_AUTHOR_NAME</code>, <code>GIT_AUTHOR_EMAIL</code></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="pre-wrap">
+          <div class="pre-header"><span>Что почитать</span></div>
+          <pre><code><span class="cm"># Главный источник — бесплатная книга</span>
+git-scm.com/book/ru/v2   <span class="cm"># Pro Git, глава 10 "Git изнутри" — обязательно</span>
+
+<span class="cm"># Интерактивное изучение</span>
+learngitbranching.js.org   <span class="cm"># визуализация merge/rebase/cherry-pick</span>
+
+<span class="cm"># Справка по форматам</span>
+git-scm.com/docs/git-log#_pretty_formats
+git-scm.com/docs/git-status#_short_format</code></pre>
+        </div>
+      </div>
+
+      <!-- ── MVC / Model-View ───────────────────────────── -->
+      <div class="subsection" id="learn-mvc">
+        <h3 class="subsection-title">4. Model-View-Controller и паттерны проектирования</h3>
+        <div class="card-grid">
+          <div class="card-sm">
+            <h4>🏗️ Qt Model-View</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Разница Model, View, Delegate</li>
+              <li>Как View запрашивает данные у Model через <code>data(index, role)</code></li>
+              <li>QModelIndex — адресация ячейки</li>
+              <li>Roles: DisplayRole, DecorationRole, UserRole</li>
+              <li>beginInsertRows / endInsertRows</li>
+              <li>dataChanged signal</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>📐 Паттерны в проекте</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li><strong>Observer</strong> — сигналы/слоты PyQt6</li>
+              <li><strong>Strategy</strong> — выбор initramfs инструмента</li>
+              <li><strong>Command</strong> — Worker как объект-команда</li>
+              <li><strong>Facade</strong> — GitRepo скрывает сложность runner'а</li>
+              <li><strong>Iterator</strong> — streaming генераторы</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🔄 Реактивный UI</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Почему UI не должен ждать IO-операций</li>
+              <li>Event loop и блокировка главного потока</li>
+              <li>Worker → Signal → UI callback (main thread)</li>
+              <li>Debounce для поисковых запросов</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🧩 Контекстные меню</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li><code>QMenu</code>, <code>addAction()</code></li>
+              <li><code>contextMenuPolicy = CustomContextMenu</code></li>
+              <li><code>customContextMenuRequested</code> сигнал</li>
+              <li>Динамическое включение/отключение действий</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="pre-wrap">
+          <div class="pre-header"><span>Что почитать</span></div>
+          <pre><code><span class="cm"># Qt Model-View — главная страница</span>
+doc.qt.io/qt-6/model-view-programming.html
+
+<span class="cm"># Паттерны проектирования (Python)</span>
+refactoring.guru/ru/design-patterns/python
+"Design Patterns" — GoF (классика, концептуально)</code></pre>
+        </div>
+      </div>
+
+      <!-- ── Async ───────────────────────────────────────── -->
+      <div class="subsection" id="learn-async">
+        <h3 class="subsection-title">5. Многопоточность в GUI-приложениях</h3>
+
+        <div class="callout callout-info">
+          <span class="callout-icon">ℹ️</span>
+          <div>Это <strong>критически важная тема</strong> для GUI-разработки. Обновление виджетов из
+          не-главного потока — undefined behavior в Qt, которое приводит к крашам.</div>
+        </div>
+
+        <div class="card-grid">
+          <div class="card-sm">
+            <h4>⚡ QThreadPool и QRunnable</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Пул потоков — переиспользование вместо создания</li>
+              <li><code>QRunnable.run()</code> — код в фоне</li>
+              <li><code>setAutoDelete(True)</code></li>
+              <li>Ограничение: нельзя трогать UI напрямую</li>
+              <li>Сигналы как единственный правильный способ</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>📡 Сигналы между потоками</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Qt автоматически маршрутизирует через event loop</li>
+              <li><code>Qt.ConnectionType.QueuedConnection</code></li>
+              <li>WorkerSignals как отдельный QObject</li>
+              <li>Почему <code>QObject</code> нельзя передать в другой поток</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🔒 Thread Safety</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Race condition — что это и почему опасно</li>
+              <li><code>threading.Lock()</code> в GitRepo (write lock)</li>
+              <li>Атомарные операции</li>
+              <li>GIL в Python — когда помогает, когда нет</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🌊 Стриминг прогресса</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Построчное чтение stdout: <code>iter(proc.stdout.readline, b'')</code></li>
+              <li>Почему нельзя ждать конца — UI замёрзнет</li>
+              <li>StreamingWorker: <code>yield</code> каждой строки</li>
+              <li><code>progress_text.emit(line)</code> в главный поток</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="pre-wrap">
+          <div class="pre-header"><span>Что почитать</span></div>
+          <pre><code><span class="cm"># Qt многопоточность</span>
+doc.qt.io/qt-6/thread-basics.html
+www.pythonguis.com/tutorials/multithreading-pyqt6-applications-qthreadpool/
+
+<span class="cm"># Python threading</span>
+docs.python.org/3/library/threading.html
+realpython.com/python-gil/   <span class="cm"># про GIL</span></code></pre>
+        </div>
+      </div>
+
+      <!-- ── Extra libs ─────────────────────────────────── -->
+      <div class="subsection" id="learn-extras">
+        <h3 class="subsection-title">6. Дополнительные библиотеки</h3>
+        <div class="card-grid">
+          <div class="card-sm">
+            <h4>🔢 NumPy — для graph_layout.py</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Базовые операции с массивами</li>
+              <li><code>np.zeros(n, dtype=bool)</code></li>
+              <li><code>np.argmin()</code>, <code>np.argmax()</code></li>
+              <li>Булева индексация</li>
+              <li>Зачем NumPy быстрее чистого Python для массивов</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🎨 Pygments — для DiffViewer</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Что такое лексер и форматтер</li>
+              <li><code>get_lexer_by_name()</code>, <code>guess_lexer()</code></li>
+              <li><code>HtmlFormatter</code> для вывода HTML</li>
+              <li>Подсветка diff: <code>DiffLexer</code></li>
+              <li>Кастомные стили через <code>Style</code></li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🔐 SSH и OpenSSH config</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Формат файла <code>~/.ssh/config</code></li>
+              <li>Host, HostName, IdentityFile, User, Port</li>
+              <li>StrictHostKeyChecking</li>
+              <li><code>GIT_SSH_COMMAND="ssh -F config_file"</code></li>
+              <li>ssh-agent: зачем и как запустить</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🌐 HTTP API (аватары)</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>GitHub API: <code>api.github.com/users/{login}</code></li>
+              <li>GitLab API: <code>gitlab.com/api/v4/users</code></li>
+              <li>Python <code>urllib.request</code> или <code>requests</code></li>
+              <li>JSON-парсинг ответа</li>
+              <li>Кэширование аватаров локально</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>📊 Алгоритмы на графах</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>DAG — directed acyclic graph</li>
+              <li>Топологическая сортировка</li>
+              <li>Понятие lane (дорожки) в визуализации</li>
+              <li>Как git log <code>--topo-order</code> упорядочивает коммиты</li>
+            </ul>
+          </div>
+          <div class="card-sm">
+            <h4>🖥️ OpenSSH и терминал</h4>
+            <ul style="color:var(--text-muted);font-size:.82rem;line-height:1.9;padding-left:16px;margin-top:6px">
+              <li>Запуск эмулятора терминала из Python</li>
+              <li>konsole, xterm, alacritty — флаги запуска команды</li>
+              <li>Передача команды через <code>-e</code> или <code>--</code></li>
+              <li>Зачем интерактивный fallback для passphrase</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="pre-wrap">
+          <div class="pre-header"><span>Что почитать</span></div>
+          <pre><code><span class="cm"># NumPy</span>
+numpy.org/doc/stable/user/quickstart.html
+
+<span class="cm"># Pygments</span>
+pygments.org/docs/   <span class="cm"># особенно: lexers, formatters</span>
+
+<span class="cm"># SSH</span>
+man ssh_config
+wiki.archlinux.org/title/SSH_keys</code></pre>
+        </div>
+      </div>
+
+      <!-- ── Roadmap ────────────────────────────────────── -->
+      <div class="subsection" id="learn-roadmap">
+        <h3 class="subsection-title">Дорожная карта обучения</h3>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Этап</th><th>Тема</th><th>Нужна для</th><th>Приоритет</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td class="dc">Python — базовый синтаксис, классы, исключения, модули</td>
+                <td class="dc">Весь проект</td>
+                <td><span class="tag tag-red" style="font-size:.7rem">обязательно</span></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td class="dc">subprocess — запуск процессов, stdout/stderr, env</td>
+                <td class="dc">GitRunner, весь git-слой</td>
+                <td><span class="tag tag-red" style="font-size:.7rem">обязательно</span></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td class="dc">Git internals — объектная модель, статусы, log форматы</td>
+                <td class="dc">GitRepo, parser.py, models.py</td>
+                <td><span class="tag tag-red" style="font-size:.7rem">обязательно</span></td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td class="dc">PyQt6 — виджеты, layouts, сигналы/слоты, event loop</td>
+                <td class="dc">Весь UI-слой</td>
+                <td><span class="tag tag-red" style="font-size:.7rem">обязательно</span></td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td class="dc">QAbstractTableModel + QTableView — Model-View паттерн</td>
+                <td class="dc">CommitTableModel, CommitListView</td>
+                <td><span class="tag tag-peach" style="font-size:.7rem">высокий</span></td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td class="dc">QThreadPool + QRunnable — многопоточность в Qt</td>
+                <td class="dc">Все Workers (GitWorker, StreamingWorker)</td>
+                <td><span class="tag tag-peach" style="font-size:.7rem">высокий</span></td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td class="dc">Python dataclasses — @dataclass, asdict, field</td>
+                <td class="dc">models.py, config.py</td>
+                <td><span class="tag tag-peach" style="font-size:.7rem">высокий</span></td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td class="dc">QStyledItemDelegate + QPainter — кастомная отрисовка</td>
+                <td class="dc">CommitGraphDelegate</td>
+                <td><span class="tag tag-yellow" style="font-size:.7rem">средний</span></td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td class="dc">Python генераторы и yield — для стриминга</td>
+                <td class="dc">StreamingWorker, fetch/pull/push</td>
+                <td><span class="tag tag-yellow" style="font-size:.7rem">средний</span></td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td class="dc">Qt Style Sheets (QSS) — темизация виджетов</td>
+                <td class="dc">style.qss, app/__init__.py</td>
+                <td><span class="tag tag-yellow" style="font-size:.7rem">средний</span></td>
+              </tr>
+              <tr>
+                <td>11</td>
+                <td class="dc">NumPy — базовые массивы, argmin, булева индексация</td>
+                <td class="dc">graph_layout.py</td>
+                <td><span class="tag tag-yellow" style="font-size:.7rem">средний</span></td>
+              </tr>
+              <tr>
+                <td>12</td>
+                <td class="dc">Алгоритмы на DAG — топологическая сортировка, lane-визуализация</td>
+                <td class="dc">graph_layout.py</td>
+                <td><span class="tag tag-yellow" style="font-size:.7rem">средний</span></td>
+              </tr>
+              <tr>
+                <td>13</td>
+                <td class="dc">Pygments — лексеры, форматтеры, подсветка синтаксиса</td>
+                <td class="dc">DiffViewer</td>
+                <td><span class="tag tag-green" style="font-size:.7rem">базовый</span></td>
+              </tr>
+              <tr>
+                <td>14</td>
+                <td class="dc">SSH — config файл, GIT_SSH_COMMAND, ssh-agent</td>
+                <td class="dc">GitRunner, config.py (SSHProfile)</td>
+                <td><span class="tag tag-green" style="font-size:.7rem">базовый</span></td>
+              </tr>
+              <tr>
+                <td>15</td>
+                <td class="dc">Git LFS — pointer файлы, .gitattributes, OID</td>
+                <td class="dc">LfsDialog, GitRepo LFS методы</td>
+                <td><span class="tag tag-green" style="font-size:.7rem">базовый</span></td>
+              </tr>
+              <tr>
+                <td>16</td>
+                <td class="dc">threading.Lock, race condition, GIL</td>
+                <td class="dc">GitRepo._write_lock</td>
+                <td><span class="tag tag-green" style="font-size:.7rem">базовый</span></td>
+              </tr>
+              <tr>
+                <td>17</td>
+                <td class="dc">Arch packaging (PKGBUILD, makepkg, PyInstaller)</td>
+                <td class="dc">PKGBUILD, build.sh</td>
+                <td><span class="tag tag-green" style="font-size:.7rem">базовый</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-tip">
+          <span class="callout-icon">📚</span>
+          <div>
+            <strong>Рекомендуемый порядок чтения кода</strong> — от простого к сложному:
+            <br>
+            <code>app/git/models.py</code> (чистые dataclass'ы, нет зависимостей)
+            → <code>app/git/runner.py</code> (160 строк, subprocess)
+            → <code>app/workers/git_worker.py</code> (QRunnable)
+            → <code>app/git/repo.py</code> (API поверх runner'а)
+            → <code>app/ui/branch_panel.py</code> (простой виджет)
+            → <code>app/ui/working_copy_widget.py</code>
+            → <code>app/ui/commit_table_model.py</code> (Model-View)
+            → <code>app/git/graph_layout.py</code> (самый сложный алгоритм)
+            → <code>app/ui/commit_graph_delegate.py</code> (QPainter).
+            <br><br>
+            <strong>Arch Wiki</strong> — для системных тем (SSH, packaging).
+            <strong>doc.qt.io</strong> и <strong>pythonguis.com</strong> — для PyQt6.
+            <strong>Pro Git</strong> — для Git internals.
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div>OpenSourceTree v1.2.15 — Документация для разработчика</div>
+  <div>GPL-3.0 · <a href="https://github.com/Lucia7Lunadottir/OpenSourceTree">GitHub</a></div>
+</footer>
+
+<!-- Sidebar active link highlighting -->
+<script>
+  const sections = document.querySelectorAll('.section, .subsection[id]');
+  const navLinks = document.querySelectorAll('.sidebar nav a');
+  const headerH = 64;
+
+  function updateActive() {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - headerH - 40) current = s.id;
+    });
+    navLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  }
+
+  window.addEventListener('scroll', updateActive, { passive: true });
+  updateActive();
+</script>
+
+</body>
+</html>

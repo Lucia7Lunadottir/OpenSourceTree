@@ -9,7 +9,7 @@ from app.config import get_language
 from app.i18n import load_language
 from app.ui.main_window import MainWindow
 
-
+os.environ["GIT_OPTIONAL_LOCKS"] = "0"
 def apply_dark_palette(app: QApplication) -> None:
     """Equestria OS purple Fusion palette."""
     app.setStyle("Fusion")
