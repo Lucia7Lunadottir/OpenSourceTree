@@ -167,7 +167,7 @@ class RepoTab(QWidget):
         git_dir = os.path.join(self._repo_path, ".git")
 
         # Files that change on every write operation or state change
-        for name in ("index", "HEAD", "MERGE_HEAD", "MERGE_MSG", "CHERRY_PICK_HEAD"):
+        for name in ("HEAD", "MERGE_HEAD", "MERGE_MSG", "CHERRY_PICK_HEAD"):
             p = os.path.join(git_dir, name)
             if os.path.exists(p):
                 self._fs_watcher.addPath(p)
