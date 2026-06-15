@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QTreeWidget, QTreeWidgetItem, QTreeWidgetItemIterator, QMenu, QMessageBox, QInputDialog,
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QDialogButtonBox
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QDialogButtonBox, QAbstractItemView
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QIcon, QColor
@@ -22,25 +22,42 @@ class BranchPanel(QTreeWidget):
     def __init__(self, repo: GitRepo, parent=None):
         super().__init__(parent)
         self._repo = repo
+        self._is_first_load = True
         self._setup_ui()
         self.refresh()
 
     def _setup_ui(self):
         self.setHeaderHidden(True)
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        # Enable multiple selection (Ctrl / Shift)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.customContextMenuRequested.connect(self._context_menu)
         self.itemDoubleClicked.connect(self._on_double_click)
         self.setIndentation(12)
 
     def refresh(self):
-        # Save selected item identity so we can restore it after rebuild
-        selected = self.currentItem()
-        saved_key = None
-        if selected:
-            d = selected.data(0, Qt.ItemDataRole.UserRole)
+        # Save current expansion states of sections
+        expanded_sections = {}
+        for i in range(self.topLevelItemCount()):
+            item = self.topLevelItem(i)
+            expanded_sections[item.text(0)] = item.isExpanded()
+
+        # Save all selected items identities
+        saved_selected_keys = set()
+        for item in self.selectedItems():
+            d = item.data(0, Qt.ItemDataRole.UserRole)
             if d:
                 kind, obj = d
-                saved_key = (kind, obj.name)
+                saved_selected_keys.add((kind, obj.name))
+
+        # Save active current item identity
+        current = self.currentItem()
+        saved_current_key = None
+        if current:
+            d = current.data(0, Qt.ItemDataRole.UserRole)
+            if d:
+                kind, obj = d
+                saved_current_key = (kind, obj.name)
 
         self.clear()
         try:
@@ -90,20 +107,33 @@ class BranchPanel(QTreeWidget):
             item.setForeground(0, QColor("#ce9178"))
             stash_root.addChild(item)
 
-        self.expandAll()
+        # Restore expansion state or expand all if first load
+        for i in range(self.topLevelItemCount()):
+            item = self.topLevelItem(i)
+            title = item.text(0)
+            if self._is_first_load:
+                item.setExpanded(True)
+            elif title in expanded_sections:
+                item.setExpanded(expanded_sections[title])
+        
+        self._is_first_load = False
 
-        # Restore previously selected item
-        if saved_key:
+        # Restore previously selected items and focus
+        if saved_selected_keys or saved_current_key:
+            self.blockSignals(True)
             it = QTreeWidgetItemIterator(self)
             while it.value():
                 item = it.value()
                 d = item.data(0, Qt.ItemDataRole.UserRole)
                 if d:
                     kind, obj = d
-                    if (kind, obj.name) == saved_key:
+                    item_key = (kind, obj.name)
+                    if item_key in saved_selected_keys:
+                        item.setSelected(True)
+                    if item_key == saved_current_key:
                         self.setCurrentItem(item)
-                        break
                 it += 1
+            self.blockSignals(False)
 
     def _make_section(self, title: str) -> QTreeWidgetItem:
         item = QTreeWidgetItem(self, [title])
@@ -276,8 +306,6 @@ class BranchPanel(QTreeWidget):
         dlg.exec()
 
         if _result[0] == "local":
-            # Do NOT emit refresh_requested — that triggers fetch_tags_bg which
-            # re-downloads the tag from remote, making it instantly reappear.
             worker = GitWorker(self._repo.delete_tag, name)
             worker.signals.result.connect(lambda _: (
                 self.status_message.emit(t("tag.delete.success_local", name=name)),
