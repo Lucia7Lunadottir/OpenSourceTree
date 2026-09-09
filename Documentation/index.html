@@ -461,10 +461,10 @@ bash start.sh</code></pre>
           </div>
           <div class="flow-row">
             <div class="flow-arrow">↓</div>
-            <div class="flow-note">GitRepo.is_git_repo(path) — проверка</div>
+            <div class="flow-note">GitRepo(path) — валидация + резолв до реального toplevel (не доверяем path как есть)</div>
           </div>
           <div class="flow-row">
-            <div class="flow-node main">repo_selected.emit(path)</div>
+            <div class="flow-node main">repo_selected.emit(resolved_path)</div>
           </div>
           <div class="flow-row">
             <div class="flow-arrow">↓</div>
@@ -905,14 +905,20 @@ bash start.sh</code></pre>
         GitRepo — главный API
       </h2>
       <p class="section-subtitle">
-        Высокоуровневая абстракция над git. Файл: <code>app/git/repo.py</code> (~950 строк).
+        Высокоуровневая абстракция над git. Файл: <code>app/git/repo.py</code> (~1040 строк).
       </p>
 
       <div class="callout callout-info">
         <span class="callout-icon">ℹ️</span>
-        <div>Конструктор: <code>GitRepo(path: str)</code> — принимает путь к директории репозитория.
-        Создаёт внутренний <code>GitRunner(path)</code>. Метод класса <code>GitRepo.is_git_repo(path)</code>
-        проверяет, является ли директория git-репозиторием.</div>
+        <div>Конструктор: <code>GitRepo(path: str)</code> — принимает путь к директории репозитория,
+        валидирует через <code>rev-parse --git-dir</code>, затем всегда доводит <code>self.path</code>
+        до реального top-level через <code>rev-parse --show-toplevel</code> (даже если передана
+        вложенная подпапка репозитория — иначе pathspec-команды типа <code>add</code>/<code>restore</code>
+        резолвятся на уровень глубже, чем нужно, и падают с "pathspec did not match any files").
+        Метод класса <code>GitRepo.is_git_repo(path)</code> проверяет, является ли директория
+        git-репозиторием. <code>get_git_dir()</code> возвращает настоящий git-dir через
+        <code>rev-parse --git-dir</code> (корректно для worktree/submodule, где <code>.git</code> — файл,
+        а не папка).</div>
       </div>
 
       <!-- Commits -->
@@ -1090,9 +1096,12 @@ bash start.sh</code></pre>
 
         <div class="method-block">
           <div class="method-sig">
-            <span class="fn-name">push_streaming</span>(<span class="param">remote</span>=<span class="st">""</span>, <span class="param">branch</span>=<span class="st">""</span>, <span class="param">force</span>=<span class="nu">False</span>, <span class="param">tags</span>=<span class="nu">False</span>) → <span class="ret-type">Iterator[str]</span>
+            <span class="fn-name">push_streaming</span>(<span class="param">remote</span>=<span class="st">""</span>, <span class="param">branch</span>=<span class="st">""</span>, <span class="param">force</span>=<span class="nu">False</span>, <span class="param">tags</span>=<span class="nu">False</span>, <span class="param">set_upstream</span>=<span class="nu">False</span>) → <span class="ret-type">Iterator[str]</span>
           </div>
-          <div class="method-desc">Стриминговый push. <code>force=True</code> использует <code>--force-with-lease</code> (безопасная force-push).</div>
+          <div class="method-desc">Стриминговый push. <code>force=True</code> использует <code>--force-with-lease</code> (безопасная force-push).
+          <code>set_upstream=True</code> добавляет <code>--set-upstream</code> — нужен, когда у текущей ветки ещё нет
+          upstream на выбранном remote (иначе голый <code>git push &lt;remote&gt;</code> падает с "no upstream branch");
+          RemoteDialog вызывает это как retry после такой ошибки, явно указывая имя ветки.</div>
         </div>
 
         <div class="callout callout-tip">
