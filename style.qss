@@ -466,6 +466,30 @@ QWidget#commitArea {
     border-top: 1px solid rgb(50, 45, 75);
 }
 
+/* ── Co-authors chips ────────────────────────────────────────────────────── */
+QWidget#coAuthorChip {
+    background-color: rgb(100, 50, 140);
+    border: 1px solid rgb(120, 70, 160);
+    border-radius: 10px;
+}
+
+QWidget#coAuthorChip QLabel {
+    color: white;
+    font-size: 11px;
+}
+
+QToolButton#coAuthorRemoveBtn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-weight: bold;
+    padding: 0px 2px;
+}
+
+QToolButton#coAuthorRemoveBtn:hover {
+    color: rgb(255, 150, 150);
+}
+
 /* ── Progress Bar ────────────────────────────────────────────────────────── */
 QProgressBar {
     background-color: rgb(40, 36, 62);

@@ -241,6 +241,149 @@ class GitRepo:
             args.append("--amend")
         return self.runner.run(args)
 
+    # ---------------------------------------------------------------- Trailers
+
+    def find_commits_with_co_authors(self) -> list[tuple[str, str, list[tuple[str, str]]]]:
+        """Scan the current branch's history for commits with Co-authored-by
+        trailers. Returns [(sha, subject, [(name, email), ...]), ...],
+        newest first (matches `git log` order)."""
+        from .trailers import parse_co_authors
+
+        FS, RS = "\x1f", "\x1e"
+        raw = self.runner.run(["log", f"--format=%H{FS}%s{FS}%B{RS}"])
+        result = []
+        for record in raw.split(RS):
+            record = record.strip("\n")
+            if not record:
+                continue
+            parts = record.split(FS)
+            if len(parts) < 3:
+                continue
+            sha, subject, body = parts[0], parts[1], parts[2]
+            co_authors = parse_co_authors(body)
+            if co_authors:
+                result.append((sha, subject, co_authors))
+        return result
+
+    def remote_branches_containing(self, sha: str) -> list[str]:
+        """Remote-tracking branches (e.g. 'origin/main') that already
+        contain `sha` -- i.e. rewriting it would require a force-push."""
+        try:
+            raw = self.runner.run(["branch", "-r", "--contains", sha])
+        except GitCommandError:
+            return []
+        return [line.strip().split(" -> ")[0] for line in raw.splitlines() if line.strip()]
+
+    def reword_strip_co_authors(self, shas: list[str]) -> str:
+        """Rewrite the given commits on the current branch in place,
+        stripping Co-authored-by trailers from their messages. Commits not
+        listed are replayed unchanged.
+
+        This only ever changes commit *messages* -- the trees/diffs being
+        replayed are identical to what's already there, so it cannot
+        produce merge conflicts on its own. Still, a
+        `backup-coauthor-cleanup-<timestamp>` branch is created pointing at
+        the pre-rewrite HEAD before anything happens, and the rebase is
+        aborted (leaving history untouched) if it doesn't finish cleanly --
+        that backup branch is always the way back with
+        `git reset --hard <backup>`.
+
+        Returns the backup branch name.
+        """
+        import subprocess
+        import tempfile
+        import textwrap
+        import time
+
+        if not shas:
+            return ""
+
+        full_shas = {self.runner.run(["rev-parse", s]).strip() for s in shas}
+
+        all_commits = self.runner.run(["rev-list", "--reverse", "HEAD"]).splitlines()
+        indices = [i for i, c in enumerate(all_commits) if c in full_shas]
+        if not indices:
+            raise GitCommandError(
+                ["rebase", "-i"], -1,
+                "Ни один из указанных коммитов не найден в текущей ветке",
+            )
+        base_idx = min(indices)
+        base_args = ["--root"] if base_idx == 0 else [all_commits[base_idx - 1]]
+
+        backup_ref = f"backup-coauthor-cleanup-{int(time.time())}"
+        self.runner.run(["branch", backup_ref])
+
+        # GIT_SEQUENCE_EDITOR rewrites the rebase todo list: only commits in
+        # `targets` become "reword" steps, everything else stays "pick".
+        seq_script = textwrap.dedent(f"""\
+            #!/usr/bin/env python3
+            import sys
+            targets = {sorted(full_shas)!r}
+            path = sys.argv[1]
+            with open(path) as f:
+                lines = f.readlines()
+            out = []
+            for line in lines:
+                parts = line.split(None, 2)
+                if len(parts) >= 2 and parts[0] == "pick" and any(t.startswith(parts[1]) for t in targets):
+                    line = "reword " + line[len("pick "):]
+                out.append(line)
+            with open(path, "w") as f:
+                f.writelines(out)
+            """)
+
+        # GIT_EDITOR runs once per "reword" step, on the commit message file --
+        # it just strips any Co-authored-by lines and nothing else.
+        edit_script = textwrap.dedent("""\
+            #!/usr/bin/env python3
+            import sys, re
+            pattern = re.compile(r"^Co-authored-by:\\s*.+?\\s*<[^<>]+>\\s*$", re.IGNORECASE)
+            path = sys.argv[1]
+            with open(path) as f:
+                lines = f.readlines()
+            kept = [l for l in lines if not pattern.match(l.strip())]
+            while kept and kept[-1].strip() == "":
+                kept.pop()
+            with open(path, "w") as f:
+                f.writelines(kept)
+                if kept and not kept[-1].endswith("\\n"):
+                    f.write("\\n")
+            """)
+
+        seq_file = tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False)
+        edit_file = tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False)
+        try:
+            seq_file.write(seq_script)
+            seq_file.close()
+            edit_file.write(edit_script)
+            edit_file.close()
+            os.chmod(seq_file.name, 0o700)
+            os.chmod(edit_file.name, 0o700)
+
+            env = os.environ.copy()
+            env["GIT_SEQUENCE_EDITOR"] = seq_file.name
+            env["GIT_EDITOR"] = edit_file.name
+
+            result = subprocess.run(
+                ["git", "-C", self.path, "rebase", "-i", "--rebase-merges"] + base_args,
+                env=env, capture_output=True, text=True,
+            )
+            if result.returncode != 0:
+                subprocess.run(
+                    ["git", "-C", self.path, "rebase", "--abort"],
+                    capture_output=True, text=True,
+                )
+                raise GitCommandError(
+                    ["rebase", "-i"], result.returncode,
+                    f"{result.stderr}\n\nРебейз отменён, история не изменена. "
+                    f"Резервная ветка на всякий случай: {backup_ref}",
+                )
+        finally:
+            os.remove(seq_file.name)
+            os.remove(edit_file.name)
+
+        return backup_ref
+
     # -------------------------------------------------------------- Branches
 
     def get_branches(self) -> list[BranchInfo]:

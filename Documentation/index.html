@@ -83,6 +83,8 @@
         <a href="#commit-list" class="sub">CommitListView</a>
         <a href="#branch-panel" class="sub">BranchPanel</a>
         <a href="#working-copy" class="sub">WorkingCopyWidget</a>
+        <a href="#co-authors-bar" class="sub">CoAuthorsBar</a>
+        <a href="#coauthor-history-dialog" class="sub">CoAuthorHistoryDialog</a>
         <a href="#diff-viewer" class="sub">DiffViewer</a>
         <a href="#dialogs" class="sub">Диалоги</a>
       </nav>
@@ -1348,8 +1350,64 @@ bash start.sh</code></pre>
             <li>Переключатель Tree / Flat list для каждого раздела</li>
             <li>Кнопки Stage All / Unstage All / Discard</li>
             <li>Текстовое поле сообщения коммита + чекбокс Amend</li>
+            <li><strong>CoAuthorsBar</strong> — чипы с Co-authored-by из текста сообщения, кнопка добавить/убрать (см. ниже)</li>
             <li>Кнопка Commit (активна при наличии staged файлов или amend)</li>
           </ul>
+        </div>
+      </div>
+
+      <!-- CoAuthorsBar -->
+      <div class="subsection" id="co-authors-bar">
+        <h3 class="subsection-title">CoAuthorsBar</h3>
+        <p style="color:var(--text-muted); font-size:.9rem; margin-bottom: 12px;">
+          Файл: <code>app/ui/co_authors_bar.py</code> · парсинг/правка трейлеров: <code>app/git/trailers.py</code>
+        </p>
+        <div class="card">
+          <p style="font-size:.9rem; margin-bottom: 8px;">
+            Показывает <code>Co-authored-by:</code>-трейлеры из текста в <code>_commit_edit</code> как чипы,
+            с кнопкой удаления на каждом и кнопкой "+ Соавтор" для добавления (открывает
+            <code>AddCoAuthorDialog</code> — имя + email).
+          </p>
+          <p style="font-size:.9rem; color:var(--text-muted);">
+            Важно: сама панель ничего не хранит — источник истины всегда текст в <code>QTextEdit</code>.
+            Добавление/удаление идёт через чистые функции <code>trailers.add_co_author()</code> /
+            <code>trailers.remove_co_author()</code>, результат кладётся обратно в textbox, после чего
+            <code>textChanged</code> сам пересобирает чипы. При Amend (в <code>_on_amend_toggled</code>)
+            в textbox подгружается полное сообщение последнего коммита (<code>get_last_commit_message()</code>),
+            поэтому существующие Co-authored-by становятся видны и редактируемы теми же чипами.
+          </p>
+        </div>
+      </div>
+
+      <!-- CoAuthorHistoryDialog -->
+      <div class="subsection" id="coauthor-history-dialog">
+        <h3 class="subsection-title">CoAuthorHistoryDialog</h3>
+        <p style="color:var(--text-muted); font-size:.9rem; margin-bottom: 12px;">
+          Файл: <code>app/ui/dialogs/coauthor_history_dialog.py</code> · Branch-меню → "Co-authored-by в истории..."
+        </p>
+        <div class="card">
+          <p style="font-size:.9rem; margin-bottom: 8px;">
+            Сканирует историю <strong>текущей</strong> ветки (<code>GitRepo.find_commits_with_co_authors()</code>,
+            парсит <code>%B</code> каждого коммита через <code>trailers.parse_co_authors()</code>) и показывает
+            список коммитов с Co-authored-by чекбоксами. Коммиты, уже присутствующие на каком-то
+            remote (<code>remote_branches_containing()</code> → <code>git branch -r --contains</code>),
+            подсвечиваются — их переписывание потребует force-push.
+          </p>
+          <p style="font-size:.9rem; color:var(--text-muted); margin-bottom: 8px;">
+            "Убрать выбранные" вызывает <code>GitRepo.reword_strip_co_authors(shas)</code> — это
+            <strong>скриптованный интерактивный rebase</strong>, а не удаление задним числом:
+          </p>
+          <ul style="color:var(--text-muted); font-size:.87rem; line-height:1.9; padding-left:20px;">
+            <li>Перед началом создаётся резервная ветка <code>backup-coauthor-cleanup-&lt;timestamp&gt;</code> на текущий HEAD</li>
+            <li><code>GIT_SEQUENCE_EDITOR</code> помечает как <code>reword</code> только выбранные коммиты, остальные остаются <code>pick</code></li>
+            <li><code>GIT_EDITOR</code> на каждом reword-шаге просто вырезает строки <code>Co-authored-by:</code> из сообщения — деревья/диффы не трогаются вообще, только текст сообщений</li>
+            <li><code>--rebase-merges</code> — топология merge-коммитов в диапазоне сохраняется</li>
+            <li>При любой ошибке — автоматический <code>git rebase --abort</code>, история остаётся нетронутой, backup-ветка всё равно остаётся как доп. подстраховка</li>
+          </ul>
+          <p style="font-size:.85rem; color:var(--text-muted); margin-top:8px;">
+            Работает только в пределах текущей ветки (это то, что физически умеет один rebase).
+            Если нужный коммит сидит на другой ветке — сначала переключиться на неё.
+          </p>
         </div>
       </div>
 

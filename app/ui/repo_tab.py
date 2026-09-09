@@ -25,6 +25,7 @@ from .dialogs.tag_dialog import TagDialog
 from .dialogs.branch_dialog import BranchDialog
 from .dialogs.lfs_dialog import LfsDialog
 from .dialogs.remotes_dialog import RemotesDialog
+from .dialogs.coauthor_history_dialog import CoAuthorHistoryDialog
 
 
 STATUS_LABELS = {
@@ -122,6 +123,8 @@ class RepoTab(QWidget):
         branch_menu.addAction(t("toolbar.branch.create"), self._on_create_branch)
         branch_menu.addAction(t("toolbar.branch.merge"), self._on_merge)
         branch_menu.addAction(t("toolbar.branch.rebase"), self._on_rebase)
+        branch_menu.addSeparator()
+        branch_menu.addAction(t("toolbar.branch.coauthor_history"), self._on_coauthor_history)
         branch_btn.setMenu(branch_menu)
         tb.addWidget(branch_btn)
 
@@ -325,6 +328,11 @@ class RepoTab(QWidget):
         dlg = BranchDialog(self._repo, mode="rebase", parent=self)
         dlg.exec()
         # Always refresh: rebase pauses on conflicts leaving state that must be shown
+        self._refresh_all()
+
+    def _on_coauthor_history(self):
+        dlg = CoAuthorHistoryDialog(self._repo, parent=self)
+        dlg.exec()
         self._refresh_all()
 
     def _on_stash(self):

@@ -16,8 +16,11 @@ from PyQt6.QtGui import QColor, QFont, QMouseEvent
 from app.i18n import t
 from app.git.repo import GitRepo
 from app.git.models import FileStatusEntry
+from app.git.trailers import add_co_author, remove_co_author
 from app.constants import STATUS_COLORS
 from app.workers.git_worker import GitWorker
+from app.ui.co_authors_bar import CoAuthorsBar
+from app.ui.dialogs.add_coauthor_dialog import AddCoAuthorDialog
 
 LFS_ICON = "⬡"
 
@@ -438,6 +441,9 @@ class WorkingCopyWidget(QWidget):
         self._commit_edit.setFont(QFont("Monospace", 11))
         commit_layout.addWidget(self._commit_edit)
 
+        self._co_authors_bar = CoAuthorsBar()
+        commit_layout.addWidget(self._co_authors_bar)
+
         btn_row = QHBoxLayout()
         self._amend_check = QCheckBox(t("working_copy.amend"))
         self._commit_btn = QPushButton(t("working_copy.commit_btn"))
@@ -470,6 +476,9 @@ class WorkingCopyWidget(QWidget):
         self._unstage_all_btn.clicked.connect(self._on_unstage_all)
         self._commit_btn.clicked.connect(self._on_commit)
         self._amend_check.toggled.connect(self._on_amend_toggled)
+        self._commit_edit.textChanged.connect(self._on_commit_text_changed)
+        self._co_authors_bar.add_requested.connect(self._on_add_co_author)
+        self._co_authors_bar.remove_requested.connect(self._on_remove_co_author)
 
     # ------------------------------------------------------------------ Slots
 
@@ -492,12 +501,28 @@ class WorkingCopyWidget(QWidget):
                 msg = self._repo.get_last_commit_message()
             except Exception:
                 msg = ""
-            self._commit_edit.setPlainText(msg)
-            cursor = self._commit_edit.textCursor()
-            cursor.movePosition(cursor.MoveOperation.End)
-            self._commit_edit.setTextCursor(cursor)
+            self._replace_commit_text_keep_cursor_at_end(msg)
         else:
             self._commit_edit.setPlainText(self._pre_amend_text)
+
+    def _on_commit_text_changed(self):
+        self._co_authors_bar.sync(self._commit_edit.toPlainText())
+
+    def _on_add_co_author(self):
+        dlg = AddCoAuthorDialog(self)
+        if dlg.exec():
+            new_text = add_co_author(self._commit_edit.toPlainText(), dlg.name, dlg.email)
+            self._replace_commit_text_keep_cursor_at_end(new_text)
+
+    def _on_remove_co_author(self, email: str):
+        new_text = remove_co_author(self._commit_edit.toPlainText(), email)
+        self._replace_commit_text_keep_cursor_at_end(new_text)
+
+    def _replace_commit_text_keep_cursor_at_end(self, text: str):
+        self._commit_edit.setPlainText(text)
+        cursor = self._commit_edit.textCursor()
+        cursor.movePosition(cursor.MoveOperation.End)
+        self._commit_edit.setTextCursor(cursor)
 
     def refresh(self):
         try:
