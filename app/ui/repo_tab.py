@@ -39,7 +39,6 @@ class RepoTab(QWidget):
 
     def __init__(self, repo_path: str, parent=None):
         super().__init__(parent)
-        self._repo_path = repo_path
         try:
             self._repo = GitRepo(repo_path)
         except Exception as e:
@@ -164,7 +163,7 @@ class RepoTab(QWidget):
         self._refresh_timer.timeout.connect(self._on_fs_change)
 
         self._fs_watcher = QFileSystemWatcher(self)
-        git_dir = os.path.join(self._repo_path, ".git")
+        git_dir = self._repo.get_git_dir()
 
         # Files that change on every write operation or state change
         for name in ("HEAD", "MERGE_HEAD", "MERGE_MSG", "CHERRY_PICK_HEAD"):
@@ -187,7 +186,7 @@ class RepoTab(QWidget):
 
     def _on_git_dir_changed(self, path: str):
         """Re-register any newly appeared state files and schedule a refresh."""
-        git_dir = os.path.join(self._repo_path, ".git")
+        git_dir = self._repo.get_git_dir()
         for name in ("index", "HEAD", "MERGE_HEAD", "MERGE_MSG", "CHERRY_PICK_HEAD"):
             p = os.path.join(git_dir, name)
             if os.path.exists(p) and p not in self._fs_watcher.files():

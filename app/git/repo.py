@@ -15,12 +15,41 @@ from .graph_layout import compute_graph_layout
 
 class GitRepo:
     def __init__(self, path: str):
-        self.path = os.path.abspath(path)
+        # realpath (not abspath!) resolves symlinks in the path, e.g. when
+        # $HOME itself is a symlink (Fedora Silverblue/Kinoite, NixOS,
+        # some container/overlay setups). Using abspath there leaves
+        # self.path pointing at a path that differs from what the rest of
+        # the app / OS resolves, which surfaces as bogus "pathspec did not
+        # match any files" errors from stage/unstage/discard after the
+        # config dir (and thus cached bookmark paths) gets regenerated.
+        self.path = os.path.realpath(path)
         self.runner = GitRunner(self.path)
         self._validate()
+        self.path = self._resolve_toplevel()
+        self.runner = GitRunner(self.path)
 
     def _validate(self):
         self.runner.run(["rev-parse", "--git-dir"])
+
+    def _resolve_toplevel(self) -> str:
+        """Re-root to the actual working-tree top-level.
+
+        `-C <path>` only controls where git starts its upward search for
+        a repository — pathspecs returned by `status`/`diff` (and the
+        pathspecs commands like `add`/`restore`/`stash push -- <path>`
+        expect) are always relative to that true top-level. If `path` is
+        a subdirectory of the repo rather than the root itself (e.g. a
+        bookmark pointing one level too deep), read-only commands like
+        status/log still "work" because they search upward, but any
+        pathspec-bearing write fails with "pathspec ... did not match any
+        files" since the path gets resolved one level too deep. Bare
+        repos have no toplevel; keep self.path as-is then.
+        """
+        try:
+            toplevel = self.runner.run(["rev-parse", "--show-toplevel"]).strip()
+        except GitCommandError:
+            return self.path
+        return os.path.realpath(toplevel) if toplevel else self.path
 
     # ------------------------------------------------------------------ Log
 
@@ -143,13 +172,41 @@ class GitRepo:
 
     # --------------------------------------------------------------- Staging
 
+    def _filter_stageable(self, paths: list[str]) -> list[str]:
+        """Drop paths that vanished from disk between the last status
+        refresh and this call (e.g. build tools / Unity / IDEs that
+        rewrite files on save) *and* are not tracked by git.
+
+        `git add`/`git stash push -- <path>` hard-fail with
+        "pathspec '...' did not match any files" for such paths, which
+        would otherwise abort the whole batch even though the rest of the
+        paths are perfectly fine to stage.  A path that's missing on disk
+        but still tracked (a real deletion the user wants to stage) is
+        kept, since git handles staging deletions fine.
+        """
+        result = []
+        for p in paths:
+            full = os.path.join(self.path, p)
+            if os.path.exists(full) or os.path.islink(full):
+                result.append(p)
+                continue
+            try:
+                self.runner.run(["ls-files", "--error-unmatch", "--", p])
+                result.append(p)  # tracked deletion — still stageable
+            except GitCommandError:
+                pass  # untracked and gone — nothing left to stage, skip it
+        return result
+
     def stage_file(self, path: str) -> None:
-        self.runner.run(["add", "--", path])
+        valid = self._filter_stageable([path])
+        if valid:
+            self.runner.run(["add", "--"] + valid)
 
     def stage_files(self, paths: list[str]) -> None:
         """Stage multiple files in a single atomic git add call."""
-        if paths:
-            self.runner.run(["add", "--"] + paths)
+        valid = self._filter_stageable(paths)
+        if valid:
+            self.runner.run(["add", "--"] + valid)
 
     def unstage_file(self, path: str) -> None:
         try:
@@ -364,9 +421,30 @@ class GitRepo:
         working tree is left untouched.
         """
         from datetime import datetime
+        valid = self._filter_stageable(paths)
+        if not valid:
+            # Nothing left to discard — the file(s) already vanished on
+            # their own (e.g. rewritten by an external tool) between the
+            # status refresh and this call.
+            return ""
         label = f"pre-discard-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+
+        # `git stash push` exits 0 even when there was nothing to stash for
+        # the given pathspec (prints "No local changes to save" instead of
+        # "Saved working directory..."), which used to be reported to the
+        # user as a successful discard even though nothing changed. Detect
+        # that locale-independently by comparing the stash count, the same
+        # way safe_reset_hard() does below.
+        count_before = len(
+            [l for l in self.runner.run(["stash", "list"]).splitlines() if l.strip()]
+        )
         # -u includes untracked files; pathspec scopes it to only these paths
-        self.runner.run(["stash", "push", "-u", "-m", label, "--"] + paths)
+        self.runner.run(["stash", "push", "-u", "-m", label, "--"] + valid)
+        count_after = len(
+            [l for l in self.runner.run(["stash", "list"]).splitlines() if l.strip()]
+        )
+        if count_after == count_before:
+            return ""  # nothing was actually stashed — don't claim success
         return label
 
     def cherry_pick(self, hash: str) -> None:
@@ -453,12 +531,26 @@ class GitRepo:
         except GitCommandError:
             return False
 
-    def get_merge_msg(self) -> str:
+    def get_git_dir(self) -> str:
+        """Resolve the real git directory, not just `<self.path>/.git`.
+
+        For worktrees and submodules `.git` is a *file* pointing elsewhere,
+        so any caller that hardcodes `os.path.join(self.path, ".git")`
+        silently watches/reads the wrong (nonexistent) location for those
+        repos. `rev-parse --git-dir` is the only reliable source; it can
+        return a relative path, which is resolved against self.path.
+        """
         try:
             git_dir = self.runner.run(["rev-parse", "--git-dir"]).strip()
-            if not os.path.isabs(git_dir):
-                git_dir = os.path.join(self.path, git_dir)
-            msg_file = os.path.join(git_dir, "MERGE_MSG")
+        except GitCommandError:
+            return os.path.join(self.path, ".git")
+        if not git_dir:
+            return os.path.join(self.path, ".git")
+        return git_dir if os.path.isabs(git_dir) else os.path.join(self.path, git_dir)
+
+    def get_merge_msg(self) -> str:
+        try:
+            msg_file = os.path.join(self.get_git_dir(), "MERGE_MSG")
             if os.path.exists(msg_file):
                 with open(msg_file, encoding="utf-8", errors="replace") as f:
                     return f.read().strip()
@@ -468,9 +560,7 @@ class GitRepo:
 
     def is_rebasing(self) -> bool:
         try:
-            git_dir = self.runner.run(["rev-parse", "--git-dir"]).strip()
-            if not os.path.isabs(git_dir):
-                git_dir = os.path.join(self.path, git_dir)
+            git_dir = self.get_git_dir()
             return (os.path.isdir(os.path.join(git_dir, "rebase-merge")) or
                     os.path.isdir(os.path.join(git_dir, "rebase-apply")))
         except Exception:
@@ -577,12 +667,7 @@ class GitRepo:
                 time.sleep(0.1)
 
         # ── 2. Remove .lock files ────────────────────────────────────────────
-        git_dir_raw = ""
-        try:
-            git_dir_raw = self.runner.run(["rev-parse", "--git-dir"]).strip()
-        except GitCommandError:
-            pass
-        git_dir = os.path.join(self.path, git_dir_raw) if git_dir_raw else os.path.join(self.path, ".git")
+        git_dir = self.get_git_dir()
 
         for lock_path in _glob.glob(os.path.join(git_dir, "**", "*.lock"), recursive=True):
             try:

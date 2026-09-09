@@ -57,10 +57,28 @@ class GitRunner:
         env = os.environ.copy()
         # Fail fast on auth prompts — we detect and retry in terminal instead
         env["GIT_TERMINAL_PROMPT"] = "0"
-        ssh_cmd = get_git_ssh_command()
+        # Pin git's own output to English/C regardless of the user's system
+        # locale (e.g. Equestria OS or any non-English setup). We don't
+        # currently parse git's free-text messages for anything user-facing,
+        # but keeping it deterministic avoids silent locale-dependent
+        # mismatches creeping back in later.
+        env["LC_ALL"] = "C"
+        env["LANG"] = "C"
+        # SSH/ASKPASS config is regenerated from files under ~/.config on
+        # every git call. If that directory was deleted (or is mid-recreation
+        # right after a fresh launch) these must never be allowed to raise —
+        # local operations like add/restore/stash must keep working even
+        # with a completely empty/missing config dir.
+        try:
+            ssh_cmd = get_git_ssh_command()
+        except Exception:
+            ssh_cmd = None
         if ssh_cmd:
             env["GIT_SSH_COMMAND"] = ssh_cmd
-        askpass = get_askpass_path()
+        try:
+            askpass = get_askpass_path()
+        except Exception:
+            askpass = None
         if askpass:
             env["GIT_ASKPASS"] = askpass
             env["SSH_ASKPASS"] = askpass

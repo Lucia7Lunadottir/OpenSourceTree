@@ -17,10 +17,43 @@ ASKPASS_SCRIPT    = CONFIG_DIR / "askpass.py"
 AVATARS_DIR       = CONFIG_DIR / "avatars"
 
 
+def _ensure_dir(path: Path, mode: int | None = None) -> None:
+    """Create `path` as a directory, tolerating anything already sitting there.
+
+    After an accidental deletion, some trash/sync tools on certain distros
+    (this has been seen on Equestria OS) don't restore a folder cleanly —
+    they can leave a stray plain *file* at that path, or nothing at all one
+    level up. A bare `Path.mkdir(exist_ok=True)` raises in that case, and
+    since this helper runs before *every* config read/write (bookmarks,
+    SSH profiles, accounts, app settings — literally everything), a single
+    bad path used to be enough to take down the whole feature set instead
+    of just one of them. Move anything unexpected out of the way instead
+    of raising, and never let a failure here propagate.
+    """
+    try:
+        if path.exists() and not path.is_dir():
+            try:
+                path.rename(path.with_name(f"{path.name}.bak-{int(datetime.now().timestamp())}"))
+            except OSError:
+                try:
+                    path.unlink()
+                except OSError:
+                    return  # can't clear it — leave it, callers will just fail to write
+        path.mkdir(parents=True, exist_ok=True)
+        if mode is not None:
+            try:
+                path.chmod(mode)
+            except OSError:
+                pass
+    except OSError:
+        pass  # best-effort: never let config-dir setup crash the app
+
+
 def _ensure_config_dir():
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    AVATARS_DIR.mkdir(exist_ok=True)
-    (Path.home() / ".ssh").mkdir(mode=0o700, exist_ok=True)
+    _ensure_dir(Path.home() / ".config")
+    _ensure_dir(CONFIG_DIR)
+    _ensure_dir(AVATARS_DIR)
+    _ensure_dir(Path.home() / ".ssh", mode=0o700)
 
 
 # ── App config (language, etc.) ───────────────────────────────────────────────

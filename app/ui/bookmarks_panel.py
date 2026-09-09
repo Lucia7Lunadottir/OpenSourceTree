@@ -74,21 +74,29 @@ class BookmarksPanel(QWidget):
             self.add_repo(path)
 
     def add_repo(self, path: str):
-        if not GitRepo.is_git_repo(path):
+        # Resolve to the actual working-tree top-level rather than trusting
+        # `path` verbatim — a bookmark saved from a subdirectory of a repo
+        # (which passes `is_git_repo`-style checks fine, since git searches
+        # upward) breaks stage/unstage/stash pathspecs later, since those
+        # are always relative to the true top-level. GitRepo already does
+        # this resolution on construction, so reuse it here as validation.
+        try:
+            resolved_path = GitRepo(path).path
+        except Exception:
             QMessageBox.warning(
                 self,
                 t("bookmarks.not_git.title"),
                 t("bookmarks.not_git.text", path=path),
             )
             return
-        config.add_bookmark(path)
+        config.add_bookmark(resolved_path)
         self._load_bookmarks()
         # Select the newly added item
         for i in range(self._list.count()):
             item = self._list.item(i)
-            if item.data(Qt.ItemDataRole.UserRole) == path:
+            if item.data(Qt.ItemDataRole.UserRole) == resolved_path:
                 self._list.setCurrentItem(item)
-                self.repo_selected.emit(path)
+                self.repo_selected.emit(resolved_path)
                 break
 
     def _on_item_activated(self, item: QListWidgetItem):
