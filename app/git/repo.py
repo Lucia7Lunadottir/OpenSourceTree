@@ -316,12 +316,15 @@ class GitRepo:
         branch: str = "",
         force: bool = False,
         tags: bool = False,
+        set_upstream: bool = False,
     ) -> str:
         args = ["push"]
         if force:
             args.append("--force-with-lease")
         if tags:
             args.append("--tags")
+        if set_upstream:
+            args.append("--set-upstream")
         if remote:
             args.append(remote)
         if branch:
@@ -914,12 +917,21 @@ class GitRepo:
             args.append(branch)
         return self.runner.run_streaming(args)
 
-    def push_streaming(self, remote: str = "", branch: str = "", force: bool = False, tags: bool = False) -> Iterator[str]:
+    def push_streaming(
+        self,
+        remote: str = "",
+        branch: str = "",
+        force: bool = False,
+        tags: bool = False,
+        set_upstream: bool = False,
+    ) -> Iterator[str]:
         args = ["push", "--progress"]
         if force:
             args.append("--force-with-lease")
         if tags:
             args.append("--tags")
+        if set_upstream:
+            args.append("--set-upstream")
         # If branch specified without a remote, git would treat branch name as remote name.
         # Use "origin" as the fallback so the argument order stays valid.
         effective_remote = remote or ("origin" if branch else "")

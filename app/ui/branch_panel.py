@@ -149,7 +149,11 @@ class BranchPanel(QTreeWidget):
         if data is None:
             return
         kind, obj = data
-        if kind == "branch" and not obj.is_remote:
+        if kind != "branch":
+            return
+        if obj.is_remote:
+            self._checkout_remote(obj.name)
+        else:
             self._checkout(obj.name)
 
     def _context_menu(self, pos):
@@ -209,8 +213,23 @@ class BranchPanel(QTreeWidget):
         self.branch_checked_out.emit(name)
 
     def _checkout_remote(self, name: str):
-        # e.g. origin/main -> create local main tracking it
+        """Checkout a remote branch, e.g. origin/main.
+
+        `checkout -b <local> --track <remote>` unconditionally fails with
+        "branch already exists" if a local branch of that short name is
+        already there, so check first and just switch to it instead of
+        assuming a clean state.
+        """
         local_name = name.split("/", 1)[-1] if "/" in name else name
+        try:
+            local_exists = any(
+                not b.is_remote and b.name == local_name for b in self._repo.get_branches()
+            )
+        except Exception:
+            local_exists = False
+        if local_exists:
+            self._checkout(local_name)
+            return
         self._run(
             self._repo.runner.run,
             ["checkout", "-b", local_name, "--track", name],

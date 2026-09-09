@@ -36,13 +36,21 @@ class RemoteDialog(QDialog):
 
         remotes = self._get_remotes()
         self._remote_combo = QComboBox()
-        self._remote_combo.addItems([t("remote.all")] + remotes)
+        if self._mode == "fetch":
+            # Only fetch actually treats an empty remote as --all (every
+            # remote). Push/pull silently fall back to a single default
+            # remote instead, so offering "(all)" there implied a
+            # multi-remote push/pull that never happened.
+            self._remote_combo.addItems([t("remote.all")] + remotes)
+        else:
+            self._remote_combo.addItems(remotes)
+            tracked = self._get_tracked_remote()
+            if tracked and tracked in remotes:
+                self._remote_combo.setCurrentText(tracked)
         form.addRow(t("remote.label"), self._remote_combo)
 
         if self._mode in ("pull", "push"):
-            self._branch_placeholder = (
-                "(текущая)" if t("remote.branch") == "Ветка:" else "(current branch)"
-            )
+            self._branch_placeholder = t("remote.current_branch_placeholder")
             self._branch_combo = QComboBox()
             self._branch_combo.setEditable(True)
             self._branch_combo.addItem(self._branch_placeholder)
@@ -103,6 +111,11 @@ class RemoteDialog(QDialog):
         self._terminal_btn.clicked.connect(self._retry_in_terminal)
         layout.addWidget(self._terminal_btn)
 
+        self._upstream_btn = QPushButton(t("remote.set_upstream_retry"))
+        self._upstream_btn.setVisible(False)
+        self._upstream_btn.clicked.connect(lambda: self._on_accept(set_upstream=True))
+        layout.addWidget(self._upstream_btn)
+
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
@@ -118,6 +131,16 @@ class RemoteDialog(QDialog):
         except Exception:
             return ["origin"]
 
+    def _get_tracked_remote(self) -> str:
+        """Remote the current branch's upstream points at, e.g. "origin"."""
+        try:
+            for b in self._repo.get_branches():
+                if not b.is_remote and b.is_current and b.tracking:
+                    return b.tracking.split("/", 1)[0]
+        except Exception:
+            pass
+        return ""
+
     def _branch_text(self) -> str:
         """Return selected branch name, or '' if placeholder is selected."""
         text = self._branch_combo.currentText().strip()
@@ -128,13 +151,21 @@ class RemoteDialog(QDialog):
     def _get_branches(self) -> list[str]:
         try:
             all_branches = self._repo.get_branches()
-            local  = [b.name for b in all_branches if not b.is_remote]
+            local = [b.name for b in all_branches if not b.is_remote]
+            if self._mode == "push":
+                # A remote-tracking name like "origin/main" is not a valid
+                # push *source* the way it looks — `git push aur origin/main`
+                # resolves it (it exists as refs/remotes/origin/main) and
+                # pushes it to `aur` under the literal name "origin/main",
+                # silently creating a wrongly-named branch instead of
+                # pushing "main". Only local branches make sense to push.
+                return local
             remote = [b.name for b in all_branches if b.is_remote]
             return local + remote
         except Exception:
             return []
 
-    def _build_fn(self):
+    def _build_fn(self, set_upstream: bool = False):
         remote = self._remote_combo.currentText()
         if remote == t("remote.all"):
             remote = ""
@@ -159,16 +190,26 @@ class RemoteDialog(QDialog):
 
         elif self._mode == "push":
             branch = self._branch_text()
+            if set_upstream and not branch:
+                # --set-upstream fails exactly like a bare push does when
+                # there's no upstream yet unless the branch is named
+                # explicitly too — resolve "(current branch)" for real.
+                try:
+                    branch = self._repo.get_head()
+                except Exception:
+                    pass
             force  = self._force_check.isChecked()
             tags   = self._tags_check.isChecked()
             self._last_args = ["push"] + (["--force-with-lease"] if force else []) + (
-                ["--tags"] if tags else []) + ([remote] if remote else []) + (
+                ["--tags"] if tags else []) + (["--set-upstream"] if set_upstream else []) + (
+                [remote] if remote else []) + (
                 [branch] if branch else [])
-            return lambda: self._repo.push_streaming(remote, branch, force, tags)
+            return lambda: self._repo.push_streaming(remote, branch, force, tags, set_upstream)
 
-    def _on_accept(self):
-        fn = self._build_fn()
+    def _on_accept(self, set_upstream: bool = False):
+        fn = self._build_fn(set_upstream)
         self._terminal_btn.setVisible(False)
+        self._upstream_btn.setVisible(False)
         self._ok_btn.setEnabled(False)
         self._output.clear()
         self._output.setVisible(True)
@@ -227,6 +268,15 @@ class RemoteDialog(QDialog):
             self._terminal_btn.setVisible(True)
             self._status_label.setStyleSheet("color: rgb(255, 100, 100);")
             self._status_label.setText(t("remote.auth_required"))
+        elif self._mode == "push" and "no upstream branch" in error.lower():
+            # `git push <remote>` with no branch arg fails outright when the
+            # current branch has never been pushed anywhere — happens a lot
+            # when pushing an existing branch to a *second* remote (e.g. an
+            # AUR git remote alongside origin). Offer to redo it with
+            # --set-upstream instead of surfacing raw git jargon.
+            self._upstream_btn.setVisible(True)
+            self._status_label.setStyleSheet("color: rgb(255, 100, 100);")
+            self._status_label.setText(t("remote.no_upstream"))
         else:
             # Output is already visible in the QPlainTextEdit above;
             # show the last non-empty line as a compact status hint.
