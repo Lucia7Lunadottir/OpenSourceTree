@@ -823,6 +823,27 @@ bash start.sh</code></pre>
 }</code></pre>
         </div>
       </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">ensure_agent_running()</h3>
+        <div class="card">
+          <p style="font-size:.9rem; margin-bottom: 8px;">
+            Гарантирует рабочий <code>SSH_AUTH_SOCK</code> в <code>os.environ</code>, переиспользуя
+            один и тот же агент между запусками приложения вместо запуска нового пустого агента
+            каждый раз. Приложения, запущенные через .desktop/меню (не из терминала), часто не
+            наследуют <code>SSH_AUTH_SOCK</code> сессии, даже если рабочий агент уже где-то запущен —
+            раньше это трактовалось как "агента нет" и плодило одноразовый <code>ssh-agent</code>
+            на каждый запуск (осиротевший процесс + пустой агент → пароль каждый раз заново).
+          </p>
+          <ul style="color:var(--text-muted); font-size:.87rem; line-height:1.9; padding-left:20px;">
+            <li>Свой агент биндится на фиксированный сокет <code>~/.config/OpenSourceTree/ssh-agent.sock</code> — так его можно найти и переиспользовать в следующем запуске</li>
+            <li>Живость проверяется через <code>ssh-add -l</code> (exit 0/1 = жив, 2 = мёртвый/битый сокет)</li>
+            <li>Если процесс уже унаследовал рабочий <code>SSH_AUTH_SOCK</code> сессии (KDE Wallet, gnome-keyring, systemd <code>ssh-agent.socket</code>...) — используется он, свой агент не создаётся</li>
+            <li><code>GitRunner._build_env()</code> вызывает это <strong>проактивно</strong> перед каждым SSH-git-вызовом (только если есть активные SSH-профили), не только реактивно после ошибки авторизации — результат кэшируется на весь процесс (<code>_agent_verified_this_run</code>), так что реальная проверка происходит один раз за сессию приложения</li>
+            <li>Ключ, добавленный через <code>ssh-add</code> (кнопка "Добавить SSH-ключ в агент"), переживает перезапуск приложения — пароль/passphrase нужен заново только после перезагрузки или ручного убийства агента</li>
+          </ul>
+        </div>
+      </div>
     </section>
 
     <div class="divider"></div>

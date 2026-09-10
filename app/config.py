@@ -195,25 +195,86 @@ def get_git_ssh_command() -> str | None:
     return f"ssh -F {OPENSSH_CONFIG}"
 
 
-def ensure_agent_running() -> bool:
-    """Start ssh-agent if not running and inject SSH_AUTH_SOCK into os.environ.
-    Returns True if agent is running (or was just started successfully)."""
-    if os.environ.get("SSH_AUTH_SOCK"):
-        return True
+AGENT_SOCK = CONFIG_DIR / "ssh-agent.sock"
+_agent_verified_this_run = False
+
+
+def _agent_alive(sock_path: str) -> bool:
+    """True if an ssh-agent is actually listening (and reachable) at sock_path.
+
+    `ssh-add -l` exits 0 (has keys) or 1 (reachable, just empty) when the
+    agent is alive; 2 means the socket is missing/stale/unreachable.
+    """
     try:
         result = subprocess.run(
-            ["ssh-agent", "-s"], capture_output=True, text=True, timeout=10
+            ["ssh-add", "-l"],
+            env={**os.environ, "SSH_AUTH_SOCK": sock_path},
+            capture_output=True, timeout=5,
+        )
+        return result.returncode in (0, 1)
+    except Exception:
+        return False
+
+
+def ensure_agent_running() -> bool:
+    """Get a usable ssh-agent into os.environ["SSH_AUTH_SOCK"], reusing a
+    persistent one across app restarts instead of spawning a fresh empty
+    agent every launch.
+
+    Desktop launchers (app menu / .desktop entries, as opposed to a
+    terminal) frequently don't propagate a session's SSH_AUTH_SOCK into the
+    process they start, even when a perfectly good agent is already
+    running. The old code treated a missing env var as "no agent" and
+    spawned a brand new throwaway one on every single launch -- each one an
+    orphan process once the app closed, and each one empty, so any key
+    added via ssh-add (passphrase prompt and all) only lived as long as
+    that one run.
+
+    Fix: bind our own agent to a fixed socket path under the config dir on
+    first use, and on every subsequent call just check whether it's still
+    alive and reuse it. A key added to it via ssh-add then survives app
+    restarts -- the passphrase is only needed again after a reboot/logout
+    (or if the agent is killed manually), not on every launch.
+
+    Once this succeeds, the result is cached for the rest of the process
+    (`_agent_verified_this_run`) so callers that just want SSH_AUTH_SOCK
+    populated before a network git command -- e.g. GitRunner on every call
+    -- don't pay for an `ssh-add -l` round trip each time.
+    """
+    global _agent_verified_this_run
+    if _agent_verified_this_run:
+        return True
+
+    if _agent_alive(str(AGENT_SOCK)):
+        os.environ["SSH_AUTH_SOCK"] = str(AGENT_SOCK)
+        _agent_verified_this_run = True
+        return True
+
+    # A session-provided agent (KDE Wallet, gnome-keyring, systemd --user
+    # ssh-agent.socket, ...) is just as good if this process happens to
+    # have inherited it -- prefer it over spawning our own.
+    inherited = os.environ.get("SSH_AUTH_SOCK")
+    if inherited and _agent_alive(inherited):
+        _agent_verified_this_run = True
+        return True
+
+    _ensure_config_dir()
+    try:
+        if AGENT_SOCK.exists():
+            AGENT_SOCK.unlink()  # stale socket left by a dead agent
+        result = subprocess.run(
+            ["ssh-agent", "-a", str(AGENT_SOCK)],
+            capture_output=True, timeout=10,
         )
         if result.returncode != 0:
             return False
-        for line in result.stdout.splitlines():
-            if "SSH_AUTH_SOCK=" in line:
-                os.environ["SSH_AUTH_SOCK"] = line.split("=", 1)[1].split(";")[0]
-            elif "SSH_AGENT_PID=" in line:
-                os.environ["SSH_AGENT_PID"] = line.split("=", 1)[1].split(";")[0]
     except Exception:
         return False
-    return bool(os.environ.get("SSH_AUTH_SOCK"))
+
+    os.environ["SSH_AUTH_SOCK"] = str(AGENT_SOCK)
+    ok = _agent_alive(str(AGENT_SOCK))
+    _agent_verified_this_run = ok
+    return ok
 
 
 def scan_default_ssh_keys() -> list[str]:

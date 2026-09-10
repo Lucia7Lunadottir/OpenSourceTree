@@ -53,7 +53,29 @@ class GitRunner:
         return ["git", "-C", self.repo_path, "-c", "core.quotePath=false"] + args
 
     def _build_env(self) -> dict:
-        from app.config import get_git_ssh_command, get_askpass_path
+        from app.config import get_git_ssh_command, get_askpass_path, ensure_agent_running
+        # SSH/ASKPASS config is regenerated from files under ~/.config on
+        # every git call. If that directory was deleted (or is mid-recreation
+        # right after a fresh launch) these must never be allowed to raise —
+        # local operations like add/restore/stash must keep working even
+        # with a completely empty/missing config dir.
+        try:
+            ssh_cmd = get_git_ssh_command()
+        except Exception:
+            ssh_cmd = None
+        if ssh_cmd:
+            # Make sure SSH_AUTH_SOCK points at a live agent *before*
+            # os.environ gets copied below — otherwise a desktop launcher
+            # that didn't propagate the session's agent leaves every SSH
+            # remote call hitting a passphrase prompt it can't answer
+            # (GIT_TERMINAL_PROMPT=0 below just turns that into a hard
+            # failure) even though a usable agent exists or was already
+            # unlocked in a previous run. Cached after the first call, so
+            # this is a no-op on every subsequent git command.
+            try:
+                ensure_agent_running()
+            except Exception:
+                pass
         env = os.environ.copy()
         # Fail fast on auth prompts — we detect and retry in terminal instead
         env["GIT_TERMINAL_PROMPT"] = "0"
@@ -64,15 +86,6 @@ class GitRunner:
         # mismatches creeping back in later.
         env["LC_ALL"] = "C"
         env["LANG"] = "C"
-        # SSH/ASKPASS config is regenerated from files under ~/.config on
-        # every git call. If that directory was deleted (or is mid-recreation
-        # right after a fresh launch) these must never be allowed to raise —
-        # local operations like add/restore/stash must keep working even
-        # with a completely empty/missing config dir.
-        try:
-            ssh_cmd = get_git_ssh_command()
-        except Exception:
-            ssh_cmd = None
         if ssh_cmd:
             env["GIT_SSH_COMMAND"] = ssh_cmd
         try:
