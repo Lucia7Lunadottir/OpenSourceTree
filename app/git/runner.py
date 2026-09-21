@@ -63,19 +63,20 @@ class GitRunner:
             ssh_cmd = get_git_ssh_command()
         except Exception:
             ssh_cmd = None
-        if ssh_cmd:
-            # Make sure SSH_AUTH_SOCK points at a live agent *before*
-            # os.environ gets copied below — otherwise a desktop launcher
-            # that didn't propagate the session's agent leaves every SSH
-            # remote call hitting a passphrase prompt it can't answer
-            # (GIT_TERMINAL_PROMPT=0 below just turns that into a hard
-            # failure) even though a usable agent exists or was already
-            # unlocked in a previous run. Cached after the first call, so
-            # this is a no-op on every subsequent git command.
-            try:
-                ensure_agent_running()
-            except Exception:
-                pass
+        # Make sure SSH_AUTH_SOCK points at a live agent *before* os.environ
+        # gets copied below -- otherwise a desktop launcher that didn't
+        # propagate the session's agent leaves every SSH remote call hitting
+        # a passphrase prompt it can't answer (GIT_TERMINAL_PROMPT=0 below
+        # just turns that into a hard failure) even though a usable agent
+        # exists or was already unlocked in a previous run. Cached after the
+        # first call, so this is a no-op on every subsequent git command.
+        # Unconditional: plain `ssh` (no custom -F config, i.e. no SSH
+        # profile with a hostname set) still consults SSH_AUTH_SOCK, so this
+        # must run even when ssh_cmd ends up None.
+        try:
+            ensure_agent_running()
+        except Exception:
+            pass
         env = os.environ.copy()
         # Fail fast on auth prompts — we detect and retry in terminal instead
         env["GIT_TERMINAL_PROMPT"] = "0"
