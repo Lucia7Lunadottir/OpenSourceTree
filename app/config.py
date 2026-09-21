@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import stat
 import subprocess
 import uuid
@@ -216,6 +217,25 @@ def _agent_alive(sock_path: str) -> bool:
         return False
 
 
+def _shell_profile_agent_sock() -> str | None:
+    """SSH_AUTH_SOCK from ~/.ssh-agent-info, the file this user's own
+    ~/.bashrc writes when it autostarts an ssh-agent for interactive shells.
+
+    A desktop launcher never sources ~/.bashrc, so it can't inherit that
+    agent's env the way a terminal-opened app would -- but the socket it
+    published is still just as reusable. Checking this file lets us find and
+    reuse that agent instead of spawning a second, empty one.
+    """
+    info_file = Path.home() / ".ssh-agent-info"
+    if not info_file.exists():
+        return None
+    try:
+        match = re.search(r"SSH_AUTH_SOCK=([^;\s]+)", info_file.read_text())
+    except OSError:
+        return None
+    return match.group(1) if match else None
+
+
 def ensure_agent_running() -> bool:
     """Get a usable ssh-agent into os.environ["SSH_AUTH_SOCK"], reusing a
     persistent one across app restarts instead of spawning a fresh empty
@@ -255,6 +275,12 @@ def ensure_agent_running() -> bool:
     # have inherited it -- prefer it over spawning our own.
     inherited = os.environ.get("SSH_AUTH_SOCK")
     if inherited and _agent_alive(inherited):
+        _agent_verified_this_run = True
+        return True
+
+    shell_sock = _shell_profile_agent_sock()
+    if shell_sock and _agent_alive(shell_sock):
+        os.environ["SSH_AUTH_SOCK"] = shell_sock
         _agent_verified_this_run = True
         return True
 
