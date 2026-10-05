@@ -11,6 +11,8 @@ from app.i18n import t
 
 from .bookmarks_panel import BookmarksPanel
 from .repo_tab import RepoTab
+from .elided_label import ClickableElidedLabel
+from .log_panel import LogPanel
 from .dialogs.clone_dialog import CloneDialog
 from .dialogs.ssh_dialog import SSHSettingsDialog
 from .dialogs.accounts_dialog import AccountsDialog
@@ -108,12 +110,22 @@ class MainWindow(QMainWindow):
     def _setup_statusbar(self):
         self._status = QStatusBar()
         self.setStatusBar(self._status)
-        self._status_label = QLabel(t("status.ready"))
-        self._status_label.setTextInteractionFlags(
-            Qt.TextInteractionFlag.TextSelectableByMouse |
-            Qt.TextInteractionFlag.TextSelectableByKeyboard
-        )
+        # Elided + clickable: a long message must not widen the window; a click
+        # opens the log panel with the full history.
+        self._status_label = ClickableElidedLabel(t("status.ready"))
+        self._status_label.clicked.connect(self._toggle_log_panel)
         self._status.addWidget(self._status_label, 1)
+
+        self._log_panel = LogPanel(self)
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._log_panel)
+        self._log_panel.hide()
+
+    def _show_status(self, message: str):
+        self._status_label.set_full_text(message)
+        self._log_panel.append_message(message)
+
+    def _toggle_log_panel(self):
+        self._log_panel.setVisible(not self._log_panel.isVisible())
 
     def _open_repo(self, path: str):
         if path in self._repo_tabs:
@@ -128,7 +140,7 @@ class MainWindow(QMainWindow):
         except Exception:
             return  # Error already shown in RepoTab constructor
 
-        tab.status_message.connect(self._status_label.setText)
+        tab.status_message.connect(self._show_status)
         tab.title_changed.connect(lambda t, p=path: self._update_tab_title(p, t))
 
         if self._placeholder.parent() is self._splitter:

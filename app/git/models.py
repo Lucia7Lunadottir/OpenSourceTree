@@ -27,6 +27,26 @@ class CommitRecord:
 
 
 @dataclass
+class CommitInfo:
+    """Full details of one commit, as shown in the commit info panel."""
+    hash: str
+    parents: list[str]
+    author: str
+    author_email: str
+    author_date: datetime
+    committer: str
+    committer_email: str
+    committer_date: datetime
+    refs: list[str]
+    subject: str
+    body: str
+    co_authors: list[tuple[str, str]]
+    files_changed: int = 0
+    insertions: int = 0
+    deletions: int = 0
+
+
+@dataclass
 class FileStatusEntry:
     status: str          # single character: M, A, D, R, C, ?, !, U, T
     path: str

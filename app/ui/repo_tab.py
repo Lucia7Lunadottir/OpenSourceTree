@@ -10,7 +10,7 @@ from PyQt6.QtGui import QIcon, QFont, QColor, QAction
 from app.i18n import t
 from app.git.repo import GitRepo
 from app.git.models import CommitRecord, FileStatusEntry
-from app.git.runner import GitCommandError
+from app.git.runner import GitCommandError, open_terminal_in
 from app.workers.git_worker import GitWorker
 from app.constants import STATUS_COLORS
 from PyQt6.QtCore import QThreadPool
@@ -19,6 +19,7 @@ from .commit_list_view import CommitListView
 from .branch_panel import BranchPanel
 from .working_copy_widget import WorkingCopyWidget
 from .diff_viewer import DiffViewer
+from .commit_info_panel import CommitInfoPanel
 from .dialogs.remote_dialog import RemoteDialog
 from .dialogs.stash_dialog import StashDialog
 from .dialogs.tag_dialog import TagDialog
@@ -83,12 +84,18 @@ class RepoTab(QWidget):
         # Bottom pane: commit file list + diff viewer
         self._bottom_splitter = QSplitter(Qt.Orientation.Horizontal)
 
+        # Left column: full commit information above the changed-files list
+        self._commit_info_panel = CommitInfoPanel()
         self._commit_files_list = QListWidget()
-        self._bottom_splitter.addWidget(self._commit_files_list)
+        self._info_splitter = QSplitter(Qt.Orientation.Vertical)
+        self._info_splitter.addWidget(self._commit_info_panel)
+        self._info_splitter.addWidget(self._commit_files_list)
+        self._info_splitter.setSizes([180, 120])
+        self._bottom_splitter.addWidget(self._info_splitter)
 
         self._diff_viewer = DiffViewer()
         self._bottom_splitter.addWidget(self._diff_viewer)
-        self._bottom_splitter.setSizes([250, 600])
+        self._bottom_splitter.setSizes([360, 600])
 
         self._right_splitter.addWidget(self._bottom_splitter)
         self._right_splitter.setSizes([400, 300])
@@ -135,6 +142,9 @@ class RepoTab(QWidget):
         tb.addSeparator()
         tb.addAction(t("toolbar.refresh"), self._refresh_all)
         tb.addSeparator()
+        terminal_action = tb.addAction(t("toolbar.terminal"), self._on_open_terminal)
+        terminal_action.setToolTip(t("toolbar.terminal.tooltip"))
+        tb.addSeparator()
         fix_action = tb.addAction(t("toolbar.fix"), self._on_fix)
         fix_action.setToolTip(
             "Kill stuck git processes and remove .lock files\n"
@@ -149,6 +159,7 @@ class RepoTab(QWidget):
         self._commit_list.refresh_requested.connect(self._refresh_all)
         self._commit_list.status_message.connect(self.status_message)
         self._commit_files_list.currentItemChanged.connect(self._on_commit_file_selected)
+        self._commit_info_panel.parent_clicked.connect(self._commit_list.select_commit)
         self._branch_panel.refresh_requested.connect(self._refresh_all)
         self._branch_panel.branch_checked_out.connect(self._on_branch_checked_out)
         self._branch_panel.status_message.connect(self.status_message)
@@ -223,7 +234,29 @@ class RepoTab(QWidget):
 
     def _on_commit_selected(self, commit: CommitRecord):
         self._current_commit = commit
+        if commit is None:
+            self._commit_info_panel.clear_info()
+            return
+        self._load_commit_info(commit)
         self._load_commit_files(commit)
+
+    def _load_commit_info(self, commit: CommitRecord):
+        worker = GitWorker(self._repo.get_commit_info, commit.hash)
+        worker.signals.result.connect(
+            lambda info, h=commit.hash: self._on_commit_info_ready(h, info))
+        worker.signals.error.connect(
+            lambda err, h=commit.hash: self._on_commit_info_failed(h, err))
+        QThreadPool.globalInstance().start(worker)
+
+    def _on_commit_info_ready(self, hash: str, info):
+        # Ignore a slow answer for a commit that is no longer selected
+        if self._current_commit and self._current_commit.hash == hash:
+            self._commit_info_panel.show_info(info)
+
+    def _on_commit_info_failed(self, hash: str, error: str):
+        if self._current_commit and self._current_commit.hash == hash:
+            lines = [l for l in error.splitlines() if l.strip()]
+            self._commit_info_panel.show_error(lines[-1] if lines else "Git error")
 
     def _on_working_copy_selected(self):
         self._working_copy_widget.refresh()
@@ -357,6 +390,12 @@ class RepoTab(QWidget):
     def _on_remotes(self):
         dlg = RemotesDialog(self._repo, parent=self)
         dlg.exec()
+
+    def _on_open_terminal(self):
+        try:
+            open_terminal_in(self._repo.path)
+        except Exception as e:
+            self.status_message.emit(f"Error: {e}")
 
     def _on_fix(self):
         ret = QMessageBox.question(

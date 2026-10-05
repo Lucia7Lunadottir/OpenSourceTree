@@ -115,6 +115,10 @@ class CommitListView(QWidget):
         commit = self._model.get_commit(idx.row())
         return commit.hash if commit else ""
 
+    def select_commit(self, hash: str):
+        """Select and scroll to the commit with this hash, if it is loaded."""
+        self._restore_selection(hash)
+
     def _restore_selection(self, hash: str):
         for row in range(self._model.rowCount()):
             commit = self._model.get_commit(row)

@@ -42,6 +42,21 @@ def find_terminal() -> str:
     return ""
 
 
+def open_terminal_in(directory: str) -> None:
+    """Open a terminal emulator whose working directory is `directory`.
+
+    The terminal is started detached, so it outlives (and never blocks) the app.
+    The directory is passed as the process cwd, which every emulator honours.
+    """
+    terminal = find_terminal()
+    if not terminal:
+        raise GitCommandError(["terminal"], -1, "Не найден эмулятор терминала (konsole, xterm)")
+    subprocess.Popen(
+        [terminal], cwd=directory, start_new_session=True,
+        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    )
+
+
 class GitRunner:
     def __init__(self, repo_path: str):
         self.repo_path = repo_path

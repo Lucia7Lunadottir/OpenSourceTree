@@ -267,10 +267,8 @@
     "tag.delete.success_remote": "Tag {name} deleted locally and from remote",
     "tag.delete.remote_error_title": "Delete Remote Tag",
     "tag.delete.remote_error_text": "Tag deleted locally, but could not be removed from the remote:\n\n{error}\n\nThe tag may not have been published, or you may not have the required permissions.",
-
     "clone.error.local_path_as_url": "URL looks like a local path. Please enter an SSH (git@...) or HTTPS URL.",
     "clone.error.ssh_failed": "Clone was not completed or was cancelled.",
-
     "ssh.title": "SSH Keys and Profiles",
     "ssh.profiles_label": "SSH Profiles",
     "ssh.btn_add": "+ Add",
@@ -348,7 +346,6 @@
     "ssh.agent.clear.title": "Clear Agent",
     "ssh.agent.clear.text": "Unload all keys from ssh-agent?\nAt the next git operation the passphrase will be requested again.",
     "ssh.agent.clear_error": "Error: {error}",
-
     "ssh.keygen.title": "Generate SSH Key",
     "ssh.keygen.key_type": "Key type:",
     "ssh.keygen.type_ed25519": "Ed25519  (recommended, modern)",
@@ -377,7 +374,6 @@
     "ssh.keygen.error.file_exists_msg": "'{path}' already exists. Overwrite?",
     "ssh.keygen.error.key_gen_title": "Key Generation Error",
     "ssh.keygen.error.key_not_created": "Key was not created.",
-
     "accounts.title": "Accounts",
     "accounts.header": "Accounts",
     "accounts.no_name": "(unnamed)",
@@ -412,7 +408,6 @@
     "accounts.confirm_remove.text": "Delete «{name}»?",
     "accounts.new_account": "New Account",
     "accounts.account_no_name": "account",
-
     "identity.title": "Git Identity — Name and E-mail",
     "identity.scope_label": "Scope:",
     "identity.scope_global": "Global (for all repositories)",
@@ -435,7 +430,6 @@
     "identity.error.global_prefix": "Global: {error}",
     "identity.error.repo_prefix": "Repository: {error}",
     "identity.error.errors": "Errors:\n{errors}",
-
     "split_commit.menu_item": "Split commit…",
     "split_commit.title": "Split Commit",
     "split_commit.subtitle": "{sha}  \"{message}\"\nTotal: {size} → {n} commit(s)",
@@ -445,11 +439,9 @@
     "split_commit.splitting": "Splitting commit…",
     "split_commit.done": "Commit split into {n} commits",
     "split_commit.no_upstream": "Could not determine unpushed commits (no upstream configured)",
-
     "commit.warn_large.title": "Large staged files",
     "commit.warn_large.file_text": "The following file(s) exceed 100 MB and will be rejected by GitHub:\n\n{files}\n\nConsider using Git LFS. Commit anyway?",
     "commit.warn_large.total_text": "Total staged size is {size}, which exceeds 1 GB. GitHub may reject this push.\n\nConsider splitting. Commit anyway?",
-
     "branch_dialog.current_branch": "Current branch: {name}",
     "branch_dialog.merge_hint": "The selected branch will be merged into the current branch.",
     "branch_dialog.rebase_hint": "The current branch will be rebased onto the selected branch.",
@@ -462,12 +454,10 @@
     "branch_dialog.conflict.merge_text": "Merge conflicts occurred.\n\nGit has written the conflicting files to disk.\nResolve them in the Working Copy panel:\n  • Right-click a conflicted file → Resolve Conflict\n  • Or choose Accept Ours / Accept Theirs\n\nAfter resolving all conflicts, create a commit to finish the merge.",
     "branch_dialog.conflict.rebase_title": "Rebase Conflicts",
     "branch_dialog.conflict.rebase_text": "Conflicts occurred during rebase.\n\nResolve the conflicts in the Working Copy panel,\nthen click Continue Rebase in the conflict banner,\nor use Abort Rebase to cancel.",
-
     "conflict.rebase_ready": "✓ All conflicts resolved — click Continue Rebase to proceed",
     "conflict.continue_rebase": "Continue Rebase",
     "conflict.cherry_pick_ready": "✓ All conflicts resolved — click Continue Cherry-pick to proceed",
     "conflict.continue_cherry_pick": "Continue Cherry-pick",
-
     "hard_reset.dialog_title": "Hard Reset",
     "hard_reset.dialog_text": "Reset branch to commit {hash} in HARD mode?\n\nYou have uncommitted changes. What would you like to do with them?",
     "hard_reset.btn_stash": "Save to Stash + Reset",
@@ -475,27 +465,37 @@
     "hard_reset.done_title": "Hard Reset Complete",
     "hard_reset.done_text": "Hard reset complete.\n\n✅ Your uncommitted changes are saved in:\n  \"{label}\"\n\nTo restore them:\n  Stash panel → right-click → Pop",
     "hard_reset.done_status": "Hard reset complete",
-
     "stash_pop.dialog_title": "Stash Pop — Restore Changes",
     "stash_pop.dialog_text": "Restore changes from stash and delete the entry?\n\nChanges will return to your working copy. The stash entry will be deleted.\n\nTo keep the entry — use «Apply» instead of «Pop».",
     "stash_pop.success": "✅ Changes restored from stash",
-
     "stash_apply.dialog_title": "Apply Stash",
     "stash_apply.dialog_text": "Apply stash changes to the working copy?\n\nThe stash entry will be kept (use Pop to apply and delete it).",
-
     "stash_drop.dialog_title": "Delete Stash Entry?",
     "stash_drop.dialog_text": "Delete this stash entry?\n\n⚠ Changes saved in this entry will be permanently lost.\n\nTo restore them first — press Cancel and use «Pop».",
     "stash_drop.success": "Stash entry deleted",
-
     "branch.merge_confirm.title": "Merge Branch",
     "branch.merge_confirm.text": "Merge '{branch}' into '{current}'?\n\nThis will combine changes from '{branch}' into your current branch '{current}'.",
     "branch.rebase_confirm.title": "Rebase Branch",
     "branch.rebase_confirm.text": "Rebase '{current}' onto '{branch}'?\n\nThis will rewrite the commit history of '{current}'.",
-
     "discard.dialog_title": "Discard Changes",
     "discard.dialog_text_one": "Discard changes to:\n  • {path}\n\n✅ Changes will be SAVED to temporary storage (Stash)\nand can be restored via:\n  Stash panel → right-click → Pop\n\nContinue?",
     "discard.dialog_text_many": "Discard changes to {n} file(s):\n{names}\n\n✅ Changes will be SAVED to temporary storage (Stash)\nand can be restored via:\n  Stash panel → right-click → Pop\n\nContinue?",
     "discard.success": "✅ Saved to stash \"{label}\" — restore via Stash → Pop",
     "discard.error_title": "Could Not Save to Stash",
-    "discard.error_text": "Changes were NOT discarded — your files are safe.\n\nReason: {error}"
+    "discard.error_text": "Changes were NOT discarded — your files are safe.\n\nReason: {error}",
+    "log.title": "Log",
+    "log.clear": "Clear",
+    "commit_info.empty": "Select a commit to see its details.",
+    "commit_info.hash": "Hash",
+    "commit_info.author": "Author",
+    "commit_info.author_date": "Author date",
+    "commit_info.committer": "Committer",
+    "commit_info.committer_date": "Commit date",
+    "commit_info.co_authors": "Co-authors",
+    "commit_info.parents": "Parents",
+    "commit_info.refs": "Refs",
+    "commit_info.stats": "Changes",
+    "commit_info.stats_value": "{files} file(s), +{ins} / −{dels}",
+    "toolbar.terminal": "Terminal",
+    "toolbar.terminal.tooltip": "Open a terminal in the repository folder"
 }

@@ -263,7 +263,6 @@
     "conflict.continue_rebase": "Kontynuuj Rebase",
     "conflict.cherry_pick_ready": "✓ Wszystkie konflikty rozwiązane — kliknij Kontynuuj Cherry-pick",
     "conflict.continue_cherry_pick": "Kontynuuj Cherry-pick",
-
     "hard_reset.dialog_title": "Hard Reset",
     "hard_reset.dialog_text": "Zresetować gałąź do commitu {hash} w trybie HARD?\n\nMasz niezatwierdzone zmiany. Co chcesz z nimi zrobić?",
     "hard_reset.btn_stash": "Zapisz w Stash + Resetuj",
@@ -271,27 +270,37 @@
     "hard_reset.done_title": "Hard Reset zakończony",
     "hard_reset.done_text": "Hard reset wykonany.\n\n✅ Twoje niezapisane zmiany są w:\n  \"{label}\"\n\nAby je przywrócić:\n  Panel Stash → prawy przycisk → Pop",
     "hard_reset.done_status": "Hard reset wykonany",
-
     "stash_pop.dialog_title": "Stash Pop — Przywróć zmiany",
     "stash_pop.dialog_text": "Przywrócić zmiany ze stasha i usunąć wpis?\n\nZmiany wrócą do kopii roboczej. Wpis ze stasha zostanie usunięty.\n\nAby zachować wpis — użyj «Apply» zamiast «Pop».",
     "stash_pop.success": "✅ Zmiany przywrócone ze stasha",
-
     "stash_drop.dialog_title": "Usunąć wpis ze stasha?",
     "stash_drop.dialog_text": "Usunąć ten wpis ze stasha?\n\n⚠ Zmiany zapisane w tym wpisie zostaną bezpowrotnie utracone.\n\nAby najpierw je przywrócić — naciśnij Anuluj i użyj «Pop».",
     "stash_drop.success": "Wpis ze stasha usunięty",
-
     "stash_apply.dialog_title": "Zastosuj Stash",
     "stash_apply.dialog_text": "Zastosować zmiany ze stasha do kopii roboczej?\n\nWpis stasha zostanie zachowany (użyj Pop, aby zastosować i usunąć).",
-
     "branch.merge_confirm.title": "Scal gałąź",
     "branch.merge_confirm.text": "Scalić '{branch}' do '{current}'?\n\nSpowoduje to połączenie zmian z '{branch}' do bieżącej gałęzi '{current}'.",
     "branch.rebase_confirm.title": "Rebase gałęzi",
     "branch.rebase_confirm.text": "Wykonać rebase '{current}' na '{branch}'?\n\nSpowoduje to przepisanie historii commitów '{current}'.",
-
     "discard.dialog_title": "Odrzuć zmiany",
     "discard.dialog_text_one": "Odrzucić zmiany w:\n  • {path}\n\n✅ Zmiany zostaną ZAPISANE w tymczasowym magazynie (Stash)\ni będą dostępne do przywrócenia przez:\n  Panel Stash → prawy przycisk → Pop\n\nKontynuować?",
     "discard.dialog_text_many": "Odrzucić zmiany w {n} plik(ach):\n{names}\n\n✅ Zmiany zostaną ZAPISANE w tymczasowym magazynie (Stash)\ni będą dostępne do przywrócenia przez:\n  Panel Stash → prawy przycisk → Pop\n\nKontynuować?",
     "discard.success": "✅ Zapisano w stashu \"{label}\" — przywróć przez Stash → Pop",
     "discard.error_title": "Nie można zapisać w stashu",
-    "discard.error_text": "Zmiany NIE zostały odrzucone — Twoje pliki są bezpieczne.\n\nPowód: {error}"
+    "discard.error_text": "Zmiany NIE zostały odrzucone — Twoje pliki są bezpieczne.\n\nPowód: {error}",
+    "log.title": "Dziennik",
+    "log.clear": "Wyczyść",
+    "commit_info.empty": "Wybierz commit, aby zobaczyć szczegóły.",
+    "commit_info.hash": "Hash",
+    "commit_info.author": "Autor",
+    "commit_info.author_date": "Data autora",
+    "commit_info.committer": "Committer",
+    "commit_info.committer_date": "Data commita",
+    "commit_info.co_authors": "Współautorzy",
+    "commit_info.parents": "Rodzice",
+    "commit_info.refs": "Odwołania",
+    "commit_info.stats": "Zmiany",
+    "commit_info.stats_value": "plików: {files}, +{ins} / −{dels}",
+    "toolbar.terminal": "Terminal",
+    "toolbar.terminal.tooltip": "Otwórz terminal w folderze repozytorium"
 }

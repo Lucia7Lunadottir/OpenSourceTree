@@ -1,9 +1,10 @@
 import os
+import re
 from typing import Optional, Iterator
 from .runner import GitRunner, GitCommandError
 from .models import (
     CommitRecord, FileStatusEntry, BranchInfo, TagInfo,
-    StashInfo, RemoteInfo, LfsFileEntry
+    StashInfo, RemoteInfo, LfsFileEntry, CommitInfo
 )
 from .parser import (
     parse_commits, parse_file_status, parse_branches,
@@ -106,6 +107,34 @@ class GitRepo:
                 commit.body = parts[8].strip()
         return commit
 
+    def get_commit_info(self, hash: str) -> CommitInfo:
+        """Full commit details: both author and committer, full message, stats."""
+        from .parser import _parse_date, _parse_refs, FIELD_SEP
+        from .trailers import parse_co_authors
+        fmt = "%x00".join(["%H", "%P", "%an", "%ae", "%aI", "%cn", "%ce", "%cI", "%D", "%s", "%b"])
+        raw = self.runner.run(["show", "--no-patch", f"--format={fmt}", hash])
+        parts = raw.rstrip("\n").split(FIELD_SEP, 10)
+        parts += [""] * (11 - len(parts))
+        h, parents, an, ae, ad, cn, ce, cd, refs, subject, body = parts
+        info = CommitInfo(
+            hash=h.strip(), parents=parents.split(),
+            author=an, author_email=ae, author_date=_parse_date(ad),
+            committer=cn, committer_email=ce, committer_date=_parse_date(cd),
+            refs=_parse_refs(refs), subject=subject, body=body.strip(),
+            co_authors=parse_co_authors(body),
+        )
+        # --root so the very first commit also gets stats; -m is not used, so
+        # a merge commit reports stats against its first parent only.
+        stat = self.runner.run(["show", "--format=", "--shortstat", "--root", hash]).strip()
+        for num, kind in re.findall(r"(\d+) (file|insertion|deletion)", stat):
+            if kind == "file":
+                info.files_changed = int(num)
+            elif kind == "insertion":
+                info.insertions = int(num)
+            else:
+                info.deletions = int(num)
+        return info
+
     def _is_root_commit(self, sha: str) -> bool:
         try:
             self.runner.run(["rev-parse", "--verify", f"{sha}^"])
@@ -202,11 +231,21 @@ class GitRepo:
         if valid:
             self.runner.run(["add", "--"] + valid)
 
+    # A single exec() is limited by ARG_MAX (~2 MB on Linux), so selecting a few
+    # thousand files used to fail with "Argument list too long". Paths are fed to
+    # git in chunks well below that limit.
+    _PATHS_PER_CALL = 500
+
+    @classmethod
+    def _chunks(cls, paths: list[str]):
+        for i in range(0, len(paths), cls._PATHS_PER_CALL):
+            yield paths[i:i + cls._PATHS_PER_CALL]
+
     def stage_files(self, paths: list[str]) -> None:
-        """Stage multiple files in a single atomic git add call."""
+        """Stage any number of files (in chunks, see _PATHS_PER_CALL)."""
         valid = self._filter_stageable(paths)
-        if valid:
-            self.runner.run(["add", "--"] + valid)
+        for chunk in self._chunks(valid):
+            self.runner.run(["add", "--"] + chunk)
 
     def unstage_file(self, path: str) -> None:
         try:
@@ -215,13 +254,12 @@ class GitRepo:
             self.runner.run(["reset", "HEAD", "--", path])
 
     def unstage_files(self, paths: list[str]) -> None:
-        """Unstage multiple files in a single atomic call."""
-        if not paths:
-            return
-        try:
-            self.runner.run(["restore", "--staged", "--"] + paths)
-        except GitCommandError:
-            self.runner.run(["reset", "HEAD", "--"] + paths)
+        """Unstage any number of files (in chunks, see _PATHS_PER_CALL)."""
+        for chunk in self._chunks(paths):
+            try:
+                self.runner.run(["restore", "--staged", "--"] + chunk)
+            except GitCommandError:
+                self.runner.run(["reset", "HEAD", "--"] + chunk)
 
     def stage_all(self) -> None:
         self.runner.run(["add", "-A"])
@@ -585,7 +623,13 @@ class GitRepo:
             [l for l in self.runner.run(["stash", "list"]).splitlines() if l.strip()]
         )
         # -u includes untracked files; pathspec scopes it to only these paths
-        self.runner.run(["stash", "push", "-u", "-m", label, "--"] + valid)
+        # Paths go through stdin (not argv) so the stash stays one atomic entry
+        # no matter how many files are selected (argv is capped by ARG_MAX).
+        self.runner.run(
+            ["stash", "push", "-u", "-m", label,
+             "--pathspec-from-file=-", "--pathspec-file-nul"],
+            input="\0".join(valid) + "\0",
+        )
         count_after = len(
             [l for l in self.runner.run(["stash", "list"]).splitlines() if l.strip()]
         )
