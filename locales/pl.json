@@ -302,5 +302,12 @@
     "commit_info.stats": "Zmiany",
     "commit_info.stats_value": "plików: {files}, +{ins} / −{dels}",
     "toolbar.terminal": "Terminal",
-    "toolbar.terminal.tooltip": "Otwórz terminal w folderze repozytorium"
+    "toolbar.terminal.tooltip": "Otwórz terminal w folderze repozytorium",
+    "diff.loading": "Ładowanie…",
+    "diff.large.open": "Otwórz w całości",
+    "diff.large.warning": "Duży plik ({size}). Wyświetlenie pełnego diffa może na jakiś czas zawiesić aplikację.",
+    "diff.huge.warning": "OGROMNY plik ({size})! Wyświetlenie pełnego diffa może zawiesić aplikację na minuty i zająć gigabajty pamięci.",
+    "diff.large.not_loaded": "Diff pliku {path} ({size}) nie został załadowany, ponieważ plik jest duży.\nKliknij „Otwórz w całości” powyżej, jeśli naprawdę go potrzebujesz.",
+    "diff.huge.title": "Ogromny plik",
+    "diff.huge.confirm": "Plik ma {size}. Otwarcie może zawiesić aplikację na minuty i zużyć dużo pamięci (kolorowanie jest wyłączone dla szybkości).\n\nOtworzyć mimo to?"
 }

@@ -302,5 +302,12 @@
     "commit_info.stats": "变更",
     "commit_info.stats_value": "{files} 个文件，+{ins} / −{dels}",
     "toolbar.terminal": "终端",
-    "toolbar.terminal.tooltip": "在仓库文件夹中打开终端"
+    "toolbar.terminal.tooltip": "在仓库文件夹中打开终端",
+    "diff.loading": "加载中…",
+    "diff.large.open": "完整打开",
+    "diff.large.warning": "文件较大（{size}）。显示完整 diff 可能会让应用卡住一段时间。",
+    "diff.huge.warning": "超大文件（{size}）！显示完整 diff 可能让应用卡住数分钟并占用数 GB 内存。",
+    "diff.large.not_loaded": "由于文件较大，未加载 {path}（{size}）的 diff。\n如确实需要，请点击上方的“完整打开”。",
+    "diff.huge.title": "超大文件",
+    "diff.huge.confirm": "文件大小为 {size}。打开可能让应用卡住数分钟并占用大量内存（为提速已关闭语法高亮）。\n\n仍要打开吗？"
 }

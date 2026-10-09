@@ -497,5 +497,12 @@
     "commit_info.stats": "Changes",
     "commit_info.stats_value": "{files} file(s), +{ins} / −{dels}",
     "toolbar.terminal": "Terminal",
-    "toolbar.terminal.tooltip": "Open a terminal in the repository folder"
+    "toolbar.terminal.tooltip": "Open a terminal in the repository folder",
+    "diff.loading": "Loading…",
+    "diff.large.open": "Open fully",
+    "diff.large.warning": "Large file ({size}). Showing the full diff may freeze the app for a while.",
+    "diff.huge.warning": "GIANT file ({size})! Showing the full diff can freeze the app for minutes and use gigabytes of memory.",
+    "diff.large.not_loaded": "Diff of {path} ({size}) is not loaded because the file is large.\nPress “Open fully” above if you really need it.",
+    "diff.huge.title": "Giant file",
+    "diff.huge.confirm": "The file is {size}. Opening it can freeze the app for minutes and use a lot of memory (syntax highlighting is disabled for speed).\n\nOpen it anyway?"
 }

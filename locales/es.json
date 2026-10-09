@@ -302,5 +302,12 @@
     "commit_info.stats": "Cambios",
     "commit_info.stats_value": "{files} archivo(s), +{ins} / −{dels}",
     "toolbar.terminal": "Terminal",
-    "toolbar.terminal.tooltip": "Abrir una terminal en la carpeta del repositorio"
+    "toolbar.terminal.tooltip": "Abrir una terminal en la carpeta del repositorio",
+    "diff.loading": "Cargando…",
+    "diff.large.open": "Abrir completo",
+    "diff.large.warning": "Archivo grande ({size}). Mostrar el diff completo puede congelar la aplicación un buen rato.",
+    "diff.huge.warning": "¡Archivo GIGANTE ({size})! Mostrar el diff completo puede congelar la aplicación durante minutos y usar gigabytes de memoria.",
+    "diff.large.not_loaded": "El diff de {path} ({size}) no se cargó porque el archivo es grande.\nPulsa «Abrir completo» arriba si realmente lo necesitas.",
+    "diff.huge.title": "Archivo gigante",
+    "diff.huge.confirm": "El archivo pesa {size}. Abrirlo puede congelar la aplicación durante minutos y consumir mucha memoria (el resaltado está desactivado por velocidad).\n\n¿Abrirlo de todos modos?"
 }

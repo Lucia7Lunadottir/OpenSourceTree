@@ -46,7 +46,7 @@ class CommitInfo:
     deletions: int = 0
 
 
-@dataclass
+@dataclass(slots=True)  # slots: hundreds of thousands of these can be alive at once
 class FileStatusEntry:
     status: str          # single character: M, A, D, R, C, ?, !, U, T
     path: str

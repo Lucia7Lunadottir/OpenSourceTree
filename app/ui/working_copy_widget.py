@@ -30,6 +30,24 @@ STATUS_LABELS = {
 }
 
 
+_DEFAULT_COLOR = QColor("#d4d4d4")
+_COLOR_BY_CHAR = {s.value: c for s, c in STATUS_COLORS.items()}
+
+
+def release_freed_memory():
+    """Give memory freed by a rebuilt file list back to the OS.
+
+    Rebuilding lists of 100k+ items leaves the glibc heap fragmented, so RSS
+    looked like a leak after every Stage/Unstage/Commit even though the
+    objects were gone. malloc_trim returns the free pages.
+    """
+    try:
+        import ctypes
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except Exception:
+        pass  # not glibc / not Linux - harmless
+
+
 def _is_lfs(path: str, patterns: list[str]) -> bool:
     name = os.path.basename(path)
     for pat in patterns:
@@ -76,10 +94,7 @@ class FileListWidget(QListWidget):
             conflict = " ⚠" if sc == "U" else ""
             item = QListWidgetItem(f"{badge}  {entry.path}{lfs_mark}{conflict}")
             item.setData(Qt.ItemDataRole.UserRole, entry)
-            color = STATUS_COLORS.get(
-                next((s for s in STATUS_COLORS if s.value == sc), None),
-                QColor("#d4d4d4"),
-            )
+            color = _COLOR_BY_CHAR.get(sc, _DEFAULT_COLOR)
             item.setForeground(color)
             if sc == "U":
                 item.setToolTip("⚠ Merge conflict — right-click to resolve")
@@ -225,10 +240,7 @@ class FileTreeWidget(QTreeWidget):
             item = QTreeWidgetItem(parent)
             item.setText(0, f"{badge}  {filename}{lfs_mark}{conflict}")
             item.setData(0, Qt.ItemDataRole.UserRole, entry)
-            color = STATUS_COLORS.get(
-                next((s for s in STATUS_COLORS if s.value == sc), None),
-                QColor("#d4d4d4"),
-            )
+            color = _COLOR_BY_CHAR.get(sc, _DEFAULT_COLOR)
             item.setForeground(0, color)
             if sc == "U":
                 item.setToolTip(0, "⚠ Merge conflict — right-click to resolve")
@@ -549,6 +561,9 @@ class WorkingCopyWidget(QWidget):
             self._update_conflict_banner(staged, unstaged)
         except Exception as e:
             self.status_message.emit(f"Error refreshing status: {e}")
+        else:
+            del staged, unstaged
+            release_freed_memory()
 
     def _update_conflict_banner(self, staged, unstaged):
         conflicted = {e.path for e in staged + unstaged if e.status == "U"}
@@ -775,22 +790,13 @@ class WorkingCopyWidget(QWidget):
         self.refresh()
 
     def _on_stage_all(self):
-        try:
-            _, unstaged = self._repo.get_working_copy_status()
-        except Exception as e:
-            self.status_message.emit(str(e))
-            return
-        if unstaged:
-            self._run_batch(self._repo.stage_file, [e.path for e in unstaged], "staging")
+        # `git add -A` stages literally everything in one process, however many
+        # files there are; it must not depend on the (possibly huge or stale)
+        # list of paths the UI is currently showing.
+        self._run_op(self._repo.stage_all)
 
     def _on_unstage_all(self):
-        try:
-            staged, _ = self._repo.get_working_copy_status()
-        except Exception as e:
-            self.status_message.emit(str(e))
-            return
-        if staged:
-            self._run_batch(self._repo.unstage_file, [e.path for e in staged], "unstaging")
+        self._run_op(self._repo.unstage_all)
 
     def _on_commit(self):
         message = self._commit_edit.toPlainText().strip()

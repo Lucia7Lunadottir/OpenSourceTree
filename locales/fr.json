@@ -302,5 +302,12 @@
     "commit_info.stats": "Modifications",
     "commit_info.stats_value": "{files} fichier(s), +{ins} / −{dels}",
     "toolbar.terminal": "Terminal",
-    "toolbar.terminal.tooltip": "Ouvrir un terminal dans le dossier du dépôt"
+    "toolbar.terminal.tooltip": "Ouvrir un terminal dans le dossier du dépôt",
+    "diff.loading": "Chargement…",
+    "diff.large.open": "Ouvrir en entier",
+    "diff.large.warning": "Fichier volumineux ({size}). Afficher le diff complet peut figer l'application un moment.",
+    "diff.huge.warning": "Fichier GÉANT ({size}) ! Afficher le diff complet peut figer l'application pendant des minutes et utiliser des gigaoctets de mémoire.",
+    "diff.large.not_loaded": "Le diff de {path} ({size}) n'est pas chargé car le fichier est volumineux.\nCliquez sur « Ouvrir en entier » ci-dessus si vous en avez vraiment besoin.",
+    "diff.huge.title": "Fichier géant",
+    "diff.huge.confirm": "Le fichier fait {size}. L'ouvrir peut figer l'application pendant des minutes et utiliser beaucoup de mémoire (la coloration est désactivée pour la vitesse).\n\nL'ouvrir quand même ?"
 }

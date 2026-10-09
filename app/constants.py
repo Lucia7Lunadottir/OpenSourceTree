@@ -58,3 +58,12 @@ STATUS_COLORS = {
     FileStatus.UNMERGED:     QColor("#f38ba8"),
     FileStatus.TYPE_CHANGED: QColor("#f9e2af"),
 }
+
+# Diffs of files above this size are not rendered until the user asks for it
+# (a Unity scene of several hundred MB otherwise freezes the app for minutes).
+LARGE_DIFF_BYTES = 2 * 1024 * 1024
+# Above this the warning is stronger and opening needs an extra confirmation.
+HUGE_DIFF_BYTES = 50 * 1024 * 1024
+# Above this size the diff is shown as plain text: syntax highlighting would
+# turn it into hundreds of MB of HTML.
+PLAIN_RENDER_BYTES = 1 * 1024 * 1024

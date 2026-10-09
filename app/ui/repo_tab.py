@@ -19,6 +19,8 @@ from .commit_list_view import CommitListView
 from .branch_panel import BranchPanel
 from .working_copy_widget import WorkingCopyWidget
 from .diff_viewer import DiffViewer
+from .diff_controller import DiffController
+from .large_file_banner import LargeFileBanner
 from .commit_info_panel import CommitInfoPanel
 from .dialogs.remote_dialog import RemoteDialog
 from .dialogs.stash_dialog import StashDialog
@@ -94,7 +96,16 @@ class RepoTab(QWidget):
         self._bottom_splitter.addWidget(self._info_splitter)
 
         self._diff_viewer = DiffViewer()
-        self._bottom_splitter.addWidget(self._diff_viewer)
+        self._large_file_banner = LargeFileBanner()
+        diff_pane = QWidget()
+        diff_layout = QVBoxLayout(diff_pane)
+        diff_layout.setContentsMargins(0, 0, 0, 0)
+        diff_layout.setSpacing(0)
+        diff_layout.addWidget(self._large_file_banner)
+        diff_layout.addWidget(self._diff_viewer, 1)
+        self._bottom_splitter.addWidget(diff_pane)
+        self._diff_controller = DiffController(
+            self._repo, self._diff_viewer, self._large_file_banner, self)
         self._bottom_splitter.setSizes([360, 600])
 
         self._right_splitter.addWidget(self._bottom_splitter)
@@ -276,7 +287,7 @@ class RepoTab(QWidget):
             files = self._repo.get_commit_files(commit.hash)
         except Exception:
             self._commit_files_list.blockSignals(False)
-            self._diff_viewer.clear_diff()
+            self._diff_controller.clear()
             return
         for entry in files:
             label = STATUS_LABELS.get(entry.status, entry.status)
@@ -301,7 +312,7 @@ class RepoTab(QWidget):
                     restored = True
                     break
         if not restored:
-            self._diff_viewer.clear_diff()
+            self._diff_controller.clear()
 
     def _on_commit_file_selected(self, current, previous):
         if current is None or self._current_commit is None:
@@ -309,18 +320,10 @@ class RepoTab(QWidget):
         entry = current.data(Qt.ItemDataRole.UserRole)
         if entry is None:
             return
-        try:
-            diff = self._repo.get_diff(self._current_commit.hash, entry.path)
-            self._diff_viewer.show_diff(diff, entry.path)
-        except Exception as e:
-            self._diff_viewer.show_diff(str(e))
+        self._diff_controller.show_commit_file(self._current_commit.hash, entry.path)
 
     def _on_working_file_selected(self, path: str, staged: bool):
-        try:
-            diff = self._repo.get_working_copy_diff(path, staged)
-            self._diff_viewer.show_diff(diff, path)
-        except Exception as e:
-            self._diff_viewer.show_diff(str(e))
+        self._diff_controller.show_working_file(path, staged)
 
     def _on_branch_checked_out(self, name: str):
         self._refresh_all()

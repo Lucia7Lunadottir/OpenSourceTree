@@ -302,5 +302,12 @@
     "commit_info.stats": "Änderungen",
     "commit_info.stats_value": "{files} Datei(en), +{ins} / −{dels}",
     "toolbar.terminal": "Terminal",
-    "toolbar.terminal.tooltip": "Terminal im Repository-Ordner öffnen"
+    "toolbar.terminal.tooltip": "Terminal im Repository-Ordner öffnen",
+    "diff.loading": "Lädt…",
+    "diff.large.open": "Vollständig öffnen",
+    "diff.large.warning": "Große Datei ({size}). Das vollständige Diff kann die App für eine Weile einfrieren.",
+    "diff.huge.warning": "RIESIGE Datei ({size})! Das vollständige Diff kann die App minutenlang einfrieren und Gigabytes an Speicher belegen.",
+    "diff.large.not_loaded": "Das Diff von {path} ({size}) wurde nicht geladen, da die Datei groß ist.\nKlicke oben auf „Vollständig öffnen“, wenn du es wirklich brauchst.",
+    "diff.huge.title": "Riesige Datei",
+    "diff.huge.confirm": "Die Datei ist {size} groß. Das Öffnen kann die App minutenlang einfrieren und viel Speicher belegen (Syntaxhervorhebung ist zur Beschleunigung deaktiviert).\n\nTrotzdem öffnen?"
 }

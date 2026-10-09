@@ -3,6 +3,7 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 
 from app.i18n import t
+from app.constants import PLAIN_RENDER_BYTES
 
 try:
     from pygments import highlight
@@ -47,9 +48,18 @@ class DiffViewer(QTextBrowser):
             f'padding:16px;">{t("diff.placeholder")}</body></html>'
         )
 
+    def show_message(self, text: str):
+        """Show a short status text (loading..., diff not loaded...)."""
+        self.setPlainText(text)
+
     def show_diff(self, diff_text: str, filename: str = ""):
         if not diff_text.strip():
             self._show_placeholder()
+            return
+
+        if len(diff_text) > PLAIN_RENDER_BYTES:
+            # Highlighting/HTML for a huge text would freeze the UI and eat GBs
+            self.setPlainText(diff_text)
             return
 
         if PYGMENTS_AVAILABLE:

@@ -168,6 +168,37 @@ class GitRepo:
             args += ["--", file_path]
         return self.runner.run(args)
 
+    def _blob_sizes(self, specs: list[str]) -> list[int]:
+        """Sizes (bytes) of `<rev>:<path>` blobs via one cat-file process; missing -> 0."""
+        try:
+            out = self.runner.run(
+                ["cat-file", "--batch-check=%(objectsize)"],
+                input="".join(f"{spec}\n" for spec in specs),
+            )
+        except GitCommandError:
+            return [0] * len(specs)
+        sizes = []
+        for line in out.splitlines():
+            try:
+                sizes.append(int(line))
+            except ValueError:
+                sizes.append(0)  # "<spec> missing"
+        return sizes + [0] * (len(specs) - len(sizes))
+
+    def get_commit_diff_size(self, hash: str, file_path: str) -> int:
+        """Upper bound of how much data a diff of this file in this commit involves."""
+        return max(self._blob_sizes([f"{hash}:{file_path}", f"{hash}^:{file_path}"]))
+
+    def get_working_copy_diff_size(self, file_path: str, staged: bool) -> int:
+        """Same for the working copy: staged diff is HEAD<->index, unstaged is index<->disk."""
+        if staged:
+            return max(self._blob_sizes([f":{file_path}", f"HEAD:{file_path}"]))
+        try:
+            on_disk = os.path.getsize(os.path.join(self.path, file_path))
+        except OSError:
+            on_disk = 0
+        return max(on_disk, *self._blob_sizes([f":{file_path}"]))
+
     def get_working_copy_status(self) -> tuple[list[FileStatusEntry], list[FileStatusEntry]]:
         raw = self.runner.run(["status", "--porcelain=v1", "-u"])
         staged = []
@@ -201,6 +232,19 @@ class GitRepo:
 
     # --------------------------------------------------------------- Staging
 
+    @staticmethod
+    def _pathspec_args(paths: list[str]) -> tuple[list[str], str]:
+        """Pass paths to git through stdin instead of argv.
+
+        argv is capped by ARG_MAX (~2 MB), which a few thousand long paths
+        already exceed. `--pathspec-from-file=-` has no such limit, so any
+        number of files (hundreds of thousands in a Unity `Library/`) goes
+        through ONE atomic git call - no chunks that could leave the work
+        half done when a later chunk fails.
+        """
+        return (["--pathspec-from-file=-", "--pathspec-file-nul"],
+                "\0".join(paths) + "\0")
+
     def _filter_stageable(self, paths: list[str]) -> list[str]:
         """Drop paths that vanished from disk between the last status
         refresh and this call (e.g. build tools / Unity / IDEs that
@@ -212,54 +256,49 @@ class GitRepo:
         paths are perfectly fine to stage.  A path that's missing on disk
         but still tracked (a real deletion the user wants to stage) is
         kept, since git handles staging deletions fine.
+
+        Tracked-ness is decided with ONE `git ls-files` for all missing
+        paths (not one process per path - with a churning Library/ folder
+        that meant tens of thousands of git processes).
         """
-        result = []
+        present, missing = [], []
         for p in paths:
             full = os.path.join(self.path, p)
             if os.path.exists(full) or os.path.islink(full):
-                result.append(p)
-                continue
-            try:
-                self.runner.run(["ls-files", "--error-unmatch", "--", p])
-                result.append(p)  # tracked deletion — still stageable
-            except GitCommandError:
-                pass  # untracked and gone — nothing left to stage, skip it
-        return result
+                present.append(p)
+            else:
+                missing.append(p)
+        if not missing:
+            return present
+        try:
+            tracked = set(self.runner.run(["ls-files", "-z"]).split("\0"))
+        except GitCommandError:
+            tracked = set()
+        # untracked and gone -> nothing left to stage, skip it
+        return present + [p for p in missing if p in tracked]
 
     def stage_file(self, path: str) -> None:
-        valid = self._filter_stageable([path])
-        if valid:
-            self.runner.run(["add", "--"] + valid)
-
-    # A single exec() is limited by ARG_MAX (~2 MB on Linux), so selecting a few
-    # thousand files used to fail with "Argument list too long". Paths are fed to
-    # git in chunks well below that limit.
-    _PATHS_PER_CALL = 500
-
-    @classmethod
-    def _chunks(cls, paths: list[str]):
-        for i in range(0, len(paths), cls._PATHS_PER_CALL):
-            yield paths[i:i + cls._PATHS_PER_CALL]
+        self.stage_files([path])
 
     def stage_files(self, paths: list[str]) -> None:
-        """Stage any number of files (in chunks, see _PATHS_PER_CALL)."""
+        """Stage any number of files in one atomic `git add`."""
         valid = self._filter_stageable(paths)
-        for chunk in self._chunks(valid):
-            self.runner.run(["add", "--"] + chunk)
+        if valid:
+            flags, data = self._pathspec_args(valid)
+            self.runner.run(["add"] + flags, input=data)
 
     def unstage_file(self, path: str) -> None:
-        try:
-            self.runner.run(["restore", "--staged", "--", path])
-        except GitCommandError:
-            self.runner.run(["reset", "HEAD", "--", path])
+        self.unstage_files([path])
 
     def unstage_files(self, paths: list[str]) -> None:
-        """Unstage any number of files (in chunks, see _PATHS_PER_CALL)."""
-        for chunk in self._chunks(paths):
-            try:
-                self.runner.run(["restore", "--staged", "--"] + chunk)
-            except GitCommandError:
-                self.runner.run(["reset", "HEAD", "--"] + chunk)
+        """Unstage any number of files in one atomic call."""
+        if not paths:
+            return
+        flags, data = self._pathspec_args(paths)
+        try:
+            self.runner.run(["restore", "--staged"] + flags, input=data)
+        except GitCommandError:
+            self.runner.run(["reset", "HEAD"] + flags, input=data)
 
     def stage_all(self) -> None:
         self.runner.run(["add", "-A"])
@@ -964,17 +1003,26 @@ class GitRepo:
                 raw = self.runner.run(["ls-files", "--cached"])
             except GitCommandError:
                 return []
+        paths = [p.strip() for p in raw.splitlines() if p.strip()]
+        if not paths:
+            return []
+        # One `cat-file --batch-check` process for every path instead of one
+        # `git cat-file -s` per file (a commit of 100k files used to spawn 100k
+        # processes on the UI thread). ":path" resolves to the staged blob.
+        try:
+            out = self.runner.run(
+                ["cat-file", "--batch-check=%(objectsize)"],
+                input="".join(f":{p}\n" for p in paths),
+            )
+            sizes = out.splitlines()
+        except GitCommandError:
+            sizes = []
         results = []
-        for path in raw.splitlines():
-            path = path.strip()
-            if not path:
-                continue
+        for i, path in enumerate(paths):
             try:
-                # ":path" resolves to the staged blob
-                size_str = self.runner.run(["cat-file", "-s", f":{path}"]).strip()
-                size = int(size_str)
-            except (GitCommandError, ValueError):
-                size = 0  # Deleted files or errors → treat as 0
+                size = int(sizes[i])
+            except (IndexError, ValueError):
+                size = 0  # Deleted files ("missing") or errors -> treat as 0
             results.append((path, size))
         return results
 
