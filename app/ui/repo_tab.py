@@ -191,7 +191,7 @@ class RepoTab(QWidget):
         git_dir = self._repo.get_git_dir()
 
         # Files that change on every write operation or state change
-        for name in ("HEAD", "MERGE_HEAD", "MERGE_MSG", "CHERRY_PICK_HEAD"):
+        for name in ("HEAD", "MERGE_HEAD", "MERGE_MSG", "CHERRY_PICK_HEAD", "REVERT_HEAD"):
             p = os.path.join(git_dir, name)
             if os.path.exists(p):
                 self._fs_watcher.addPath(p)
@@ -212,7 +212,7 @@ class RepoTab(QWidget):
     def _on_git_dir_changed(self, path: str):
         """Re-register any newly appeared state files and schedule a refresh."""
         git_dir = self._repo.get_git_dir()
-        for name in ("index", "HEAD", "MERGE_HEAD", "MERGE_MSG", "CHERRY_PICK_HEAD"):
+        for name in ("index", "HEAD", "MERGE_HEAD", "MERGE_MSG", "CHERRY_PICK_HEAD", "REVERT_HEAD"):
             p = os.path.join(git_dir, name)
             if os.path.exists(p) and p not in self._fs_watcher.files():
                 self._fs_watcher.addPath(p)

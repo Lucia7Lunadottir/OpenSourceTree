@@ -309,5 +309,15 @@
     "diff.huge.warning": "Arquivo GIGANTE ({size})! Mostrar o diff completo pode travar o aplicativo por minutos e usar gigabytes de memória.",
     "diff.large.not_loaded": "O diff de {path} ({size}) não foi carregado porque o arquivo é grande.\nClique em “Abrir por completo” acima se realmente precisar.",
     "diff.huge.title": "Arquivo gigante",
-    "diff.huge.confirm": "O arquivo tem {size}. Abri-lo pode travar o aplicativo por minutos e usar muita memória (o realce está desativado por velocidade).\n\nAbrir mesmo assim?"
+    "diff.huge.confirm": "O arquivo tem {size}. Abri-lo pode travar o aplicativo por minutos e usar muita memória (o realce está desativado por velocidade).\n\nAbrir mesmo assim?",
+    "sequencer.merge_title": "Commit de merge",
+    "sequencer.merge_text": "{sha} é um commit de merge. Escolha o pai (mainline):",
+    "sequencer.staged_title": "Alterações no índice",
+    "sequencer.staged_text": "Há alterações no índice e o git não pode começar com elas.\nGuardá-las num stash durante a operação e restaurá-las depois?",
+    "sequencer.stash_kept_title": "Alterações mantidas no stash",
+    "sequencer.stash_kept_text": "A operação parou por conflitos. Suas alterações do índice estão no stash «{label}» — faça Pop ao terminar.",
+    "sequencer.conflict_status": "Conflitos — resolva-os no painel Working Copy",
+    "conflict.revert_ready": "✓ Todos os conflitos resolvidos — clique em «Continuar Revert»",
+    "conflict.abort_revert": "Abortar Revert",
+    "conflict.continue_revert": "Continuar Revert"
 }

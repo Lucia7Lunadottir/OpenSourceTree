@@ -504,5 +504,15 @@
     "diff.huge.warning": "GIANT file ({size})! Showing the full diff can freeze the app for minutes and use gigabytes of memory.",
     "diff.large.not_loaded": "Diff of {path} ({size}) is not loaded because the file is large.\nPress “Open fully” above if you really need it.",
     "diff.huge.title": "Giant file",
-    "diff.huge.confirm": "The file is {size}. Opening it can freeze the app for minutes and use a lot of memory (syntax highlighting is disabled for speed).\n\nOpen it anyway?"
+    "diff.huge.confirm": "The file is {size}. Opening it can freeze the app for minutes and use a lot of memory (syntax highlighting is disabled for speed).\n\nOpen it anyway?",
+    "sequencer.merge_title": "Merge commit",
+    "sequencer.merge_text": "{sha} is a merge commit. Choose the parent (mainline) to keep:",
+    "sequencer.staged_title": "Staged changes",
+    "sequencer.staged_text": "There are staged changes, and git cannot start with them.\nShelve them in a stash for the duration of the operation and restore afterwards?",
+    "sequencer.stash_kept_title": "Changes kept in stash",
+    "sequencer.stash_kept_text": "The operation stopped on conflicts. Your staged changes are kept in stash «{label}» — pop it after finishing.",
+    "sequencer.conflict_status": "Conflicts — resolve them in the Working Copy panel",
+    "conflict.revert_ready": "✓ All conflicts resolved — click Continue Revert to proceed",
+    "conflict.abort_revert": "Abort Revert",
+    "conflict.continue_revert": "Continue Revert"
 }

@@ -309,5 +309,15 @@
     "diff.huge.warning": "RIESIGE Datei ({size})! Das vollständige Diff kann die App minutenlang einfrieren und Gigabytes an Speicher belegen.",
     "diff.large.not_loaded": "Das Diff von {path} ({size}) wurde nicht geladen, da die Datei groß ist.\nKlicke oben auf „Vollständig öffnen“, wenn du es wirklich brauchst.",
     "diff.huge.title": "Riesige Datei",
-    "diff.huge.confirm": "Die Datei ist {size} groß. Das Öffnen kann die App minutenlang einfrieren und viel Speicher belegen (Syntaxhervorhebung ist zur Beschleunigung deaktiviert).\n\nTrotzdem öffnen?"
+    "diff.huge.confirm": "Die Datei ist {size} groß. Das Öffnen kann die App minutenlang einfrieren und viel Speicher belegen (Syntaxhervorhebung ist zur Beschleunigung deaktiviert).\n\nTrotzdem öffnen?",
+    "sequencer.merge_title": "Merge-Commit",
+    "sequencer.merge_text": "{sha} ist ein Merge-Commit. Wählen Sie den Parent (Mainline):",
+    "sequencer.staged_title": "Gestagte Änderungen",
+    "sequencer.staged_text": "Es gibt gestagte Änderungen, mit denen git nicht starten kann.\nFür die Dauer der Operation in einen Stash legen und danach wiederherstellen?",
+    "sequencer.stash_kept_title": "Änderungen im Stash",
+    "sequencer.stash_kept_text": "Die Operation stoppte bei Konflikten. Ihre gestagten Änderungen liegen im Stash «{label}» — danach per Pop zurückholen.",
+    "sequencer.conflict_status": "Konflikte — im Working-Copy-Panel lösen",
+    "conflict.revert_ready": "✓ Alle Konflikte gelöst — „Revert fortsetzen“ klicken",
+    "conflict.abort_revert": "Revert abbrechen",
+    "conflict.continue_revert": "Revert fortsetzen"
 }

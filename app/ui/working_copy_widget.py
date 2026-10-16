@@ -634,6 +634,19 @@ class WorkingCopyWidget(QWidget):
         self._conflict_label.setText(t("conflict.banner", n=len(conflicted)))
         self._abort_btn.setText(op)
         self._conflict_banner.setVisible(True)
+            elif self._repo.is_reverting():
+                self._banner_icon.setText("✓")
+                self._banner_icon.setStyleSheet("color: #4ec9b0; font-size: 14px;")
+                self._conflict_banner.setStyleSheet(
+                    "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);"
+                )
+                self._conflict_label.setText(t("conflict.revert_ready"))
+                self._abort_btn.setText(t("conflict.abort_revert"))
+                self._abort_fn = self._repo.abort_revert
+                self._continue_btn.setText(t("conflict.continue_revert"))
+                self._continue_btn.setVisible(True)
+                self._continue_fn = self._repo.revert_continue
+                self._conflict_banner.setVisible(True)
 
     def _maybe_fill_merge_msg(self):
         if not self._commit_edit.toPlainText().strip():
@@ -651,6 +664,8 @@ class WorkingCopyWidget(QWidget):
 
         # Directory node in tree mode → offer to unstage the whole folder
         if isinstance(sender_view, FileTreeWidget):
+        elif self._repo.is_reverting():
+            op, fn = t("conflict.abort_revert"), self._repo.abort_revert
             item = sender_view.itemAt(pos)
             if item and item.data(0, Qt.ItemDataRole.UserRole) is None:
                 entries = sender_view.get_entries_under(item)

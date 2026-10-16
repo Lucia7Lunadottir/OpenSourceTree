@@ -309,5 +309,15 @@
     "diff.huge.warning": "OGROMNY plik ({size})! Wyświetlenie pełnego diffa może zawiesić aplikację na minuty i zająć gigabajty pamięci.",
     "diff.large.not_loaded": "Diff pliku {path} ({size}) nie został załadowany, ponieważ plik jest duży.\nKliknij „Otwórz w całości” powyżej, jeśli naprawdę go potrzebujesz.",
     "diff.huge.title": "Ogromny plik",
-    "diff.huge.confirm": "Plik ma {size}. Otwarcie może zawiesić aplikację na minuty i zużyć dużo pamięci (kolorowanie jest wyłączone dla szybkości).\n\nOtworzyć mimo to?"
+    "diff.huge.confirm": "Plik ma {size}. Otwarcie może zawiesić aplikację na minuty i zużyć dużo pamięci (kolorowanie jest wyłączone dla szybkości).\n\nOtworzyć mimo to?",
+    "sequencer.merge_title": "Commit scalający",
+    "sequencer.merge_text": "{sha} to commit scalający. Wybierz rodzica (mainline):",
+    "sequencer.staged_title": "Zmiany w indeksie",
+    "sequencer.staged_text": "W indeksie są zmiany, z którymi git nie może zacząć.\nSchować je w stash na czas operacji i przywrócić potem?",
+    "sequencer.stash_kept_title": "Zmiany zachowane w stash",
+    "sequencer.stash_kept_text": "Operacja zatrzymała się na konfliktach. Zmiany z indeksu są w stash «{label}» — przywróć je (Pop) po zakończeniu.",
+    "sequencer.conflict_status": "Konflikty — rozwiąż je w panelu Working Copy",
+    "conflict.revert_ready": "✓ Wszystkie konflikty rozwiązane — kliknij „Kontynuuj Revert”",
+    "conflict.abort_revert": "Przerwij Revert",
+    "conflict.continue_revert": "Kontynuuj Revert"
 }

@@ -309,5 +309,15 @@
     "diff.huge.warning": "Fichier GÉANT ({size}) ! Afficher le diff complet peut figer l'application pendant des minutes et utiliser des gigaoctets de mémoire.",
     "diff.large.not_loaded": "Le diff de {path} ({size}) n'est pas chargé car le fichier est volumineux.\nCliquez sur « Ouvrir en entier » ci-dessus si vous en avez vraiment besoin.",
     "diff.huge.title": "Fichier géant",
-    "diff.huge.confirm": "Le fichier fait {size}. L'ouvrir peut figer l'application pendant des minutes et utiliser beaucoup de mémoire (la coloration est désactivée pour la vitesse).\n\nL'ouvrir quand même ?"
+    "diff.huge.confirm": "Le fichier fait {size}. L'ouvrir peut figer l'application pendant des minutes et utiliser beaucoup de mémoire (la coloration est désactivée pour la vitesse).\n\nL'ouvrir quand même ?",
+    "sequencer.merge_title": "Commit de fusion",
+    "sequencer.merge_text": "{sha} est un commit de fusion. Choisissez le parent (mainline) :",
+    "sequencer.staged_title": "Changements indexés",
+    "sequencer.staged_text": "Des changements sont indexés et git ne peut pas démarrer avec eux.\nLes mettre de côté dans un stash pendant l'opération puis les restaurer ?",
+    "sequencer.stash_kept_title": "Changements conservés dans le stash",
+    "sequencer.stash_kept_text": "L'opération s'est arrêtée sur des conflits. Vos changements indexés sont dans le stash « {label} » — faites un Pop ensuite.",
+    "sequencer.conflict_status": "Conflits — résolvez-les dans le panneau Working Copy",
+    "conflict.revert_ready": "✓ Tous les conflits sont résolus — cliquez sur « Continuer Revert »",
+    "conflict.abort_revert": "Abandonner Revert",
+    "conflict.continue_revert": "Continuer Revert"
 }

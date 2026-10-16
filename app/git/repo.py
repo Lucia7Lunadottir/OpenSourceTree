@@ -676,11 +676,72 @@ class GitRepo:
             return ""  # nothing was actually stashed — don't claim success
         return label
 
-    def cherry_pick(self, hash: str) -> None:
-        self.runner.run(["cherry-pick", hash])
+    def commit_parents(self, hash: str) -> list[str]:
+        raw = self.runner.run(["rev-list", "--parents", "-n", "1", hash]).split()
+        return raw[1:]
 
-    def revert_commit(self, hash: str) -> None:
-        self.runner.run(["revert", "--no-edit", hash])
+    def is_merge_commit(self, hash: str) -> bool:
+        return len(self.commit_parents(hash)) > 1
+
+    def has_staged_changes(self) -> bool:
+        try:
+            self.runner.run(["diff", "--cached", "--quiet"])
+            return False
+        except GitCommandError:
+            return True
+
+    def cherry_pick(self, hash: str, mainline: int = 0, autostash: bool = False) -> str:
+        """Apply `hash` on top of HEAD. `mainline` (1-based) is required for merge commits."""
+        extra = ["-m", str(mainline)] if mainline else []
+        return self._sequencer_op("cherry-pick", "CHERRY_PICK_HEAD", extra + [hash], autostash)
+
+    def revert_commit(self, hash: str, mainline: int = 0, autostash: bool = False) -> str:
+        """Create a commit undoing `hash`. `mainline` (1-based) is required for merge commits."""
+        extra = ["-m", str(mainline)] if mainline else []
+        return self._sequencer_op("revert", "REVERT_HEAD", ["--no-edit"] + extra + [hash], autostash)
+
+    def _sequencer_op(self, command: str, state_ref: str, args: list[str], autostash: bool) -> str:
+        """Run cherry-pick / revert; return the label of a stash left behind ("" if none).
+
+        git refuses to start when the index has staged changes. With `autostash`
+        they are shelved first and re-applied afterwards. If the operation stops
+        on conflicts the stash is kept (popping into a half-done operation would
+        mix two sets of conflicts) and its label is returned for the caller to show.
+        """
+        from datetime import datetime
+        label = ""
+        if autostash and self.has_staged_changes():
+            label = f"pre-{command}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+            self.runner.run(["stash", "push", "-m", label])
+        try:
+            self.runner.run([command] + args)
+        except GitCommandError as err:
+            nothing = "nothing to commit" in (err.stdout + err.stderr)
+            if (self._has_ref(state_ref) or nothing) and not self.get_conflicted_files():
+                # Stopped without conflicts: the change is already present (empty result).
+                if self._has_ref(state_ref):
+                    self.runner.run([command, "--abort"])
+                if label:
+                    self.runner.run(["stash", "pop"])
+                raise RuntimeError(
+                    f"git {command}: нечего применять — изменения коммита уже есть в текущей ветке."
+                ) from err
+            if label and not self._has_ref(state_ref):
+                self.runner.run(["stash", "pop"])
+            raise
+        if label:
+            try:
+                self.runner.run(["stash", "pop"])
+            except GitCommandError:
+                return label  # pop conflicted: work stays safe in the stash
+        return ""
+
+    def _has_ref(self, ref: str) -> bool:
+        try:
+            self.runner.run(["rev-parse", "-q", "--verify", ref])
+            return True
+        except GitCommandError:
+            return False
 
     def checkout_detached(self, hash: str) -> None:
         self.runner.run(["checkout", hash])
@@ -796,11 +857,10 @@ class GitRepo:
             return False
 
     def is_cherry_picking(self) -> bool:
-        try:
-            self.runner.run(["rev-parse", "CHERRY_PICK_HEAD"])
-            return True
-        except GitCommandError:
-            return False
+        return self._has_ref("CHERRY_PICK_HEAD")
+
+    def is_reverting(self) -> bool:
+        return self._has_ref("REVERT_HEAD")
 
     def abort_merge(self) -> None:
         self.runner.run(["merge", "--abort"])
@@ -815,7 +875,14 @@ class GitRepo:
         self.runner.run(["cherry-pick", "--abort"])
 
     def cherry_pick_continue(self) -> None:
-        self.runner.run(["cherry-pick", "--continue"])
+        # core.editor=true: no terminal here, git must not wait for an editor
+        self.runner.run(["-c", "core.editor=true", "cherry-pick", "--continue"])
+
+    def abort_revert(self) -> None:
+        self.runner.run(["revert", "--abort"])
+
+    def revert_continue(self) -> None:
+        self.runner.run(["-c", "core.editor=true", "revert", "--continue"])
 
     def get_last_commit_message(self) -> str:
         """Return full commit message (subject + body) of HEAD."""

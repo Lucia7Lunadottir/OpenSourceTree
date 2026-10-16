@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableView, QLineEdit,
     QPushButton, QAbstractItemView, QHeaderView, QLabel,
-    QMenu, QApplication, QMessageBox
+    QMenu, QApplication, QMessageBox, QInputDialog
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QModelIndex, QTimer, QPoint
 from PyQt6.QtGui import QAction
@@ -228,9 +228,9 @@ class CommitListView(QWidget):
         elif action == branch_act:
             self._create_branch_here(h)
         elif action == cherrypick_act:
-            self._run_op(self._repo.cherry_pick, h, f"Cherry-pick {sh} выполнен")
+            self._apply_sequencer_op(self._repo.cherry_pick, commit, f"Cherry-pick {sh} выполнен")
         elif action == revert_act:
-            self._run_op(self._repo.revert_commit, h, f"Revert {sh} выполнен")
+            self._apply_sequencer_op(self._repo.revert_commit, commit, f"Revert {sh} выполнен")
         elif action == copy_short_act:
             clipboard.setText(sh)
         elif action == copy_full_act:
@@ -317,6 +317,49 @@ class CommitListView(QWidget):
             self._run_op(self._repo.create_branch, name.strip(), hash,
                          success=f"Ветка '{name}' создана")
 
+    def _apply_sequencer_op(self, fn, commit: CommitRecord, success: str):
+        """Run cherry_pick / revert_commit, asking for what git needs to proceed:
+        the mainline parent for merge commits and permission to shelve staged changes."""
+        try:
+            parents = self._repo.commit_parents(commit.hash)
+            staged = self._repo.has_staged_changes()
+        except Exception as e:
+            self._on_op_error(str(e))
+            return
+
+        mainline = 0
+        if len(parents) > 1:
+            choices = [f"{i}: {p[:8]}" for i, p in enumerate(parents, 1)]
+            picked, ok = QInputDialog.getItem(
+                self, t("sequencer.merge_title"),
+                t("sequencer.merge_text", sha=commit.short_hash),
+                choices, 0, False)
+            if not ok:
+                return
+            mainline = int(picked.split(":")[0])
+
+        autostash = False
+        if staged:
+            ret = QMessageBox.question(
+                self, t("sequencer.staged_title"), t("sequencer.staged_text"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes)
+            if ret != QMessageBox.StandardButton.Yes:
+                return
+            autostash = True
+
+        worker = GitWorker(fn, commit.hash, mainline, autostash)
+        worker.signals.result.connect(lambda label: self._on_sequencer_done(success, label))
+        worker.signals.error.connect(self._on_op_error)
+        QThreadPool.globalInstance().start(worker)
+
+    def _on_sequencer_done(self, success: str, stash_label: str):
+        if stash_label:
+            QMessageBox.information(
+                self, t("sequencer.stash_kept_title"),
+                t("sequencer.stash_kept_text", label=stash_label))
+        self._on_op_done(success)
+
     def _run_op(self, fn, *args, success="Готово"):
         worker = GitWorker(fn, *args)
         worker.signals.result.connect(lambda _: self._on_op_done(success))
@@ -329,6 +372,11 @@ class CommitListView(QWidget):
         self.refresh()
 
     def _on_op_error(self, error: str):
+        if self._repo.is_cherry_picking() or self._repo.is_reverting():
+            # Stopped on conflicts — a normal state to resolve, not a failure.
+            self.status_message.emit(t("sequencer.conflict_status"))
+            self.refresh_requested.emit()
+            return
         lines = [l for l in error.splitlines() if l.strip()]
         self.status_message.emit("Ошибка: " + (lines[-1] if lines else ""))
         QMessageBox.critical(self, "Git Error", error)
