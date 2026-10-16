@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>RemotesDialog</class>
+ <widget class="QDialog" name="RemotesDialog">
+  <property name="minimumSize">
+   <size>
+    <width>680</width>
+    <height>340</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">remotes.title</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <item>
+    <widget class="QLabel" name="hintLabel">
+     <property name="styleSheet">
+      <string notr="true">color: rgb(140,120,180); font-size: 11px;</string>
+     </property>
+     <property name="text">
+      <string notr="true">remotes.hint</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTableWidget" name="table">
+     <property name="editTriggers">
+      <set>QAbstractItemView::EditTrigger::DoubleClicked</set>
+     </property>
+     <property name="alternatingRowColors">
+      <bool>true</bool>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+     </property>
+     <attribute name="verticalHeaderVisible">
+      <bool>false</bool>
+     </attribute>
+     <attribute name="verticalHeaderDefaultSectionSize">
+      <number>30</number>
+     </attribute>
+     <column>
+      <property name="text">
+       <string notr="true">remotes.col_name</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string notr="true">remotes.col_url</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string notr="true">remotes.col_type</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string notr="true">remotes.col_action</string>
+      </property>
+     </column>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="addRow" stretch="0,0,0,1,0">
+     <item>
+      <widget class="QLabel" name="newNameLabel">
+       <property name="text">
+        <string notr="true">remotes.add_name</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="newNameEdit">
+       <property name="minimumSize">
+        <size>
+         <width>90</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>90</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="placeholderText">
+        <string notr="true">origin</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="newUrlLabel">
+       <property name="text">
+        <string notr="true">remotes.add_url</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="newUrlEdit">
+       <property name="placeholderText">
+        <string notr="true">https://github.com/user/repo.git  or  git@github.com:user/repo.git</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="addButton">
+       <property name="text">
+        <string notr="true">remotes.add_btn</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item alignment="Qt::AlignmentFlag::AlignRight">
+    <widget class="QPushButton" name="closeButton">
+     <property name="text">
+      <string notr="true">conflict.close</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>table</tabstop>
+  <tabstop>newNameEdit</tabstop>
+  <tabstop>newUrlEdit</tabstop>
+  <tabstop>addButton</tabstop>
+  <tabstop>closeButton</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

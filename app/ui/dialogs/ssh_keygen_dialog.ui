@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>KeyGenerateDialog</class>
+ <widget class="QDialog" name="KeyGenerateDialog">
+  <property name="minimumSize">
+   <size>
+    <width>500</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">ssh.keygen.title</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>10</number>
+   </property>
+   <item>
+    <layout class="QFormLayout" name="keyForm">
+     <item row="0" column="0">
+      <widget class="QLabel" name="typeLabel">
+       <property name="text">
+        <string notr="true">ssh.keygen.key_type</string>
+       </property>
+       <property name="buddy">
+        <cstring>typeCombo</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="typeCombo"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="sizeLabel">
+       <property name="text">
+        <string notr="true">ssh.keygen.key_size</string>
+       </property>
+       <property name="buddy">
+        <cstring>sizeCombo</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="sizeCombo">
+       <item>
+        <property name="text">
+         <string notr="true">4096</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string notr="true">2048</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="pathLabel">
+       <property name="text">
+        <string notr="true">ssh.keygen.save_path</string>
+       </property>
+       <property name="buddy">
+        <cstring>pathEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <layout class="QHBoxLayout" name="pathRow">
+       <item>
+        <widget class="QLineEdit" name="pathEdit"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="browseButton">
+         <property name="minimumSize">
+          <size>
+           <width>80</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>80</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string notr="true">ssh.keygen.browse</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="commentLabel">
+       <property name="text">
+        <string notr="true">ssh.keygen.comment</string>
+       </property>
+       <property name="buddy">
+        <cstring>commentEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="commentEdit">
+       <property name="placeholderText">
+        <string notr="true">ssh.keygen.comment_placeholder</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="passphraseGroup">
+     <property name="title">
+      <string notr="true">ssh.keygen.passphrase_group</string>
+     </property>
+     <layout class="QFormLayout" name="passphraseForm">
+      <item row="0" column="0">
+       <widget class="QLabel" name="passLabel">
+        <property name="text">
+         <string notr="true">ssh.keygen.passphrase</string>
+        </property>
+        <property name="buddy">
+         <cstring>passEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <layout class="QHBoxLayout" name="passRow">
+        <item>
+         <widget class="QLineEdit" name="passEdit">
+          <property name="echoMode">
+           <enum>QLineEdit::EchoMode::Password</enum>
+          </property>
+          <property name="placeholderText">
+           <string notr="true">ssh.keygen.passphrase_placeholder</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="showPassButton">
+          <property name="minimumSize">
+           <size>
+            <width>32</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>32</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">padding: 2px 5px; min-width: 0;</string>
+          </property>
+          <property name="text">
+           <string notr="true">👁</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="confirmLabel">
+        <property name="text">
+         <string notr="true">ssh.keygen.confirm</string>
+        </property>
+        <property name="buddy">
+         <cstring>confirmEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <layout class="QHBoxLayout" name="confirmRow">
+        <item>
+         <widget class="QLineEdit" name="confirmEdit">
+          <property name="echoMode">
+           <enum>QLineEdit::EchoMode::Password</enum>
+          </property>
+          <property name="placeholderText">
+           <string notr="true">ssh.keygen.confirm_placeholder</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="showConfirmButton">
+          <property name="minimumSize">
+           <size>
+            <width>32</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>32</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">padding: 2px 5px; min-width: 0;</string>
+          </property>
+          <property name="text">
+           <string notr="true">👁</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="passHintLabel">
+        <property name="styleSheet">
+         <string notr="true">color: rgb(140,120,180); font-size: 11px;</string>
+        </property>
+        <property name="text">
+         <string notr="true">ssh.keygen.passphrase_hint</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="addToAgentCheck">
+     <property name="text">
+      <string notr="true">ssh.keygen.add_to_agent</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="previewGroup">
+     <property name="title">
+      <string notr="true">ssh.keygen.cmd_preview</string>
+     </property>
+     <layout class="QVBoxLayout" name="previewLayout">
+      <item>
+       <widget class="QLabel" name="previewLabel">
+        <property name="font">
+         <font>
+          <family>Monospace</family>
+          <pointsize>9</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: rgb(140,180,140);</string>
+        </property>
+        <property name="text">
+         <string notr="true"/>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

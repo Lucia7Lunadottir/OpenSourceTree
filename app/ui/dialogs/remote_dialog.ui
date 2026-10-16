@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>RemoteDialog</class>
+ <widget class="QDialog" name="RemoteDialog">
+  <property name="minimumSize">
+   <size>
+    <width>480</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">remote.title.fetch</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <item>
+    <layout class="QFormLayout" name="formLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="remoteLabel">
+       <property name="text">
+        <string notr="true">remote.label</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="remoteCombo"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="branchLabel">
+       <property name="text">
+        <string notr="true">remote.branch</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="branchCombo">
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="pruneCheck">
+     <property name="text">
+      <string notr="true">remote.prune</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="fetchTagsCheck">
+     <property name="text">
+      <string notr="true">remote.fetch_tags</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="rebaseCheck">
+     <property name="text">
+      <string notr="true">remote.rebase</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="forceCheck">
+     <property name="text">
+      <string notr="true">remote.force_push</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="tagsCheck">
+     <property name="text">
+      <string notr="true">remote.include_tags</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QProgressBar" name="progressBar">
+     <property name="maximum">
+      <number>0</number>
+     </property>
+     <property name="value">
+      <number>-1</number>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="liveLineLabel">
+     <property name="styleSheet">
+      <string notr="true">color: #9cdcfe; font-family: Monospace; font-size: 9pt;</string>
+     </property>
+     <property name="text">
+      <string notr="true"/>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPlainTextEdit" name="output">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>180</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <family>Monospace</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="statusLabel">
+     <property name="styleSheet">
+      <string notr="true">color: rgb(140, 120, 180);</string>
+     </property>
+     <property name="text">
+      <string notr="true"/>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="agentButton">
+     <property name="text">
+      <string notr="true">remote.add_to_agent</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="terminalButton">
+     <property name="text">
+      <string notr="true">remote.retry_terminal</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="upstreamButton">
+     <property name="text">
+      <string notr="true">remote.set_upstream_retry</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>remoteCombo</tabstop>
+  <tabstop>branchCombo</tabstop>
+  <tabstop>pruneCheck</tabstop>
+  <tabstop>fetchTagsCheck</tabstop>
+  <tabstop>rebaseCheck</tabstop>
+  <tabstop>forceCheck</tabstop>
+  <tabstop>tagsCheck</tabstop>
+  <tabstop>output</tabstop>
+  <tabstop>agentButton</tabstop>
+  <tabstop>terminalButton</tabstop>
+  <tabstop>upstreamButton</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

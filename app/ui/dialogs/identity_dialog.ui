@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>IdentityDialog</class>
+ <widget class="QDialog" name="IdentityDialog">
+  <property name="minimumSize">
+   <size>
+    <width>440</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">identity.title</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>10</number>
+   </property>
+   <item>
+    <layout class="QHBoxLayout" name="scopeRow">
+     <item>
+      <widget class="QLabel" name="scopeLabel">
+       <property name="text">
+        <string notr="true">identity.scope_label</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="globalCheck">
+       <property name="text">
+        <string notr="true">identity.scope_global</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="scopeSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="globalGroup">
+     <property name="title">
+      <string notr="true">identity.group_global</string>
+     </property>
+     <layout class="QFormLayout" name="globalForm">
+      <item row="0" column="0">
+       <widget class="QLabel" name="globalNameLabel">
+        <property name="text">
+         <string notr="true">identity.field_name</string>
+        </property>
+        <property name="buddy">
+         <cstring>globalNameEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="globalNameEdit">
+        <property name="placeholderText">
+         <string notr="true">identity.field_name_placeholder</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="globalEmailLabel">
+        <property name="text">
+         <string notr="true">identity.field_email</string>
+        </property>
+        <property name="buddy">
+         <cstring>globalEmailEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="globalEmailEdit">
+        <property name="placeholderText">
+         <string notr="true">identity.field_email_placeholder</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="repoGroup">
+     <property name="title">
+      <string notr="true">identity.group_repo</string>
+     </property>
+     <layout class="QFormLayout" name="repoForm">
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="overrideCheck">
+        <property name="text">
+         <string notr="true">identity.override_check</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="repoNameLabel">
+        <property name="text">
+         <string notr="true">identity.field_name</string>
+        </property>
+        <property name="buddy">
+         <cstring>repoNameEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="repoNameEdit">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="placeholderText">
+         <string notr="true">identity.repo_name_placeholder</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="repoEmailLabel">
+        <property name="text">
+         <string notr="true">identity.field_email</string>
+        </property>
+        <property name="buddy">
+         <cstring>repoEmailEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="repoEmailEdit">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="placeholderText">
+         <string notr="true">identity.repo_name_placeholder</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="fillGroup">
+     <property name="title">
+      <string notr="true">identity.group_fill</string>
+     </property>
+     <layout class="QFormLayout" name="fillForm">
+      <item row="0" column="0">
+       <widget class="QLabel" name="accountLabel">
+        <property name="text">
+         <string notr="true">identity.field_account</string>
+        </property>
+        <property name="buddy">
+         <cstring>accountCombo</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <layout class="QHBoxLayout" name="fillRow">
+        <item>
+         <widget class="QComboBox" name="accountCombo"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="fillButton">
+          <property name="text">
+           <string notr="true">identity.btn_fill</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="hintLabel">
+     <property name="styleSheet">
+      <string notr="true">color: rgb(140,120,180); font-size: 11px;</string>
+     </property>
+     <property name="text">
+      <string notr="true">identity.hint</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Save</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

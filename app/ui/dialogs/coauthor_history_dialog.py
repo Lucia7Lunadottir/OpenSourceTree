@@ -1,13 +1,19 @@
+from pathlib import Path
+
+from PyQt6 import uic
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QListWidget, QListWidgetItem,
-    QLabel, QPushButton, QDialogButtonBox, QMessageBox, QAbstractItemView
+    QDialog, QListWidget, QListWidgetItem, QLabel, QPushButton,
+    QDialogButtonBox, QMessageBox
 )
 from PyQt6.QtCore import Qt, QThreadPool
 from PyQt6.QtGui import QColor
 
 from app.i18n import t
 from app.git.repo import GitRepo
+from app.ui.ui_translator import UiTranslator
 from app.workers.git_worker import GitWorker
+
+_UI_FILE = Path(__file__).with_name("coauthor_history_dialog.ui")
 
 
 class CoAuthorHistoryDialog(QDialog):
@@ -16,49 +22,29 @@ class CoAuthorHistoryDialog(QDialog):
     strip_co_authors). Read-only until "Remove selected" is pressed and
     confirmed -- opening this dialog never touches the repo."""
 
+    # widgets created by loadUi from coauthor_history_dialog.ui
+    infoLabel: QLabel
+    commitList: QListWidget
+    selectAllButton: QPushButton
+    selectNoneButton: QPushButton
+    warningLabel: QLabel
+    primaryButton: QPushButton   # "Remove selected"; objectName is a style.qss selector
+    buttonBox: QDialogButtonBox
+
     def __init__(self, repo: GitRepo, parent=None):
         super().__init__(parent)
         self._repo = repo
         self._found: list[tuple[str, str, list[tuple[str, str]]]] = []
-        self.setWindowTitle(t("coauthor_history.title"))
-        self.setMinimumSize(600, 420)
-        self._setup_ui()
+        uic.loadUi(_UI_FILE, self)
+        UiTranslator().apply(self)
+        # Designer can't put a custom button inside a QDialogButtonBox:
+        # the .ui lays it out next to the box, here it moves into it.
+        self.buttonBox.addButton(self.primaryButton, QDialogButtonBox.ButtonRole.ActionRole)
+        self.buttonBox.rejected.connect(self.reject)
+        self.primaryButton.clicked.connect(self._on_remove_selected)
+        self.selectAllButton.clicked.connect(lambda: self._set_all_checked(True))
+        self.selectNoneButton.clicked.connect(lambda: self._set_all_checked(False))
         self._load()
-
-    def _setup_ui(self):
-        layout = QVBoxLayout(self)
-
-        self._info_label = QLabel(t("coauthor_history.loading"))
-        self._info_label.setWordWrap(True)
-        layout.addWidget(self._info_label)
-
-        self._list = QListWidget()
-        self._list.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
-        layout.addWidget(self._list)
-
-        select_row = QHBoxLayout()
-        self._select_all_btn = QPushButton(t("coauthor_history.select_all"))
-        self._select_all_btn.clicked.connect(lambda: self._set_all_checked(True))
-        self._select_none_btn = QPushButton(t("coauthor_history.select_none"))
-        self._select_none_btn.clicked.connect(lambda: self._set_all_checked(False))
-        select_row.addWidget(self._select_all_btn)
-        select_row.addWidget(self._select_none_btn)
-        select_row.addStretch()
-        layout.addLayout(select_row)
-
-        self._warning_label = QLabel("")
-        self._warning_label.setWordWrap(True)
-        self._warning_label.setStyleSheet("color: rgb(230, 170, 90);")
-        layout.addWidget(self._warning_label)
-
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
-        buttons.rejected.connect(self.reject)
-        self._remove_btn = QPushButton(t("coauthor_history.remove_selected"))
-        self._remove_btn.setObjectName("primaryButton")
-        self._remove_btn.setEnabled(False)
-        self._remove_btn.clicked.connect(self._on_remove_selected)
-        buttons.addButton(self._remove_btn, QDialogButtonBox.ButtonRole.ActionRole)
-        layout.addWidget(buttons)
 
     # ------------------------------------------------------------------ Load
 
@@ -69,14 +55,14 @@ class CoAuthorHistoryDialog(QDialog):
         QThreadPool.globalInstance().start(worker)
 
     def _on_load_error(self, error: str):
-        self._info_label.setText(t("coauthor_history.load_error", error=error))
+        self.infoLabel.setText(t("coauthor_history.load_error", error=error))
 
     def _on_loaded(self, found: list[tuple[str, str, list[tuple[str, str]]]]):
         self._found = found
         if not found:
-            self._info_label.setText(t("coauthor_history.none_found"))
+            self.infoLabel.setText(t("coauthor_history.none_found"))
             return
-        self._info_label.setText(t("coauthor_history.found_count", n=len(found)))
+        self.infoLabel.setText(t("coauthor_history.found_count", n=len(found)))
 
         pushed_count = 0
         for sha, subject, co_authors in found:
@@ -95,24 +81,24 @@ class CoAuthorHistoryDialog(QDialog):
                 item.setForeground(QColor(230, 170, 90))
                 item.setToolTip(t("coauthor_history.already_pushed", remotes=", ".join(remotes)))
 
-            self._list.addItem(item)
+            self.commitList.addItem(item)
 
-        self._remove_btn.setEnabled(True)
+        self.primaryButton.setEnabled(True)
         if pushed_count:
-            self._warning_label.setText(t("coauthor_history.push_warning", n=pushed_count))
+            self.warningLabel.setText(t("coauthor_history.push_warning", n=pushed_count))
 
     def _set_all_checked(self, checked: bool):
         state = Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
-        for i in range(self._list.count()):
-            self._list.item(i).setCheckState(state)
+        for i in range(self.commitList.count()):
+            self.commitList.item(i).setCheckState(state)
 
     # ---------------------------------------------------------------- Rewrite
 
     def _on_remove_selected(self):
         selected_shas = [
-            self._list.item(i).data(Qt.ItemDataRole.UserRole)
-            for i in range(self._list.count())
-            if self._list.item(i).checkState() == Qt.CheckState.Checked
+            self.commitList.item(i).data(Qt.ItemDataRole.UserRole)
+            for i in range(self.commitList.count())
+            if self.commitList.item(i).checkState() == Qt.CheckState.Checked
         ]
         if not selected_shas:
             return
@@ -126,7 +112,7 @@ class CoAuthorHistoryDialog(QDialog):
         if ret != QMessageBox.StandardButton.Yes:
             return
 
-        self._remove_btn.setEnabled(False)
+        self.primaryButton.setEnabled(False)
         worker = GitWorker(self._repo.reword_strip_co_authors, selected_shas)
         worker.signals.result.connect(self._on_rewrite_done)
         worker.signals.error.connect(self._on_rewrite_error)
@@ -140,5 +126,5 @@ class CoAuthorHistoryDialog(QDialog):
         self.accept()
 
     def _on_rewrite_error(self, error: str):
-        self._remove_btn.setEnabled(True)
+        self.primaryButton.setEnabled(True)
         QMessageBox.critical(self, t("coauthor_history.title"), error)

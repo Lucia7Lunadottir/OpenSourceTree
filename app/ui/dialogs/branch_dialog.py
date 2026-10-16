@@ -1,117 +1,121 @@
+from dataclasses import dataclass
+from pathlib import Path
+
+from PyQt6 import uic
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QFormLayout,
-    QLineEdit, QComboBox, QCheckBox,
-    QDialogButtonBox, QMessageBox, QLabel, QProgressBar, QFrame
+    QDialog, QLineEdit, QComboBox, QCheckBox,
+    QDialogButtonBox, QMessageBox, QLabel, QProgressBar, QFrame, QFormLayout
 )
 from PyQt6.QtCore import QThreadPool
 
 from app.i18n import t
 from app.git.repo import GitRepo
+from app.ui.ui_translator import UiTranslator
 from app.workers.git_worker import GitWorker
+
+_UI_FILE = Path(__file__).with_name("branch_dialog.ui")
+
+
+@dataclass(frozen=True)
+class _ModeView:
+    """What part of branch_dialog.ui a mode shows.
+
+    rows    -- field objectNames of the form rows to show (the rest are hidden)
+    widgets -- objectNames of the other widgets to show
+    name_label_key -- i18n key for the label of the nameEdit row
+    """
+    title_key: str
+    rows: tuple[str, ...] = ()
+    widgets: tuple[str, ...] = ()
+    name_label_key: str = "branch_dialog.name"
+
+    @property
+    def shows_current_branch(self) -> bool:
+        return "infoFrame" in self.widgets
+
+
+_MODES: dict[str, _ModeView] = {
+    "create": _ModeView("branch_dialog.title.create",
+                        rows=("nameEdit", "fromEdit"), widgets=("checkoutCheck",)),
+    "rename": _ModeView("branch_dialog.title.rename",
+                        rows=("nameEdit",), widgets=("renameLabel",),
+                        name_label_key="branch_dialog.new_name"),
+    "delete": _ModeView("branch_dialog.title.delete",
+                        widgets=("deleteLabel", "forceCheck")),
+    "merge":  _ModeView("branch_dialog.title.merge", rows=("branchCombo",),
+                        widgets=("infoFrame", "mergeHintLabel", "noFfCheck", "squashCheck")),
+    "rebase": _ModeView("branch_dialog.title.rebase", rows=("branchCombo",),
+                        widgets=("infoFrame", "rebaseHintLabel")),
+}
+# an unknown mode keeps the old behaviour: "create" title, no mode widgets
+_UNKNOWN_MODE = _ModeView("branch_dialog.title.create")
+
+# every widget / form row that depends on the mode
+_MODE_ROWS = ("nameEdit", "fromEdit", "branchCombo")
+_MODE_WIDGETS = ("renameLabel", "deleteLabel", "infoFrame", "mergeHintLabel",
+                 "rebaseHintLabel", "checkoutCheck", "forceCheck", "noFfCheck", "squashCheck")
 
 
 class BranchDialog(QDialog):
+    # widgets created by loadUi from branch_dialog.ui
+    renameLabel: QLabel
+    deleteLabel: QLabel
+    infoFrame: QFrame
+    currentBranchLabel: QLabel
+    formLayout: QFormLayout
+    nameLabel: QLabel
+    nameEdit: QLineEdit
+    fromEdit: QLineEdit
+    branchCombo: QComboBox
+    checkoutCheck: QCheckBox
+    forceCheck: QCheckBox
+    noFfCheck: QCheckBox
+    squashCheck: QCheckBox
+    progressBar: QProgressBar
+    statusLabel: QLabel
+    buttonBox: QDialogButtonBox
+
     def __init__(self, repo: GitRepo, mode: str = "create", branch_name: str = "", parent=None):
         super().__init__(parent)
         self._repo = repo
         self._mode = mode
         self._branch_name = branch_name
+        view = _MODES.get(mode, _UNKNOWN_MODE)
 
-        title_keys = {
-            "create": "branch_dialog.title.create",
-            "rename": "branch_dialog.title.rename",
-            "delete": "branch_dialog.title.delete",
-            "merge":  "branch_dialog.title.merge",
-            "rebase": "branch_dialog.title.rebase",
-        }
-        self.setWindowTitle(t(title_keys.get(mode, "branch_dialog.title.create")))
-        self.setMinimumWidth(420)
-        self._setup_ui()
+        uic.loadUi(_UI_FILE, self)
+        current = self._current_branch() if view.shows_current_branch else ""
+        UiTranslator({
+            "renameLabel": {"name": branch_name},
+            "deleteLabel": {"name": branch_name},
+            "currentBranchLabel": {"name": current},
+        }).apply(self)
 
-    def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        form = QFormLayout()
+        self._apply_mode(view)
+        self.progressBar.setVisible(False)
+        self.statusLabel.setVisible(False)
 
-        if self._mode == "create":
-            self._name_edit = QLineEdit()
-            form.addRow(t("branch_dialog.name"), self._name_edit)
-            self._from_edit = QLineEdit("HEAD")
-            form.addRow(t("branch_dialog.from"), self._from_edit)
-            self._checkout_check = QCheckBox(t("branch_dialog.checkout_after"))
-            self._checkout_check.setChecked(True)
-            layout.addLayout(form)
-            layout.addWidget(self._checkout_check)
+        self._ok_btn = self.buttonBox.button(QDialogButtonBox.StandardButton.Ok)
+        self.buttonBox.accepted.connect(self._on_accept)
+        self.buttonBox.rejected.connect(self.reject)
 
-        elif self._mode == "rename":
-            label = QLabel(t("branch_dialog.rename_label", name=self._branch_name))
-            layout.addWidget(label)
-            self._name_edit = QLineEdit(self._branch_name)
-            form.addRow(t("branch_dialog.new_name"), self._name_edit)
-            layout.addLayout(form)
+    def _apply_mode(self, view: _ModeView):
+        self.setWindowTitle(t(view.title_key))
+        self.nameLabel.setText(t(view.name_label_key))
+        for name in _MODE_ROWS:
+            self.formLayout.setRowVisible(getattr(self, name), name in view.rows)
+        for name in _MODE_WIDGETS:
+            getattr(self, name).setVisible(name in view.widgets)
 
-        elif self._mode == "delete":
-            label = QLabel(t("branch_dialog.delete_label", name=self._branch_name))
-            layout.addWidget(label)
-            self._force_check = QCheckBox(t("branch_dialog.force_delete"))
-            layout.addWidget(self._force_check)
+        if self._mode == "rename":
+            self.nameEdit.setText(self._branch_name)
+        if "branchCombo" in view.rows:
+            self.branchCombo.addItems(self._get_branch_names())
 
-        elif self._mode in ("merge", "rebase"):
-            # Info frame: current branch + hint about what will happen
-            try:
-                current = self._repo.get_head()
-            except Exception:
-                current = "HEAD"
-
-            info_frame = QFrame()
-            info_frame.setStyleSheet(
-                "background: rgba(100,100,180,20); border: 1px solid rgba(100,100,180,60);"
-                "border-radius: 4px; padding: 4px;"
-            )
-            info_layout = QVBoxLayout(info_frame)
-            info_layout.setContentsMargins(8, 6, 8, 6)
-            info_layout.setSpacing(2)
-            info_layout.addWidget(QLabel(t("branch_dialog.current_branch", name=current)))
-
-            hint_key = "branch_dialog.merge_hint" if self._mode == "merge" else "branch_dialog.rebase_hint"
-            hint = QLabel(t(hint_key))
-            hint.setStyleSheet("color: #9cdcfe; font-size: 11px;")
-            hint.setWordWrap(True)
-            info_layout.addWidget(hint)
-            layout.addWidget(info_frame)
-
-            branches = self._get_branch_names()
-            self._branch_combo = QComboBox()
-            self._branch_combo.addItems(branches)
-            form.addRow(t("branch_dialog.branch"), self._branch_combo)
-            layout.addLayout(form)
-
-            if self._mode == "merge":
-                self._no_ff_check = QCheckBox(t("branch_dialog.no_ff"))
-                self._squash_check = QCheckBox(t("branch_dialog.squash"))
-                layout.addWidget(self._no_ff_check)
-                layout.addWidget(self._squash_check)
-
-        # Progress bar (hidden until operation starts)
-        self._progress = QProgressBar()
-        self._progress.setRange(0, 0)   # indeterminate
-        self._progress.setFixedHeight(14)
-        self._progress.setTextVisible(False)
-        self._progress.setVisible(False)
-        layout.addWidget(self._progress)
-
-        # Status label
-        self._status_label = QLabel("")
-        self._status_label.setStyleSheet("color: #9cdcfe; font-size: 11px;")
-        self._status_label.setVisible(False)
-        layout.addWidget(self._status_label)
-
-        self._buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        self._ok_btn = self._buttons.button(QDialogButtonBox.StandardButton.Ok)
-        self._buttons.accepted.connect(self._on_accept)
-        self._buttons.rejected.connect(self.reject)
-        layout.addWidget(self._buttons)
+    def _current_branch(self) -> str:
+        try:
+            return self._repo.get_head()
+        except Exception:
+            return "HEAD"
 
     def _get_branch_names(self) -> list[str]:
         try:
@@ -121,23 +125,23 @@ class BranchDialog(QDialog):
 
     def _set_running(self, running: bool, msg: str = ""):
         self._ok_btn.setEnabled(not running)
-        self._progress.setVisible(running)
+        self.progressBar.setVisible(running)
         if msg:
-            self._status_label.setText(msg)
-            self._status_label.setVisible(True)
+            self.statusLabel.setText(msg)
+            self.statusLabel.setVisible(True)
         else:
-            self._status_label.setVisible(False)
+            self.statusLabel.setVisible(False)
 
     def _on_accept(self):
         worker = None
         if self._mode == "create":
-            name = self._name_edit.text().strip()
+            name = self.nameEdit.text().strip()
             if not name:
                 QMessageBox.warning(self, t("branch_dialog.title.create"),
                                     t("branch_dialog.error.empty_name"))
                 return
-            from_ref = self._from_edit.text().strip() or "HEAD"
-            checkout = self._checkout_check.isChecked()
+            from_ref = self.fromEdit.text().strip() or "HEAD"
+            checkout = self.checkoutCheck.isChecked()
 
             def do_create():
                 if checkout:
@@ -149,7 +153,7 @@ class BranchDialog(QDialog):
             self._set_running(True, t("branch_dialog.creating", name=name))
 
         elif self._mode == "rename":
-            new_name = self._name_edit.text().strip()
+            new_name = self.nameEdit.text().strip()
             if not new_name:
                 QMessageBox.warning(self, t("branch_dialog.title.rename"),
                                     t("branch_dialog.error.empty_name"))
@@ -159,19 +163,19 @@ class BranchDialog(QDialog):
                                       old=self._branch_name, new=new_name))
 
         elif self._mode == "delete":
-            force = self._force_check.isChecked()
+            force = self.forceCheck.isChecked()
             worker = GitWorker(self._repo.delete_branch, self._branch_name, force)
             self._set_running(True, t("branch_dialog.deleting", name=self._branch_name))
 
         elif self._mode == "merge":
-            branch = self._branch_combo.currentText()
-            no_ff  = self._no_ff_check.isChecked()
-            squash = self._squash_check.isChecked()
+            branch = self.branchCombo.currentText()
+            no_ff  = self.noFfCheck.isChecked()
+            squash = self.squashCheck.isChecked()
             worker = GitWorker(self._repo.merge, branch, no_ff, squash)
             self._set_running(True, t("branch_dialog.merging", branch=branch))
 
         elif self._mode == "rebase":
-            branch = self._branch_combo.currentText()
+            branch = self.branchCombo.currentText()
             worker = GitWorker(self._repo.rebase, branch)
             self._set_running(True, t("branch_dialog.rebasing", branch=branch))
 

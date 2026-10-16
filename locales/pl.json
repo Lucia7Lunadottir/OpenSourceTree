@@ -336,5 +336,11 @@
     "sequencer.conflict_status": "Konflikty — rozwiąż je w panelu Working Copy",
     "conflict.revert_ready": "✓ Wszystkie konflikty rozwiązane — kliknij „Kontynuuj Revert”",
     "conflict.abort_revert": "Przerwij Revert",
-    "conflict.continue_revert": "Kontynuuj Revert"
+    "conflict.continue_revert": "Kontynuuj Revert",
+    "coauthors.add_dialog.title": "Dodaj współautora",
+    "coauthors.add_dialog.name_label": "Imię i nazwisko:",
+    "coauthors.add_dialog.name_placeholder": "Imię Nazwisko",
+    "coauthors.add_dialog.email_label": "E-mail:",
+    "coauthors.add_dialog.email_placeholder": "email@example.com",
+    "coauthors.add_dialog.invalid": "Podaj imię i nazwisko oraz prawidłowy adres e-mail."
 }

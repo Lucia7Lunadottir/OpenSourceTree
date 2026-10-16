@@ -1,38 +1,29 @@
-from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QFormLayout, QLineEdit,
-    QDialogButtonBox, QMessageBox
-)
+from pathlib import Path
+
+from PyQt6 import uic
+from PyQt6.QtWidgets import QDialog, QLineEdit, QDialogButtonBox, QMessageBox
 
 from app.i18n import t
+from app.ui.ui_translator import UiTranslator
+
+_UI_FILE = Path(__file__).with_name("add_coauthor_dialog.ui")
 
 
 class AddCoAuthorDialog(QDialog):
     """Prompt for a Co-authored-by name + email pair."""
 
+    # widgets created by loadUi from add_coauthor_dialog.ui
+    nameEdit: QLineEdit
+    emailEdit: QLineEdit
+    buttonBox: QDialogButtonBox
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(t("coauthors.add_dialog.title"))
-        self.setMinimumWidth(360)
+        uic.loadUi(_UI_FILE, self)
+        UiTranslator().apply(self)
 
-        layout = QVBoxLayout(self)
-        form = QFormLayout()
-
-        self._name_edit = QLineEdit()
-        self._name_edit.setPlaceholderText(t("coauthors.add_dialog.name_placeholder"))
-        form.addRow(t("coauthors.add_dialog.name_label"), self._name_edit)
-
-        self._email_edit = QLineEdit()
-        self._email_edit.setPlaceholderText(t("coauthors.add_dialog.email_placeholder"))
-        form.addRow(t("coauthors.add_dialog.email_label"), self._email_edit)
-
-        layout.addLayout(form)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        buttons.accepted.connect(self._on_accept)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
+        self.buttonBox.accepted.connect(self._on_accept)
+        self.buttonBox.rejected.connect(self.reject)
 
     def _on_accept(self):
         if not self.name.strip() or "@" not in self.email:
@@ -44,8 +35,8 @@ class AddCoAuthorDialog(QDialog):
 
     @property
     def name(self) -> str:
-        return self._name_edit.text().strip()
+        return self.nameEdit.text().strip()
 
     @property
     def email(self) -> str:
-        return self._email_edit.text().strip()
+        return self.emailEdit.text().strip()

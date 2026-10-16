@@ -1,17 +1,18 @@
 import os
 import subprocess
+from pathlib import Path
 
-from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QPlainTextEdit, QDialogButtonBox, QMessageBox, QFrame
-)
-from PyQt6.QtCore import Qt
+from PyQt6 import uic
+from PyQt6.QtWidgets import QDialog, QLabel, QPushButton, QPlainTextEdit, QMessageBox
 from PyQt6.QtGui import (
     QSyntaxHighlighter, QTextCharFormat, QColor, QFont
 )
 
 from app.i18n import t
 from app.git.repo import GitRepo
+from app.ui.ui_translator import UiTranslator
+
+_UI_FILE = Path(__file__).with_name("conflict_dialog.ui")
 
 
 class _ConflictHighlighter(QSyntaxHighlighter):
@@ -59,100 +60,39 @@ class _ConflictHighlighter(QSyntaxHighlighter):
 
 
 class ConflictDialog(QDialog):
+    # widgets created by loadUi from conflict_dialog.ui
+    infoLabel: QLabel
+    editor: QPlainTextEdit
+    oursButton: QPushButton
+    theirsButton: QPushButton
+    editorButton: QPushButton
+    primaryButton: QPushButton   # "Mark resolved"; objectName is a style.qss selector
+    closeButton: QPushButton
+
     def __init__(self, repo: GitRepo, path: str, parent=None):
         super().__init__(parent)
         self._repo = repo
         self._path = path
         filename = os.path.basename(path)
-        self.setWindowTitle(t("conflict.title", filename=filename))
-        self.setMinimumSize(700, 500)
-        self._setup_ui()
+        uic.loadUi(_UI_FILE, self)
+        UiTranslator({self.objectName(): {"filename": filename}}).apply(self)
+        self._highlighter = _ConflictHighlighter(self.editor.document())
+        self.oursButton.clicked.connect(self._on_accept_ours)
+        self.theirsButton.clicked.connect(self._on_accept_theirs)
+        self.editorButton.clicked.connect(self._on_open_editor)
+        self.primaryButton.clicked.connect(self._on_mark_resolved)
+        self.closeButton.clicked.connect(self.reject)
         self._load()
-
-    def _setup_ui(self):
-        layout = QVBoxLayout(self)
-
-        # Info bar
-        info = QFrame()
-        info.setObjectName("conflictInfo")
-        info_row = QHBoxLayout(info)
-        info_row.setContentsMargins(8, 6, 8, 6)
-        self._info_label = QLabel("")
-        self._info_label.setStyleSheet("color: #dcdcaa; font-weight: bold;")
-        info_row.addWidget(QLabel("⚠"))
-        info_row.addWidget(self._info_label, 1)
-        layout.addWidget(info)
-
-        hint = QLabel(t("conflict.hint"))
-        hint.setStyleSheet("color: #9cdcfe; font-size: 11px;")
-        hint.setWordWrap(True)
-        layout.addWidget(hint)
-
-        # Content viewer
-        self._editor = QPlainTextEdit()
-        self._editor.setReadOnly(True)
-        self._editor.setFont(QFont("Monospace", 10))
-        self._editor.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
-        layout.addWidget(self._editor)
-        self._highlighter = _ConflictHighlighter(self._editor.document())
-
-        # Legend
-        legend = QHBoxLayout()
-        for color, label in (
-            ("#ff8080", t("conflict.legend_ours")),
-            ("#e0d060", t("conflict.legend_sep")),
-            ("#80cc80", t("conflict.legend_theirs")),
-        ):
-            dot = QLabel("●")
-            dot.setStyleSheet(f"color: {color};")
-            legend.addWidget(dot)
-            legend.addWidget(QLabel(label))
-            legend.addSpacing(12)
-        legend.addStretch()
-        layout.addLayout(legend)
-
-        sep = QFrame()
-        sep.setFrameShape(QFrame.Shape.HLine)
-        layout.addWidget(sep)
-
-        # Action buttons
-        btn_row = QHBoxLayout()
-        self._ours_btn   = QPushButton(t("conflict.accept_ours"))
-        self._theirs_btn = QPushButton(t("conflict.accept_theirs"))
-        self._editor_btn = QPushButton(t("conflict.open_editor"))
-        self._resolve_btn = QPushButton(t("conflict.mark_resolved"))
-        self._resolve_btn.setObjectName("primaryButton")
-
-        self._ours_btn.setToolTip(t("conflict.accept_ours_tip"))
-        self._theirs_btn.setToolTip(t("conflict.accept_theirs_tip"))
-        self._editor_btn.setToolTip(t("conflict.open_editor_tip"))
-        self._resolve_btn.setToolTip(t("conflict.mark_resolved_tip"))
-
-        self._ours_btn.clicked.connect(self._on_accept_ours)
-        self._theirs_btn.clicked.connect(self._on_accept_theirs)
-        self._editor_btn.clicked.connect(self._on_open_editor)
-        self._resolve_btn.clicked.connect(self._on_mark_resolved)
-
-        close_btn = QPushButton(t("conflict.close"))
-        close_btn.clicked.connect(self.reject)
-
-        btn_row.addWidget(self._ours_btn)
-        btn_row.addWidget(self._theirs_btn)
-        btn_row.addWidget(self._editor_btn)
-        btn_row.addStretch()
-        btn_row.addWidget(self._resolve_btn)
-        btn_row.addWidget(close_btn)
-        layout.addLayout(btn_row)
 
     def _load(self):
         content = self._repo.conflict_content(self._path)
-        self._editor.setPlainText(content)
+        self.editor.setPlainText(content)
         n = content.count("<<<<<<<")
-        self._info_label.setText(
+        self.infoLabel.setText(
             t("conflict.sections", n=n) if n else t("conflict.no_markers")
         )
         # Disable resolve button until user explicitly acts
-        self._resolve_btn.setEnabled(n == 0)
+        self.primaryButton.setEnabled(n == 0)
 
     # ----------------------------------------------------------------- Actions
 
@@ -205,12 +145,12 @@ class ConflictDialog(QDialog):
     def _reload_after_edit(self):
         """Re-read file from disk and enable 'Mark Resolved' if no markers remain."""
         content = self._repo.conflict_content(self._path)
-        self._editor.setPlainText(content)
+        self.editor.setPlainText(content)
         n = content.count("<<<<<<<")
-        self._info_label.setText(
+        self.infoLabel.setText(
             t("conflict.sections", n=n) if n else t("conflict.no_markers")
         )
-        self._resolve_btn.setEnabled(True)   # let user decide
+        self.primaryButton.setEnabled(True)   # let user decide
 
     def _on_mark_resolved(self):
         try:

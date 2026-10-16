@@ -1,10 +1,11 @@
 import os
 import subprocess
+from pathlib import Path
 
+from PyQt6 import uic
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QFormLayout, QHBoxLayout, QComboBox,
-    QCheckBox, QDialogButtonBox, QMessageBox, QProgressBar, QLabel,
-    QPushButton, QPlainTextEdit
+    QDialog, QFormLayout, QComboBox, QCheckBox, QDialogButtonBox,
+    QMessageBox, QProgressBar, QLabel, QPushButton, QPlainTextEdit
 )
 from PyQt6.QtCore import QThreadPool
 
@@ -12,118 +13,94 @@ from app.i18n import t
 from app.git.repo import GitRepo
 from app.git.runner import is_auth_error, find_terminal
 from app.config import ensure_agent_running, scan_default_ssh_keys, load_ssh_profiles
+from app.ui.ui_translator import UiTranslator
 from app.workers.streaming_worker import StreamingWorker
+
+_UI_FILE = Path(__file__).with_name("remote_dialog.ui")
 
 
 class RemoteDialog(QDialog):
+    # widgets created by loadUi from remote_dialog.ui
+    formLayout: QFormLayout
+    remoteCombo: QComboBox
+    branchCombo: QComboBox
+    pruneCheck: QCheckBox
+    fetchTagsCheck: QCheckBox
+    rebaseCheck: QCheckBox
+    forceCheck: QCheckBox
+    tagsCheck: QCheckBox
+    progressBar: QProgressBar
+    liveLineLabel: QLabel
+    output: QPlainTextEdit
+    statusLabel: QLabel
+    agentButton: QPushButton
+    terminalButton: QPushButton
+    upstreamButton: QPushButton
+    buttonBox: QDialogButtonBox
+
+    # option checkboxes the .ui holds for every mode; only these are shown
+    _MODE_OPTIONS = {
+        "fetch": ("pruneCheck", "fetchTagsCheck"),
+        "pull":  ("rebaseCheck",),
+        "push":  ("forceCheck", "tagsCheck"),
+    }
+    _ALL_OPTIONS = ("pruneCheck", "fetchTagsCheck", "rebaseCheck", "forceCheck", "tagsCheck")
+
     def __init__(self, repo: GitRepo, mode: str = "fetch", parent=None):
         super().__init__(parent)
         self._repo = repo
         self._mode = mode
         self._last_args = None
+        uic.loadUi(_UI_FILE, self)
+        UiTranslator().apply(self)
         title_keys = {
             "fetch": "remote.title.fetch",
             "pull":  "remote.title.pull",
             "push":  "remote.title.push",
         }
         self.setWindowTitle(t(title_keys.get(mode, "remote.title.fetch")))
-        self.setMinimumWidth(480)
         self._setup_ui()
 
     def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        form = QFormLayout()
-
         remotes = self._get_remotes()
-        self._remote_combo = QComboBox()
         if self._mode == "fetch":
             # Only fetch actually treats an empty remote as --all (every
             # remote). Push/pull silently fall back to a single default
             # remote instead, so offering "(all)" there implied a
             # multi-remote push/pull that never happened.
-            self._remote_combo.addItems([t("remote.all")] + remotes)
+            self.remoteCombo.addItems([t("remote.all")] + remotes)
         else:
-            self._remote_combo.addItems(remotes)
+            self.remoteCombo.addItems(remotes)
             tracked = self._get_tracked_remote()
             if tracked and tracked in remotes:
-                self._remote_combo.setCurrentText(tracked)
-        form.addRow(t("remote.label"), self._remote_combo)
+                self.remoteCombo.setCurrentText(tracked)
 
         if self._mode in ("pull", "push"):
             self._branch_placeholder = t("remote.current_branch_placeholder")
-            self._branch_combo = QComboBox()
-            self._branch_combo.setEditable(True)
-            self._branch_combo.addItem(self._branch_placeholder)
+            self.branchCombo.addItem(self._branch_placeholder)
             for b in self._get_branches():
-                self._branch_combo.addItem(b)
-            self._branch_combo.setCurrentIndex(0)
-            form.addRow(t("remote.branch"), self._branch_combo)
+                self.branchCombo.addItem(b)
+            self.branchCombo.setCurrentIndex(0)
+        else:
+            self.formLayout.setRowVisible(self.branchCombo, False)
 
-        layout.addLayout(form)
+        shown = self._MODE_OPTIONS.get(self._mode, ())
+        for name in self._ALL_OPTIONS:
+            getattr(self, name).setVisible(name in shown)
 
-        if self._mode == "fetch":
-            self._prune_check = QCheckBox(t("remote.prune"))
-            self._fetch_tags_check = QCheckBox(t("remote.fetch_tags"))
-            self._fetch_tags_check.setChecked(True)
-            layout.addWidget(self._prune_check)
-            layout.addWidget(self._fetch_tags_check)
-        elif self._mode == "pull":
-            self._rebase_check = QCheckBox(t("remote.rebase"))
-            layout.addWidget(self._rebase_check)
-        elif self._mode == "push":
-            self._force_check = QCheckBox(t("remote.force_push"))
-            self._tags_check  = QCheckBox(t("remote.include_tags"))
-            layout.addWidget(self._force_check)
-            layout.addWidget(self._tags_check)
+        # hidden until an operation runs / fails
+        for w in (self.progressBar, self.liveLineLabel, self.output,
+                  self.agentButton, self.terminalButton, self.upstreamButton):
+            w.setVisible(False)
 
-        self._progress = QProgressBar()
-        self._progress.setRange(0, 0)   # indeterminate
-        self._progress.setVisible(False)
-        layout.addWidget(self._progress)
+        self.agentButton.clicked.connect(self._add_to_agent_and_retry)
+        self.terminalButton.clicked.connect(self._retry_in_terminal)
+        self.upstreamButton.clicked.connect(lambda: self._on_accept(set_upstream=True))
 
-        # Live progress line (git \r-overwritten lines: Writing objects X%, etc.)
-        self._live_line = QLabel("")
-        self._live_line.setStyleSheet("color: #9cdcfe; font-family: Monospace; font-size: 9pt;")
-        self._live_line.setVisible(False)
-        layout.addWidget(self._live_line)
-
-        self._output = QPlainTextEdit()
-        self._output.setReadOnly(True)
-        self._output.setMinimumHeight(180)
-        self._output.setVisible(False)
-        font = self._output.font()
-        font.setFamily("Monospace")
-        font.setPointSize(9)
-        self._output.setFont(font)
-        layout.addWidget(self._output)
-
-        self._status_label = QLabel("")
-        self._status_label.setStyleSheet("color: rgb(140, 120, 180);")
-        layout.addWidget(self._status_label)
-
-        self._agent_btn = QPushButton(t("remote.add_to_agent"))
-        self._agent_btn.setVisible(False)
-        self._agent_btn.clicked.connect(self._add_to_agent_and_retry)
-        layout.addWidget(self._agent_btn)
-
-        self._terminal_btn = QPushButton(t("remote.retry_terminal"))
-        self._terminal_btn.setVisible(False)
-        self._terminal_btn.clicked.connect(self._retry_in_terminal)
-        layout.addWidget(self._terminal_btn)
-
-        self._upstream_btn = QPushButton(t("remote.set_upstream_retry"))
-        self._upstream_btn.setVisible(False)
-        self._upstream_btn.clicked.connect(lambda: self._on_accept(set_upstream=True))
-        layout.addWidget(self._upstream_btn)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        self._ok_btn = buttons.button(QDialogButtonBox.StandardButton.Ok)
+        self._ok_btn = self.buttonBox.button(QDialogButtonBox.StandardButton.Ok)
         self._ok_btn.setText(t(f"remote.title.{self._mode}"))
-        buttons.accepted.connect(self._on_accept)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
+        self.buttonBox.accepted.connect(self._on_accept)
+        self.buttonBox.rejected.connect(self.reject)
 
     def _get_remotes(self) -> list[str]:
         try:
@@ -143,7 +120,7 @@ class RemoteDialog(QDialog):
 
     def _branch_text(self) -> str:
         """Return selected branch name, or '' if placeholder is selected."""
-        text = self._branch_combo.currentText().strip()
+        text = self.branchCombo.currentText().strip()
         if text == self._branch_placeholder:
             return ""
         return text
@@ -166,13 +143,13 @@ class RemoteDialog(QDialog):
             return []
 
     def _build_fn(self, set_upstream: bool = False):
-        remote = self._remote_combo.currentText()
+        remote = self.remoteCombo.currentText()
         if remote == t("remote.all"):
             remote = ""
 
         if self._mode == "fetch":
-            prune = self._prune_check.isChecked()
-            tags  = self._fetch_tags_check.isChecked()
+            prune = self.pruneCheck.isChecked()
+            tags  = self.fetchTagsCheck.isChecked()
             self._last_args = (
                 ["fetch"]
                 + (["--prune"] if prune else [])
@@ -183,7 +160,7 @@ class RemoteDialog(QDialog):
 
         elif self._mode == "pull":
             branch = self._branch_text()
-            rebase = self._rebase_check.isChecked()
+            rebase = self.rebaseCheck.isChecked()
             self._last_args = ["pull"] + (["--rebase"] if rebase else []) + (
                 [remote] if remote else []) + ([branch] if branch else [])
             return lambda: self._repo.pull_streaming(remote, branch, rebase)
@@ -198,8 +175,8 @@ class RemoteDialog(QDialog):
                     branch = self._repo.get_head()
                 except Exception:
                     pass
-            force  = self._force_check.isChecked()
-            tags   = self._tags_check.isChecked()
+            force  = self.forceCheck.isChecked()
+            tags   = self.tagsCheck.isChecked()
             self._last_args = ["push"] + (["--force-with-lease"] if force else []) + (
                 ["--tags"] if tags else []) + (["--set-upstream"] if set_upstream else []) + (
                 [remote] if remote else []) + (
@@ -208,16 +185,16 @@ class RemoteDialog(QDialog):
 
     def _on_accept(self, set_upstream: bool = False):
         fn = self._build_fn(set_upstream)
-        self._terminal_btn.setVisible(False)
-        self._upstream_btn.setVisible(False)
+        self.terminalButton.setVisible(False)
+        self.upstreamButton.setVisible(False)
         self._ok_btn.setEnabled(False)
-        self._output.clear()
-        self._output.setVisible(True)
-        self._live_line.setText("")
-        self._live_line.setVisible(True)
-        self._progress.setRange(0, 0)
-        self._progress.setVisible(True)
-        self._status_label.setText(t(f"remote.title.{self._mode}") + "...")
+        self.output.clear()
+        self.output.setVisible(True)
+        self.liveLineLabel.setText("")
+        self.liveLineLabel.setVisible(True)
+        self.progressBar.setRange(0, 0)
+        self.progressBar.setVisible(True)
+        self.statusLabel.setText(t(f"remote.title.{self._mode}") + "...")
 
         worker = StreamingWorker(fn)
         worker.signals.progress_text.connect(self._on_line)
@@ -242,58 +219,58 @@ class RemoteDialog(QDialog):
             return
         if any(line.startswith(p) for p in self._PROGRESS_PREFIXES):
             # Update the live progress label in place
-            self._live_line.setText(line)
+            self.liveLineLabel.setText(line)
         else:
-            self._output.appendPlainText(line)
-            sb = self._output.verticalScrollBar()
+            self.output.appendPlainText(line)
+            sb = self.output.verticalScrollBar()
             sb.setValue(sb.maximum())
 
     def _on_done(self, _result):
-        self._progress.setRange(0, 1)
-        self._progress.setValue(1)
-        self._progress.setVisible(False)
-        self._live_line.setVisible(False)
-        self._status_label.setText(t("remote.done"))
+        self.progressBar.setRange(0, 1)
+        self.progressBar.setValue(1)
+        self.progressBar.setVisible(False)
+        self.liveLineLabel.setVisible(False)
+        self.statusLabel.setText(t("remote.done"))
         self.accept()
 
     def _on_error(self, error: str):
-        self._progress.setRange(0, 1)
-        self._progress.setValue(1)
-        self._progress.setVisible(False)
-        self._live_line.setVisible(False)
+        self.progressBar.setRange(0, 1)
+        self.progressBar.setValue(1)
+        self.progressBar.setVisible(False)
+        self.liveLineLabel.setVisible(False)
         self._ok_btn.setEnabled(True)
 
         if is_auth_error(error):
-            self._agent_btn.setVisible(True)
-            self._terminal_btn.setVisible(True)
-            self._status_label.setStyleSheet("color: rgb(255, 100, 100);")
-            self._status_label.setText(t("remote.auth_required"))
+            self.agentButton.setVisible(True)
+            self.terminalButton.setVisible(True)
+            self.statusLabel.setStyleSheet("color: rgb(255, 100, 100);")
+            self.statusLabel.setText(t("remote.auth_required"))
         elif self._mode == "push" and "no upstream branch" in error.lower():
             # `git push <remote>` with no branch arg fails outright when the
             # current branch has never been pushed anywhere — happens a lot
             # when pushing an existing branch to a *second* remote (e.g. an
             # AUR git remote alongside origin). Offer to redo it with
             # --set-upstream instead of surfacing raw git jargon.
-            self._upstream_btn.setVisible(True)
-            self._status_label.setStyleSheet("color: rgb(255, 100, 100);")
-            self._status_label.setText(t("remote.no_upstream"))
+            self.upstreamButton.setVisible(True)
+            self.statusLabel.setStyleSheet("color: rgb(255, 100, 100);")
+            self.statusLabel.setText(t("remote.no_upstream"))
         else:
             # Output is already visible in the QPlainTextEdit above;
             # show the last non-empty line as a compact status hint.
             lines = [l for l in error.splitlines() if l.strip()]
             short = lines[-1] if lines else t("remote.error")
-            self._status_label.setStyleSheet("color: rgb(255, 100, 100);")
-            self._status_label.setText(f"✗  {short}")
+            self.statusLabel.setStyleSheet("color: rgb(255, 100, 100);")
+            self.statusLabel.setText(f"✗  {short}")
 
     def _retry_in_terminal(self):
         if not self._last_args:
             return
-        self._terminal_btn.setVisible(False)
-        self._agent_btn.setVisible(False)
-        self._status_label.setText(t("remote.opening_terminal"))
+        self.terminalButton.setVisible(False)
+        self.agentButton.setVisible(False)
+        self.statusLabel.setText(t("remote.opening_terminal"))
         try:
             self._repo.runner.run_in_terminal(self._last_args)
-            self._status_label.setText(t("remote.done_terminal"))
+            self.statusLabel.setText(t("remote.done_terminal"))
             self.accept()
         except Exception as e:
             QMessageBox.critical(self, t("remote.terminal_error"), str(e))
@@ -334,10 +311,10 @@ class RemoteDialog(QDialog):
             QMessageBox.warning(self, "ssh-agent", "Терминал не найден.")
             return
 
-        self._agent_btn.setVisible(False)
-        self._terminal_btn.setVisible(False)
-        self._status_label.setStyleSheet("color: rgb(140, 120, 180);")
-        self._status_label.setText(t("remote.opening_terminal"))
+        self.agentButton.setVisible(False)
+        self.terminalButton.setVisible(False)
+        self.statusLabel.setStyleSheet("color: rgb(140, 120, 180);")
+        self.statusLabel.setText(t("remote.opening_terminal"))
 
         cmd = (
             f"ssh-add {shlex.quote(key)}; "
@@ -356,12 +333,12 @@ class RemoteDialog(QDialog):
         check = subprocess.run(["ssh-add", "-l"], capture_output=True, text=True)
         if check.returncode != 0:
             # Agent is empty → user probably cancelled
-            self._status_label.setText(t("remote.auth_required"))
-            self._agent_btn.setVisible(True)
-            self._terminal_btn.setVisible(True)
+            self.statusLabel.setText(t("remote.auth_required"))
+            self.agentButton.setVisible(True)
+            self.terminalButton.setVisible(True)
             return
 
         # Key is now in agent — retry the operation automatically
-        self._status_label.setStyleSheet("color: rgb(140, 120, 180);")
-        self._output.clear()
+        self.statusLabel.setStyleSheet("color: rgb(140, 120, 180);")
+        self.output.clear()
         self._on_accept()

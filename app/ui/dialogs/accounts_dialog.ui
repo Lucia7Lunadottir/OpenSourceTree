@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AccountsDialog</class>
+ <widget class="QDialog" name="AccountsDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>820</width>
+    <height>560</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">accounts.title</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <item>
+    <widget class="QSplitter" name="splitter">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <widget class="QWidget" name="leftPanel">
+      <property name="minimumSize">
+       <size>
+        <width>230</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>230</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <layout class="QVBoxLayout" name="leftLayout">
+       <property name="spacing">
+        <number>4</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="headerLabel">
+         <property name="styleSheet">
+          <string notr="true">font-weight: bold; color: rgb(203,166,247);</string>
+         </property>
+         <property name="text">
+          <string notr="true">accounts.header</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="accountList">
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="listButtonRow">
+         <item>
+          <widget class="QPushButton" name="addButton">
+           <property name="text">
+            <string notr="true">accounts.btn_add</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="removeButton">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string notr="true">accounts.btn_remove</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="editorPanel">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <layout class="QVBoxLayout" name="editorLayout">
+       <property name="spacing">
+        <number>10</number>
+       </property>
+       <property name="leftMargin">
+        <number>8</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <layout class="QFormLayout" name="editorForm">
+         <item row="0" column="0">
+          <widget class="QLabel" name="labelFieldLabel">
+           <property name="text">
+            <string notr="true">accounts.field_label</string>
+           </property>
+           <property name="buddy">
+            <cstring>labelEdit</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="labelEdit">
+           <property name="placeholderText">
+            <string notr="true">accounts.field_label_placeholder</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="providerLabel">
+           <property name="text">
+            <string notr="true">accounts.field_provider</string>
+           </property>
+           <property name="buddy">
+            <cstring>providerCombo</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="providerCombo"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="hostLabel">
+           <property name="text">
+            <string notr="true">accounts.field_host</string>
+           </property>
+           <property name="buddy">
+            <cstring>hostEdit</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="hostEdit">
+           <property name="placeholderText">
+            <string notr="true">accounts.field_host_placeholder</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="apiUrlLabel">
+           <property name="text">
+            <string notr="true">accounts.field_api_url</string>
+           </property>
+           <property name="buddy">
+            <cstring>apiUrlEdit</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="apiUrlEdit">
+           <property name="placeholderText">
+            <string notr="true">accounts.field_api_url_placeholder</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="userLabel">
+           <property name="text">
+            <string notr="true">accounts.field_login</string>
+           </property>
+           <property name="buddy">
+            <cstring>userEdit</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLineEdit" name="userEdit">
+           <property name="placeholderText">
+            <string notr="true">accounts.field_login_placeholder</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="emailLabel">
+           <property name="text">
+            <string notr="true">accounts.field_email</string>
+           </property>
+           <property name="buddy">
+            <cstring>emailEdit</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLineEdit" name="emailEdit">
+           <property name="placeholderText">
+            <string notr="true">accounts.field_email_placeholder</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="tokenLabel">
+           <property name="text">
+            <string notr="true">accounts.field_token</string>
+           </property>
+           <property name="buddy">
+            <cstring>tokenEdit</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <layout class="QHBoxLayout" name="tokenRow">
+           <item>
+            <widget class="QLineEdit" name="tokenEdit">
+             <property name="echoMode">
+              <enum>QLineEdit::EchoMode::Password</enum>
+             </property>
+             <property name="placeholderText">
+              <string notr="true">accounts.field_token_placeholder</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="showTokenButton">
+             <property name="minimumSize">
+              <size>
+               <width>32</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>32</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">padding: 2px 5px; min-width: 0;</string>
+             </property>
+             <property name="text">
+              <string notr="true">👁</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="7" column="1">
+          <widget class="QLabel" name="tokenHintLabel">
+           <property name="styleSheet">
+            <string notr="true">color: rgb(140,120,180); font-size: 11px;</string>
+           </property>
+           <property name="text">
+            <string notr="true">accounts.token_hint</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::TextFormat::RichText</enum>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="avatarRow">
+         <item>
+          <widget class="QLabel" name="avatarLabel">
+           <property name="minimumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">border: 1px solid rgb(70,55,100); border-radius: 32px; background: rgb(40,36,62);</string>
+           </property>
+           <property name="text">
+            <string notr="true">?</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="fetchAvatarButton">
+           <property name="text">
+            <string notr="true">accounts.btn_fetch_avatar</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="avatarSpacer">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QPushButton" name="testButton">
+         <property name="text">
+          <string notr="true">accounts.btn_test_token</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="testResultLabel">
+         <property name="styleSheet">
+          <string notr="true">color: rgb(140,120,180); font-size: 11px;</string>
+         </property>
+         <property name="text">
+          <string notr="true"/>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="editorSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Save</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

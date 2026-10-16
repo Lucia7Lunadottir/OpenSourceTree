@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>BranchDialog</class>
+ <widget class="QDialog" name="BranchDialog">
+  <property name="minimumSize">
+   <size>
+    <width>420</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">branch_dialog.title.create</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <item>
+    <widget class="QLabel" name="renameLabel">
+     <property name="text">
+      <string notr="true">branch_dialog.rename_label</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="deleteLabel">
+     <property name="text">
+      <string notr="true">branch_dialog.delete_label</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="infoFrame">
+     <property name="styleSheet">
+      <string notr="true">background: rgba(100,100,180,20); border: 1px solid rgba(100,100,180,60);border-radius: 4px; padding: 4px;</string>
+     </property>
+     <layout class="QVBoxLayout" name="infoLayout">
+      <property name="spacing">
+       <number>2</number>
+      </property>
+      <property name="leftMargin">
+       <number>8</number>
+      </property>
+      <property name="topMargin">
+       <number>6</number>
+      </property>
+      <property name="rightMargin">
+       <number>8</number>
+      </property>
+      <property name="bottomMargin">
+       <number>6</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="currentBranchLabel">
+        <property name="text">
+         <string notr="true">branch_dialog.current_branch</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="mergeHintLabel">
+        <property name="styleSheet">
+         <string notr="true">color: #9cdcfe; font-size: 11px;</string>
+        </property>
+        <property name="text">
+         <string notr="true">branch_dialog.merge_hint</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="rebaseHintLabel">
+        <property name="styleSheet">
+         <string notr="true">color: #9cdcfe; font-size: 11px;</string>
+        </property>
+        <property name="text">
+         <string notr="true">branch_dialog.rebase_hint</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QFormLayout" name="formLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="nameLabel">
+       <property name="text">
+        <string notr="true">branch_dialog.name</string>
+       </property>
+       <property name="buddy">
+        <cstring>nameEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="nameEdit"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="fromLabel">
+       <property name="text">
+        <string notr="true">branch_dialog.from</string>
+       </property>
+       <property name="buddy">
+        <cstring>fromEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="fromEdit">
+       <property name="text">
+        <string notr="true">HEAD</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="branchLabel">
+       <property name="text">
+        <string notr="true">branch_dialog.branch</string>
+       </property>
+       <property name="buddy">
+        <cstring>branchCombo</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="branchCombo"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="checkoutCheck">
+     <property name="text">
+      <string notr="true">branch_dialog.checkout_after</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="forceCheck">
+     <property name="text">
+      <string notr="true">branch_dialog.force_delete</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="noFfCheck">
+     <property name="text">
+      <string notr="true">branch_dialog.no_ff</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="squashCheck">
+     <property name="text">
+      <string notr="true">branch_dialog.squash</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QProgressBar" name="progressBar">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>14</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>14</height>
+      </size>
+     </property>
+     <property name="minimum">
+      <number>0</number>
+     </property>
+     <property name="maximum">
+      <number>0</number>
+     </property>
+     <property name="textVisible">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="statusLabel">
+     <property name="styleSheet">
+      <string notr="true">color: #9cdcfe; font-size: 11px;</string>
+     </property>
+     <property name="text">
+      <string notr="true"/>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

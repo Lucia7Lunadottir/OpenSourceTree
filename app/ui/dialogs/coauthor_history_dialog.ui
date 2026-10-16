@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CoAuthorHistoryDialog</class>
+ <widget class="QDialog" name="CoAuthorHistoryDialog">
+  <property name="minimumSize">
+   <size>
+    <width>600</width>
+    <height>420</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">coauthor_history.title</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <item>
+    <widget class="QLabel" name="infoLabel">
+     <property name="text">
+      <string notr="true">coauthor_history.loading</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QListWidget" name="commitList">
+     <property name="selectionMode">
+      <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="selectRow">
+     <item>
+      <widget class="QPushButton" name="selectAllButton">
+       <property name="text">
+        <string notr="true">coauthor_history.select_all</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="selectNoneButton">
+       <property name="text">
+        <string notr="true">coauthor_history.select_none</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="selectSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="warningLabel">
+     <property name="styleSheet">
+      <string notr="true">color: rgb(230, 170, 90);</string>
+     </property>
+     <property name="text">
+      <string notr="true"/>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonRow">
+     <item>
+      <widget class="QPushButton" name="primaryButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string notr="true">coauthor_history.remove_selected</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="standardButtons">
+        <set>QDialogButtonBox::StandardButton::Cancel</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>commitList</tabstop>
+  <tabstop>selectAllButton</tabstop>
+  <tabstop>selectNoneButton</tabstop>
+  <tabstop>primaryButton</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LfsDialog</class>
+ <widget class="QDialog" name="LfsDialog">
+  <property name="minimumSize">
+   <size>
+    <width>640</width>
+    <height>560</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">lfs.title</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <item>
+    <widget class="QLabel" name="trackedLabel">
+     <property name="font">
+      <font>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string notr="true">lfs.tracked</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QListWidget" name="patternsList">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>90</height>
+      </size>
+     </property>
+     <property name="alternatingRowColors">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="patternButtonRow">
+     <item>
+      <widget class="QPushButton" name="trackButton">
+       <property name="toolTip">
+        <string notr="true">lfs.track_tooltip</string>
+       </property>
+       <property name="text">
+        <string notr="true">lfs.track_btn</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="untrackButton">
+       <property name="toolTip">
+        <string notr="true">lfs.untrack_tooltip</string>
+       </property>
+       <property name="text">
+        <string notr="true">lfs.untrack_btn</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="patternButtonSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QFrame" name="separator">
+     <property name="styleSheet">
+      <string notr="true">color: #3c3c3c;</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Shape::HLine</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="filesLabel">
+     <property name="font">
+      <font>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string notr="true">lfs.files_title</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTreeWidget" name="fileTree">
+     <property name="toolTip">
+      <string notr="true">lfs.tree_tooltip</string>
+     </property>
+     <property name="alternatingRowColors">
+      <bool>true</bool>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+     </property>
+     <attribute name="headerStretchLastSection">
+      <bool>false</bool>
+     </attribute>
+     <column>
+      <property name="text">
+       <string notr="true">lfs.col_file</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string notr="true">lfs.col_size</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string notr="true">lfs.col_status</string>
+      </property>
+     </column>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="actionRow">
+     <item>
+      <widget class="QPushButton" name="downloadAllButton">
+       <property name="toolTip">
+        <string notr="true">lfs.download_all_tooltip</string>
+       </property>
+       <property name="text">
+        <string notr="true">lfs.download_all</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushObjectsButton">
+       <property name="toolTip">
+        <string notr="true">lfs.push_objs_tooltip</string>
+       </property>
+       <property name="text">
+        <string notr="true">lfs.push_objs</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pruneButton">
+       <property name="toolTip">
+        <string notr="true">lfs.prune_tooltip</string>
+       </property>
+       <property name="text">
+        <string notr="true">lfs.prune</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="refreshButton">
+       <property name="text">
+        <string notr="true">toolbar.refresh</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QProgressBar" name="progressBar">
+     <property name="maximum">
+      <number>0</number>
+     </property>
+     <property name="value">
+      <number>-1</number>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPlainTextEdit" name="output">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>110</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <family>Monospace</family>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>patternsList</tabstop>
+  <tabstop>trackButton</tabstop>
+  <tabstop>untrackButton</tabstop>
+  <tabstop>fileTree</tabstop>
+  <tabstop>downloadAllButton</tabstop>
+  <tabstop>pushObjectsButton</tabstop>
+  <tabstop>pruneButton</tabstop>
+  <tabstop>refreshButton</tabstop>
+  <tabstop>output</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

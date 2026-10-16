@@ -1,15 +1,20 @@
 import re
+from pathlib import Path
 
+from PyQt6 import uic
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
+    QDialog, QHBoxLayout, QPushButton,
     QLineEdit, QTableWidget, QTableWidgetItem, QHeaderView,
-    QMessageBox, QAbstractItemView, QWidget
+    QMessageBox, QWidget
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 
 from app.i18n import t
 from app.git.repo import GitRepo
+from app.ui.ui_translator import UiTranslator
+
+_UI_FILE = Path(__file__).with_name("remotes_dialog.ui")
 
 
 def _https_to_ssh(url: str) -> str:
@@ -25,65 +30,38 @@ def _is_https(url: str) -> bool:
 
 
 class RemotesDialog(QDialog):
+    # widgets created by loadUi from remotes_dialog.ui
+    table: QTableWidget
+    newNameEdit: QLineEdit
+    newUrlEdit: QLineEdit
+    addButton: QPushButton
+    closeButton: QPushButton
+
     def __init__(self, repo: GitRepo, parent=None):
         super().__init__(parent)
         self._repo = repo
-        self.setWindowTitle(t("remotes.title"))
-        self.setMinimumSize(680, 340)
-        self._setup_ui()
+        uic.loadUi(_UI_FILE, self)
+        UiTranslator().apply(self)
+        self._setup_table()
+        self.addButton.clicked.connect(self._on_add)
+        self.closeButton.clicked.connect(self.accept)
         self._load()
 
-    def _setup_ui(self):
-        layout = QVBoxLayout(self)
-
-        hint = QLabel(t("remotes.hint"))
-        hint.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
-        hint.setWordWrap(True)
-        layout.addWidget(hint)
-
-        # Table: Name | URL | Type | Actions
-        self._table = QTableWidget(0, 4)
-        self._table.setHorizontalHeaderLabels([
-            t("remotes.col_name"),
-            t("remotes.col_url"),
-            t("remotes.col_type"),
-            t("remotes.col_action"),
-        ])
-        hh = self._table.horizontalHeader()
+    def _setup_table(self):
+        # Column header texts are i18n keys in the .ui; per-section resize
+        # modes can't be expressed in Designer.
+        for col in range(self.table.columnCount()):
+            header_item = self.table.horizontalHeaderItem(col)
+            header_item.setText(t(header_item.text()))
+        hh = self.table.horizontalHeader()
         hh.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         hh.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         hh.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         hh.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
-        self._table.setColumnWidth(3, 140)
-        self._table.verticalHeader().setDefaultSectionSize(30)
-        self._table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self._table.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
-        self._table.verticalHeader().setVisible(False)
-        self._table.setAlternatingRowColors(True)
-        layout.addWidget(self._table)
-
-        # Add remote row
-        add_row = QHBoxLayout()
-        add_row.addWidget(QLabel(t("remotes.add_name")))
-        self._new_name = QLineEdit()
-        self._new_name.setPlaceholderText("origin")
-        self._new_name.setFixedWidth(90)
-        add_row.addWidget(self._new_name)
-        add_row.addWidget(QLabel(t("remotes.add_url")))
-        self._new_url = QLineEdit()
-        self._new_url.setPlaceholderText("https://github.com/user/repo.git  or  git@github.com:user/repo.git")
-        add_row.addWidget(self._new_url, 1)
-        add_btn = QPushButton(t("remotes.add_btn"))
-        add_btn.clicked.connect(self._on_add)
-        add_row.addWidget(add_btn)
-        layout.addLayout(add_row)
-
-        close_btn = QPushButton(t("conflict.close"))
-        close_btn.clicked.connect(self.accept)
-        layout.addWidget(close_btn, alignment=Qt.AlignmentFlag.AlignRight)
+        self.table.setColumnWidth(3, 140)
 
     def _load(self):
-        self._table.setRowCount(0)
+        self.table.setRowCount(0)
         try:
             remotes = self._repo.get_remotes()
         except Exception:
@@ -93,24 +71,24 @@ class RemotesDialog(QDialog):
             self._add_row(r.name, r.fetch_url)
 
     def _add_row(self, name: str, url: str):
-        row = self._table.rowCount()
-        self._table.insertRow(row)
+        row = self.table.rowCount()
+        self.table.insertRow(row)
 
         name_item = QTableWidgetItem(name)
         name_item.setFlags(name_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-        self._table.setItem(row, 0, name_item)
+        self.table.setItem(row, 0, name_item)
 
         url_item = QTableWidgetItem(url)
-        self._table.setItem(row, 1, url_item)
+        self.table.setItem(row, 1, url_item)
 
         https = _is_https(url)
         type_item = QTableWidgetItem("HTTPS ⚠" if https else "SSH ✓")
         type_item.setFlags(type_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
         type_item.setForeground(QColor("#f5a623") if https else QColor("#4ec9b0"))
-        self._table.setItem(row, 2, type_item)
+        self.table.setItem(row, 2, type_item)
 
         action_widget = self._make_action_cell(row, name, url)
-        self._table.setCellWidget(row, 3, action_widget)
+        self.table.setCellWidget(row, 3, action_widget)
 
     # Compact inline style that overrides the global "padding: 5px 14px" from style.qss
     _ICON_BTN  = "padding: 2px 5px; min-width: 0;"
@@ -165,7 +143,7 @@ class RemotesDialog(QDialog):
         self._load()
 
     def _on_save_url(self, row: int, name: str):
-        item = self._table.item(row, 1)
+        item = self.table.item(row, 1)
         if not item:
             return
         new_url = item.text().strip()
@@ -193,8 +171,8 @@ class RemotesDialog(QDialog):
             self._load()
 
     def _on_add(self):
-        name = self._new_name.text().strip()
-        url  = self._new_url.text().strip()
+        name = self.newNameEdit.text().strip()
+        url  = self.newUrlEdit.text().strip()
         if not name or not url:
             QMessageBox.warning(self, t("remotes.title"), t("remotes.add_empty"))
             return
@@ -203,6 +181,6 @@ class RemotesDialog(QDialog):
         except Exception as e:
             QMessageBox.critical(self, t("error.git_error"), str(e))
             return
-        self._new_name.clear()
-        self._new_url.clear()
+        self.newNameEdit.clear()
+        self.newUrlEdit.clear()
         self._load()

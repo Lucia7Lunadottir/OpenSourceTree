@@ -336,5 +336,11 @@
     "sequencer.conflict_status": "競合 — Working Copy パネルで解決してください",
     "conflict.revert_ready": "✓ すべての競合が解決されました — 「Revert を続行」をクリック",
     "conflict.abort_revert": "Revert を中止",
-    "conflict.continue_revert": "Revert を続行"
+    "conflict.continue_revert": "Revert を続行",
+    "coauthors.add_dialog.title": "共同作成者を追加",
+    "coauthors.add_dialog.name_label": "名前:",
+    "coauthors.add_dialog.name_placeholder": "姓 名",
+    "coauthors.add_dialog.email_label": "メール:",
+    "coauthors.add_dialog.email_placeholder": "email@example.com",
+    "coauthors.add_dialog.invalid": "名前と有効なメールアドレスを入力してください。"
 }

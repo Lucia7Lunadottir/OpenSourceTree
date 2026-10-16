@@ -1,10 +1,11 @@
 import os
 import subprocess
+from pathlib import Path
 
+from PyQt6 import uic
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QFormLayout, QLineEdit, QCheckBox,
-    QDialogButtonBox, QMessageBox, QLabel, QPushButton, QPlainTextEdit,
-    QProgressBar
+    QDialog, QLineEdit, QCheckBox, QDialogButtonBox, QMessageBox, QLabel,
+    QPushButton, QPlainTextEdit, QProgressBar
 )
 from PyQt6.QtCore import QThreadPool
 
@@ -12,92 +13,59 @@ from app.i18n import t
 from app.git.repo import GitRepo
 from app.git.runner import is_auth_error, find_terminal
 from app.config import ensure_agent_running, scan_default_ssh_keys, load_ssh_profiles
+from app.ui.ui_translator import UiTranslator
 from app.workers.git_worker import GitWorker
 from app.workers.streaming_worker import StreamingWorker
 
+_UI_FILE = Path(__file__).with_name("tag_dialog.ui")
+
 
 class TagDialog(QDialog):
+    # widgets created by loadUi from tag_dialog.ui
+    nameEdit: QLineEdit
+    refEdit: QLineEdit
+    messageEdit: QLineEdit
+    pushCheck: QCheckBox
+    progressBar: QProgressBar
+    outputEdit: QPlainTextEdit
+    statusLabel: QLabel
+    agentButton: QPushButton
+    terminalButton: QPushButton
+    buttonBox: QDialogButtonBox
+
     def __init__(self, repo: GitRepo, parent=None):
         super().__init__(parent)
         self._repo = repo
         self._tag_name = ""
         self._remote = "origin"
-        self.setWindowTitle(t("tag.title"))
-        self.setMinimumWidth(400)
-        self._setup_ui()
+        uic.loadUi(_UI_FILE, self)
+        UiTranslator().apply(self)
 
-    def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        form = QFormLayout()
-
-        self._name_edit = QLineEdit()
-        self._name_edit.setPlaceholderText("v1.0.0")
-        form.addRow(t("tag.name"), self._name_edit)
-
-        self._ref_edit = QLineEdit("HEAD")
-        form.addRow(t("tag.from_ref"), self._ref_edit)
-
-        self._message_edit = QLineEdit()
-        self._message_edit.setPlaceholderText(t("tag.message_placeholder"))
-        form.addRow(t("tag.message"), self._message_edit)
-
-        layout.addLayout(form)
-
-        self._push_check = QCheckBox(t("tag.push_after"))
-        self._push_check.setChecked(True)
-        layout.addWidget(self._push_check)
-
-        self._progress = QProgressBar()
-        self._progress.setRange(0, 0)
-        self._progress.setVisible(False)
-        layout.addWidget(self._progress)
-
-        self._output = QPlainTextEdit()
-        self._output.setReadOnly(True)
-        self._output.setMaximumHeight(90)
-        self._output.setVisible(False)
-        font = self._output.font()
-        font.setFamily("Monospace")
-        font.setPointSize(9)
-        self._output.setFont(font)
-        layout.addWidget(self._output)
-
-        self._status_label = QLabel("")
-        self._status_label.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
-        layout.addWidget(self._status_label)
-
-        self._agent_btn = QPushButton(t("remote.add_to_agent"))
-        self._agent_btn.setVisible(False)
-        self._agent_btn.clicked.connect(self._add_to_agent_and_retry)
-        layout.addWidget(self._agent_btn)
-
-        self._terminal_btn = QPushButton(t("remote.retry_terminal"))
-        self._terminal_btn.setVisible(False)
-        self._terminal_btn.clicked.connect(self._retry_in_terminal)
-        layout.addWidget(self._terminal_btn)
-
-        self._buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        self._ok_btn = self._buttons.button(QDialogButtonBox.StandardButton.Ok)
+        # shown only while pushing / after an auth error
+        for w in (self.progressBar, self.outputEdit, self.agentButton, self.terminalButton):
+            w.setVisible(False)
+        # a standard button's text can't be set in Designer
+        self._ok_btn = self.buttonBox.button(QDialogButtonBox.StandardButton.Ok)
         self._ok_btn.setText(t("tag.btn"))
-        self._buttons.accepted.connect(self._on_accept)
-        self._buttons.rejected.connect(self.reject)
-        layout.addWidget(self._buttons)
+
+        self.agentButton.clicked.connect(self._add_to_agent_and_retry)
+        self.terminalButton.clicked.connect(self._retry_in_terminal)
+        self.buttonBox.accepted.connect(self._on_accept)
+        self.buttonBox.rejected.connect(self.reject)
 
     def _set_busy(self, text: str):
-        self._status_label.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
-        self._status_label.setText(text)
+        self.statusLabel.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
+        self.statusLabel.setText(text)
         self._ok_btn.setEnabled(False)
 
     def _on_accept(self):
-        name = self._name_edit.text().strip()
+        name = self.nameEdit.text().strip()
         if not name:
             QMessageBox.warning(self, t("tag.title"), t("tag.error.empty_name"))
             return
         self._tag_name = name
-        ref     = self._ref_edit.text().strip() or "HEAD"
-        message = self._message_edit.text().strip()
+        ref     = self.refEdit.text().strip() or "HEAD"
+        message = self.messageEdit.text().strip()
 
         self._set_busy(t("tag.creating"))
         worker = GitWorker(self._repo.create_tag, name, ref, message)
@@ -106,18 +74,18 @@ class TagDialog(QDialog):
         QThreadPool.globalInstance().start(worker)
 
     def _after_create(self):
-        if not self._push_check.isChecked():
+        if not self.pushCheck.isChecked():
             self.accept()
             return
         self._start_push()
 
     def _start_push(self):
-        self._agent_btn.setVisible(False)
-        self._terminal_btn.setVisible(False)
-        self._output.clear()
-        self._output.setVisible(True)
-        self._progress.setRange(0, 0)
-        self._progress.setVisible(True)
+        self.agentButton.setVisible(False)
+        self.terminalButton.setVisible(False)
+        self.outputEdit.clear()
+        self.outputEdit.setVisible(True)
+        self.progressBar.setRange(0, 0)
+        self.progressBar.setVisible(True)
         self._set_busy(t("tag.pushing"))
 
         worker = StreamingWorker(
@@ -130,37 +98,37 @@ class TagDialog(QDialog):
 
     def _on_push_line(self, line: str):
         if line.strip():
-            self._output.appendPlainText(line.rstrip())
-            sb = self._output.verticalScrollBar()
+            self.outputEdit.appendPlainText(line.rstrip())
+            sb = self.outputEdit.verticalScrollBar()
             sb.setValue(sb.maximum())
 
     def _on_push_done(self, _):
-        self._progress.setRange(0, 1)
-        self._progress.setValue(1)
-        self._progress.setVisible(False)
+        self.progressBar.setRange(0, 1)
+        self.progressBar.setValue(1)
+        self.progressBar.setVisible(False)
         self.accept()
 
     def _on_push_error(self, error: str):
-        self._progress.setRange(0, 1)
-        self._progress.setValue(1)
-        self._progress.setVisible(False)
+        self.progressBar.setRange(0, 1)
+        self.progressBar.setValue(1)
+        self.progressBar.setVisible(False)
         self._ok_btn.setEnabled(True)
 
         if is_auth_error(error):
-            self._agent_btn.setVisible(True)
-            self._terminal_btn.setVisible(True)
-            self._status_label.setStyleSheet("color: rgb(255,100,100); font-size: 11px;")
-            self._status_label.setText(t("remote.auth_required"))
+            self.agentButton.setVisible(True)
+            self.terminalButton.setVisible(True)
+            self.statusLabel.setStyleSheet("color: rgb(255,100,100); font-size: 11px;")
+            self.statusLabel.setText(t("remote.auth_required"))
         else:
             lines = [l for l in error.splitlines() if l.strip()]
             short = lines[-1] if lines else t("remote.error")
-            self._status_label.setStyleSheet("color: rgb(255,100,100); font-size: 11px;")
-            self._status_label.setText(f"✗  {short}")
+            self.statusLabel.setStyleSheet("color: rgb(255,100,100); font-size: 11px;")
+            self.statusLabel.setText(f"✗  {short}")
 
     def _on_create_error(self, error: str):
         self._ok_btn.setEnabled(True)
-        self._status_label.setStyleSheet("color: rgb(255,100,100); font-size: 11px;")
-        self._status_label.setText("")
+        self.statusLabel.setStyleSheet("color: rgb(255,100,100); font-size: 11px;")
+        self.statusLabel.setText("")
         QMessageBox.critical(self, t("tag.error"), error)
 
     # ── SSH agent recovery ────────────────────────────────────────────────────
@@ -196,10 +164,10 @@ class TagDialog(QDialog):
             QMessageBox.warning(self, "ssh-agent", "Терминал не найден.")
             return
 
-        self._agent_btn.setVisible(False)
-        self._terminal_btn.setVisible(False)
-        self._status_label.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
-        self._status_label.setText(t("remote.opening_terminal"))
+        self.agentButton.setVisible(False)
+        self.terminalButton.setVisible(False)
+        self.statusLabel.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
+        self.statusLabel.setText(t("remote.opening_terminal"))
 
         cmd = (
             f"ssh-add {shlex.quote(key)}; "
@@ -216,24 +184,24 @@ class TagDialog(QDialog):
 
         check = subprocess.run(["ssh-add", "-l"], capture_output=True, text=True)
         if check.returncode != 0:
-            self._status_label.setText(t("remote.auth_required"))
-            self._agent_btn.setVisible(True)
-            self._terminal_btn.setVisible(True)
+            self.statusLabel.setText(t("remote.auth_required"))
+            self.agentButton.setVisible(True)
+            self.terminalButton.setVisible(True)
             return
 
-        self._output.clear()
+        self.outputEdit.clear()
         self._start_push()
 
     def _retry_in_terminal(self):
-        self._agent_btn.setVisible(False)
-        self._terminal_btn.setVisible(False)
-        self._status_label.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
-        self._status_label.setText(t("remote.opening_terminal"))
+        self.agentButton.setVisible(False)
+        self.terminalButton.setVisible(False)
+        self.statusLabel.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
+        self.statusLabel.setText(t("remote.opening_terminal"))
         try:
             self._repo.runner.run_in_terminal(
                 ["push", self._remote, f"refs/tags/{self._tag_name}"]
             )
-            self._status_label.setText(t("remote.done_terminal"))
+            self.statusLabel.setText(t("remote.done_terminal"))
             self.accept()
         except Exception as e:
             QMessageBox.critical(self, t("remote.terminal_error"), str(e))

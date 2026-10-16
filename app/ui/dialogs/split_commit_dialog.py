@@ -1,14 +1,20 @@
+from pathlib import Path
+
+from PyQt6 import uic
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox,
+    QDialog, QVBoxLayout, QLabel, QGroupBox,
     QTreeWidget, QTreeWidgetItem, QPushButton, QProgressBar,
     QDialogButtonBox, QSizePolicy, QFrame
 )
-from PyQt6.QtCore import Qt, QThreadPool
-from PyQt6.QtGui import QColor, QFont
+from PyQt6.QtCore import QThreadPool
+from PyQt6.QtGui import QColor
 
 from app.i18n import t
 from app.git.repo import GitRepo
+from app.ui.ui_translator import UiTranslator
 from app.workers.git_worker import GitWorker
+
+_UI_FILE = Path(__file__).with_name("split_commit_dialog.ui")
 
 GITHUB_FILE_MAX = 100 * 1024 * 1024   # 100 MB
 BATCH_LIMIT     = 1 * 1024 * 1024 * 1024  # 1 GB
@@ -63,6 +69,16 @@ def _compute_batches(file_sizes: list[tuple[str, int]]) -> list[list[str]]:
 
 
 class SplitCommitDialog(QDialog):
+    # widgets created by loadUi from split_commit_dialog.ui
+    subtitleLabel: QLabel
+    loadingLabel: QLabel
+    batchesFrame: QFrame
+    batchesLayout: QVBoxLayout
+    warnLabel: QLabel
+    progressBar: QProgressBar
+    primaryButton: QPushButton   # "Split"; objectName is a style.qss selector
+    buttonBox: QDialogButtonBox
+
     def __init__(self, repo: GitRepo, sha: str, parent=None):
         super().__init__(parent)
         self._repo = repo
@@ -71,66 +87,22 @@ class SplitCommitDialog(QDialog):
         self._file_sizes: list[tuple[str, int]] = []
         self._message = ""
 
-        self.setWindowTitle(t("split_commit.title"))
-        self.setMinimumWidth(600)
-        self.setMinimumHeight(400)
+        uic.loadUi(_UI_FILE, self)
+        UiTranslator().apply(self)
         self._setup_ui()
         self._load_data()
 
     # ------------------------------------------------------------------ UI
 
     def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setSpacing(8)
-
-        # Subtitle
-        self._subtitle = QLabel("…")
-        self._subtitle.setWordWrap(True)
-        font = QFont()
-        font.setPointSize(10)
-        self._subtitle.setFont(font)
-        layout.addWidget(self._subtitle)
-
-        # Spinner / loading label
-        self._loading_label = QLabel(t("split_commit.splitting") + " …")
-        self._loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._loading_label.setStyleSheet("color: #9cdcfe;")
-        layout.addWidget(self._loading_label)
-
-        # Batches container (hidden while loading)
-        self._batches_widget = QFrame()
-        self._batches_layout = QVBoxLayout(self._batches_widget)
-        self._batches_layout.setContentsMargins(0, 0, 0, 0)
-        self._batches_layout.setSpacing(4)
-        self._batches_widget.setVisible(False)
-        layout.addWidget(self._batches_widget, 1)
-
-        # Large-file warning area
-        self._warn_label = QLabel("")
-        self._warn_label.setWordWrap(True)
-        self._warn_label.setStyleSheet("color: #ce9178;")
-        self._warn_label.setVisible(False)
-        layout.addWidget(self._warn_label)
-
-        # Progress bar (hidden until Split clicked)
-        self._progress_bar = QProgressBar()
-        self._progress_bar.setRange(0, 0)   # indeterminate
-        self._progress_bar.setFixedHeight(14)
-        self._progress_bar.setTextVisible(False)
-        self._progress_bar.setVisible(False)
-        layout.addWidget(self._progress_bar)
-
-        # Buttons
-        self._button_box = QDialogButtonBox()
-        self._split_btn  = self._button_box.addButton(
-            t("split_commit.btn_split"), QDialogButtonBox.ButtonRole.AcceptRole
-        )
-        self._split_btn.setObjectName("primaryButton")
-        self._split_btn.setEnabled(False)
-        self._button_box.addButton(QDialogButtonBox.StandardButton.Cancel)
-        self._button_box.rejected.connect(self.reject)
-        self._split_btn.clicked.connect(self._on_split)
-        layout.addWidget(self._button_box)
+        # hidden while loading / until Split is clicked
+        for w in (self.batchesFrame, self.warnLabel, self.progressBar):
+            w.setVisible(False)
+        # Designer can't put a custom button inside a QDialogButtonBox:
+        # the .ui lays it out next to the box, here it moves into it.
+        self.buttonBox.addButton(self.primaryButton, QDialogButtonBox.ButtonRole.AcceptRole)
+        self.buttonBox.rejected.connect(self.reject)
+        self.primaryButton.clicked.connect(self._on_split)
 
     # ------------------------------------------------------------------ Data loading
 
@@ -148,13 +120,13 @@ class SplitCommitDialog(QDialog):
 
     def _on_data_ready(self, file_sizes: list[tuple[str, int]]):
         self._file_sizes = file_sizes
-        self._loading_label.setVisible(False)
+        self.loadingLabel.setVisible(False)
 
         self._batches = _compute_batches(file_sizes)
         total = sum(s for _, s in file_sizes)
         n = len(self._batches)
         short_sha = self._sha[:7]
-        self._subtitle.setText(
+        self.subtitleLabel.setText(
             t("split_commit.subtitle",
               sha=short_sha,
               message=self._message[:60],
@@ -164,18 +136,18 @@ class SplitCommitDialog(QDialog):
 
         self._populate_batches()
         self._check_warnings(file_sizes)
-        self._batches_widget.setVisible(True)
-        self._split_btn.setEnabled(len(self._batches) > 1)
+        self.batchesFrame.setVisible(True)
+        self.primaryButton.setEnabled(len(self._batches) > 1)
 
     def _on_load_error(self, err: str):
-        self._loading_label.setText(f"Error: {err}")
+        self.loadingLabel.setText(f"Error: {err}")
 
     # ------------------------------------------------------------------ Batch display
 
     def _populate_batches(self):
         # Clear previous content
-        while self._batches_layout.count():
-            item = self._batches_layout.takeAt(0)
+        while self.batchesLayout.count():
+            item = self.batchesLayout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
 
@@ -212,27 +184,27 @@ class SplitCommitDialog(QDialog):
             tree.setMinimumHeight(min(len(batch) * 22 + 4, 150))
             tree.setMaximumHeight(min(len(batch) * 22 + 4, 150))
             gl.addWidget(tree)
-            self._batches_layout.addWidget(group)
+            self.batchesLayout.addWidget(group)
 
     def _check_warnings(self, file_sizes: list[tuple[str, int]]):
         large = [(p, s) for p, s in file_sizes if s > GITHUB_FILE_MAX]
         if not large:
-            self._warn_label.setVisible(False)
+            self.warnLabel.setVisible(False)
             return
         lines = [
             t("split_commit.large_file_warn", path=p, size=_fmt_size(s))
             for p, s in large
         ]
-        self._warn_label.setText("\n".join(lines))
-        self._warn_label.setVisible(True)
+        self.warnLabel.setText("\n".join(lines))
+        self.warnLabel.setVisible(True)
 
     # ------------------------------------------------------------------ Split
 
     def _on_split(self):
         if not self._batches:
             return
-        self._split_btn.setEnabled(False)
-        self._progress_bar.setVisible(True)
+        self.primaryButton.setEnabled(False)
+        self.progressBar.setVisible(True)
 
         worker = GitWorker(
             self._repo.split_commit, self._sha, self._batches, self._message
@@ -242,11 +214,11 @@ class SplitCommitDialog(QDialog):
         QThreadPool.globalInstance().start(worker)
 
     def _on_split_done(self, _):
-        self._progress_bar.setVisible(False)
+        self.progressBar.setVisible(False)
         self.accept()
 
     def _on_split_error(self, err: str):
         from PyQt6.QtWidgets import QMessageBox
-        self._progress_bar.setVisible(False)
-        self._split_btn.setEnabled(True)
+        self.progressBar.setVisible(False)
+        self.primaryButton.setEnabled(True)
         QMessageBox.critical(self, t("error.git_error"), err)

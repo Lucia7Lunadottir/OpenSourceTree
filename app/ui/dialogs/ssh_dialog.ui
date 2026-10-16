@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SSHSettingsDialog</class>
+ <widget class="QDialog" name="SSHSettingsDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>860</width>
+    <height>620</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">ssh.title</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>8</number>
+   </property>
+   <item>
+    <widget class="QSplitter" name="splitter">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <widget class="QWidget" name="leftPanel">
+      <property name="minimumSize">
+       <size>
+        <width>230</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>230</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <layout class="QVBoxLayout" name="leftLayout">
+       <property name="spacing">
+        <number>4</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="profilesLabel">
+         <property name="styleSheet">
+          <string notr="true">font-weight: bold; color: rgb(203,166,247);</string>
+         </property>
+         <property name="text">
+          <string notr="true">ssh.profiles_label</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="profileList">
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="spacing">
+          <number>2</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="listButtonRow">
+         <item>
+          <widget class="QPushButton" name="addButton">
+           <property name="text">
+            <string notr="true">ssh.btn_add</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="removeButton">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string notr="true">ssh.btn_remove</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QPushButton" name="generateButton">
+         <property name="toolTip">
+          <string notr="true">ssh.btn_generate_tip</string>
+         </property>
+         <property name="text">
+          <string notr="true">ssh.btn_generate</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="importButton">
+         <property name="toolTip">
+          <string notr="true">ssh.btn_import_tip</string>
+         </property>
+         <property name="text">
+          <string notr="true">ssh.btn_import</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="editorPanel">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <layout class="QVBoxLayout" name="editorLayout">
+       <property name="spacing">
+        <number>8</number>
+       </property>
+       <property name="leftMargin">
+        <number>8</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QGroupBox" name="profileGroup">
+         <property name="title">
+          <string notr="true">ssh.group_profile</string>
+         </property>
+         <layout class="QFormLayout" name="profileForm">
+          <item row="0" column="0">
+           <widget class="QLabel" name="nameLabel">
+            <property name="text">
+             <string notr="true">ssh.field_name</string>
+            </property>
+            <property name="buddy">
+             <cstring>nameEdit</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="nameEdit">
+            <property name="placeholderText">
+             <string notr="true">ssh.field_name_placeholder</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="keyFileLabel">
+            <property name="text">
+             <string notr="true">ssh.field_key_file</string>
+            </property>
+            <property name="buddy">
+             <cstring>keyEdit</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <layout class="QHBoxLayout" name="keyRow">
+            <item>
+             <widget class="QLineEdit" name="keyEdit">
+              <property name="placeholderText">
+               <string notr="true">ssh.field_key_placeholder</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="browseKeyButton">
+              <property name="minimumSize">
+               <size>
+                <width>80</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string notr="true">ssh.keygen.browse</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="pubkeyFieldLabel">
+            <property name="text">
+             <string notr="true">ssh.field_pubkey</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="pubkeyLabel">
+            <property name="styleSheet">
+             <string notr="true">color: rgb(140,120,180); font-size: 11px;</string>
+            </property>
+            <property name="text">
+             <string notr="true"/>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="textInteractionFlags">
+             <set>Qt::TextInteractionFlag::TextSelectableByMouse</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QPushButton" name="copyPubkeyButton">
+            <property name="text">
+             <string notr="true">ssh.btn_copy_pubkey</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="connectionGroup">
+         <property name="title">
+          <string notr="true">ssh.group_connection</string>
+         </property>
+         <layout class="QFormLayout" name="connectionForm">
+          <item row="0" column="0">
+           <widget class="QLabel" name="aliasLabel">
+            <property name="text">
+             <string notr="true">ssh.field_alias</string>
+            </property>
+            <property name="buddy">
+             <cstring>aliasEdit</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="aliasEdit">
+            <property name="placeholderText">
+             <string notr="true">ssh.field_alias_placeholder</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="hostLabel">
+            <property name="text">
+             <string notr="true">ssh.field_host</string>
+            </property>
+            <property name="buddy">
+             <cstring>hostEdit</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="hostEdit">
+            <property name="placeholderText">
+             <string notr="true">ssh.field_host_placeholder</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="userLabel">
+            <property name="text">
+             <string notr="true">ssh.field_ssh_user</string>
+            </property>
+            <property name="buddy">
+             <cstring>userEdit</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="userEdit">
+            <property name="text">
+             <string notr="true">git</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="portLabel">
+            <property name="text">
+             <string notr="true">ssh.field_port</string>
+            </property>
+            <property name="buddy">
+             <cstring>portSpin</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QSpinBox" name="portSpin">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>65535</number>
+            </property>
+            <property name="value">
+             <number>22</number>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="strictLabel">
+            <property name="text">
+             <string notr="true">ssh.field_strict_check</string>
+            </property>
+            <property name="buddy">
+             <cstring>strictCombo</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QComboBox" name="strictCombo">
+            <property name="toolTip">
+             <string notr="true">ssh.strict_check_tip</string>
+            </property>
+            <item>
+             <property name="text">
+              <string notr="true">accept-new</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string notr="true">yes</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string notr="true">no</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="agentGroup">
+         <property name="title">
+          <string notr="true">ssh.group_agent</string>
+         </property>
+         <layout class="QVBoxLayout" name="agentLayout">
+          <item>
+           <widget class="QLabel" name="agentStatusLabel">
+            <property name="styleSheet">
+             <string notr="true">font-size: 11px; color: rgb(140,120,180);</string>
+            </property>
+            <property name="text">
+             <string notr="true">ssh.agent_status_checking</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListWidget" name="agentKeysList">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>72</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>72</height>
+             </size>
+            </property>
+            <property name="toolTip">
+             <string notr="true">ssh.agent_keys_list_tip</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="agentButtonRow">
+            <item>
+             <widget class="QPushButton" name="addAgentButton">
+              <property name="toolTip">
+               <string notr="true">ssh.btn_add_to_agent_tip</string>
+              </property>
+              <property name="text">
+               <string notr="true">ssh.btn_add_to_agent</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="removeAgentButton">
+              <property name="text">
+               <string notr="true">ssh.btn_remove_from_agent</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="clearAgentButton">
+              <property name="toolTip">
+               <string notr="true">ssh.btn_clear_agent_tip</string>
+              </property>
+              <property name="text">
+               <string notr="true">ssh.btn_clear_agent</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="refreshAgentButton">
+              <property name="minimumSize">
+               <size>
+                <width>30</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>30</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string notr="true">ssh.btn_refresh_agent_tip</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">padding: 2px 4px; min-width: 0;</string>
+              </property>
+              <property name="text">
+               <string notr="true">↻</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="agentHintLabel">
+            <property name="styleSheet">
+             <string notr="true">color: rgb(140,120,180); font-size: 11px;</string>
+            </property>
+            <property name="text">
+             <string notr="true">ssh.agent_hint</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="testGroup">
+         <property name="title">
+          <string notr="true">ssh.group_test</string>
+         </property>
+         <layout class="QVBoxLayout" name="testLayout">
+          <item>
+           <layout class="QHBoxLayout" name="testRow">
+            <item>
+             <widget class="QLabel" name="testCmdLabel">
+              <property name="text">
+               <string notr="true">ssh.test_cmd_label</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="testSpacer">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="testButton">
+              <property name="text">
+               <string notr="true">ssh.btn_test</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QTextEdit" name="testOutput">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>55</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>55</height>
+             </size>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+            <property name="placeholderText">
+             <string notr="true">ssh.test_placeholder</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="editorSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Save</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

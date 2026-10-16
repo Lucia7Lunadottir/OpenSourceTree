@@ -336,5 +336,11 @@
     "sequencer.conflict_status": "Conflitos — resolva-os no painel Working Copy",
     "conflict.revert_ready": "✓ Todos os conflitos resolvidos — clique em «Continuar Revert»",
     "conflict.abort_revert": "Abortar Revert",
-    "conflict.continue_revert": "Continuar Revert"
+    "conflict.continue_revert": "Continuar Revert",
+    "coauthors.add_dialog.title": "Adicionar coautor",
+    "coauthors.add_dialog.name_label": "Nome:",
+    "coauthors.add_dialog.name_placeholder": "Nome Sobrenome",
+    "coauthors.add_dialog.email_label": "E-mail:",
+    "coauthors.add_dialog.email_placeholder": "email@example.com",
+    "coauthors.add_dialog.invalid": "Informe um nome e um e-mail válido."
 }

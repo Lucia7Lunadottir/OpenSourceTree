@@ -1,106 +1,73 @@
+from pathlib import Path
+
+from PyQt6 import uic
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QFormLayout, QHBoxLayout,
-    QLineEdit, QCheckBox, QPushButton, QLabel,
+    QDialog, QLineEdit, QCheckBox, QPushButton, QLabel,
     QDialogButtonBox, QMessageBox, QGroupBox, QComboBox
 )
-from PyQt6.QtCore import Qt
 
 from app.git.repo import GitRepo
 from app.config import load_accounts
 from app.i18n import t
+from app.ui.ui_translator import UiTranslator
+
+_UI_FILE = Path(__file__).with_name("identity_dialog.ui")
 
 
 class IdentityDialog(QDialog):
     """Configure git user.name and user.email (global or per-repo)."""
 
+    # widgets created by loadUi from identity_dialog.ui
+    globalCheck: QCheckBox
+    globalGroup: QGroupBox
+    globalNameEdit: QLineEdit
+    globalEmailEdit: QLineEdit
+    repoGroup: QGroupBox
+    overrideCheck: QCheckBox
+    repoNameEdit: QLineEdit
+    repoEmailEdit: QLineEdit
+    fillGroup: QGroupBox
+    accountCombo: QComboBox
+    fillButton: QPushButton
+    hintLabel: QLabel
+    buttonBox: QDialogButtonBox
+
     def __init__(self, repo: GitRepo | None = None, parent=None):
         super().__init__(parent)
         self._repo = repo
-        self.setWindowTitle(t("identity.title"))
-        self.setMinimumWidth(440)
         self._setup_ui()
         self._load_current()
 
     def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setSpacing(10)
+        uic.loadUi(_UI_FILE, self)
+        repo_args = {"name": self._repo.get_repo_name()} if self._repo is not None else {}
+        UiTranslator({"repoGroup": repo_args}).apply(self)
 
-        # Scope selector
-        scope_row = QHBoxLayout()
-        scope_label = QLabel(t("identity.scope_label"))
-        self._global_check = QCheckBox(t("identity.scope_global"))
-        self._global_check.setChecked(True)
-        self._global_check.stateChanged.connect(self._on_scope_changed)
-        scope_row.addWidget(scope_label)
-        scope_row.addWidget(self._global_check)
-        scope_row.addStretch()
-        layout.addLayout(scope_row)
-
+        self.globalCheck.stateChanged.connect(self._on_scope_changed)
         if self._repo is None:
-            self._global_check.setChecked(True)
-            self._global_check.setEnabled(False)
-
-        # Global identity group
-        self._global_group = QGroupBox(t("identity.group_global"))
-        gf = QFormLayout(self._global_group)
-        self._global_name = QLineEdit()
-        self._global_name.setPlaceholderText(t("identity.field_name_placeholder"))
-        gf.addRow(t("identity.field_name"), self._global_name)
-        self._global_email = QLineEdit()
-        self._global_email.setPlaceholderText(t("identity.field_email_placeholder"))
-        gf.addRow(t("identity.field_email"), self._global_email)
-        layout.addWidget(self._global_group)
-
-        # Per-repo group (shown only when repo is set and scope is local)
-        if self._repo is not None:
-            self._repo_group = QGroupBox(t("identity.group_repo", name=self._repo.get_repo_name()))
-            rf = QFormLayout(self._repo_group)
-
-            self._override_check = QCheckBox(t("identity.override_check"))
-            self._override_check.stateChanged.connect(self._on_override_changed)
-            rf.addRow("", self._override_check)
-
-            self._repo_name = QLineEdit()
-            self._repo_name.setPlaceholderText(t("identity.repo_name_placeholder"))
-            self._repo_name.setEnabled(False)
-            rf.addRow(t("identity.field_name"), self._repo_name)
-
-            self._repo_email = QLineEdit()
-            self._repo_email.setPlaceholderText(t("identity.repo_name_placeholder"))
-            self._repo_email.setEnabled(False)
-            rf.addRow(t("identity.field_email"), self._repo_email)
-
-            layout.addWidget(self._repo_group)
+            self.globalCheck.setChecked(True)
+            self.globalCheck.setEnabled(False)
+            # Per-repo group is shown only when a repo is set
+            self.repoGroup.hide()
+        else:
+            self.overrideCheck.stateChanged.connect(self._on_override_changed)
 
         # Fill from account
         accounts = load_accounts()
         if accounts:
-            fill_group = QGroupBox(t("identity.group_fill"))
-            fl = QFormLayout(fill_group)
-            self._account_combo = QComboBox()
-            self._account_combo.addItem(t("identity.account_placeholder"), None)
+            self.accountCombo.addItem(t("identity.account_placeholder"), None)
             for acc in accounts:
                 label = acc.label or acc.username or acc.email
-                self._account_combo.addItem(label, acc)
-            fill_btn = QPushButton(t("identity.btn_fill"))
-            fill_btn.clicked.connect(self._fill_from_account)
-            row = QHBoxLayout()
-            row.addWidget(self._account_combo)
-            row.addWidget(fill_btn)
-            fl.addRow(t("identity.field_account"), row)
-            layout.addWidget(fill_group)
+                self.accountCombo.addItem(label, acc)
+            self.fillButton.clicked.connect(self._fill_from_account)
+        else:
+            self.fillGroup.hide()
 
-        hint = QLabel(t("identity.hint"))
-        hint.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
-        layout.addWidget(hint)
-
-        btns = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
-        )
-        btns.button(QDialogButtonBox.StandardButton.Save).setText(t("identity.btn_save"))
-        btns.accepted.connect(self._save)
-        btns.rejected.connect(self.reject)
-        layout.addWidget(btns)
+        self.buttonBox.button(QDialogButtonBox.StandardButton.Save).setText(t("identity.btn_save"))
+        self.buttonBox.accepted.connect(self._save)
+        self.buttonBox.rejected.connect(self.reject)
+        # Fit the height to the groups actually shown (independent of the .ui geometry)
+        self.adjustSize()
 
     def _load_current(self):
         # Always show global values
@@ -120,41 +87,41 @@ class IdentityDialog(QDialog):
             g_name  = _git_global("user.name")
             g_email = _git_global("user.email")
 
-        self._global_name.setText(g_name)
-        self._global_email.setText(g_email)
+        self.globalNameEdit.setText(g_name)
+        self.globalEmailEdit.setText(g_email)
 
         if self._repo is not None:
             l_name, l_email = self._repo.get_identity(global_=False)
             has_local = bool(l_name or l_email)
-            self._override_check.setChecked(has_local)
-            self._repo_name.setText(l_name)
-            self._repo_email.setText(l_email)
-            self._repo_name.setEnabled(has_local)
-            self._repo_email.setEnabled(has_local)
+            self.overrideCheck.setChecked(has_local)
+            self.repoNameEdit.setText(l_name)
+            self.repoEmailEdit.setText(l_email)
+            self.repoNameEdit.setEnabled(has_local)
+            self.repoEmailEdit.setEnabled(has_local)
 
     def _on_scope_changed(self):
         pass   # both groups always visible
 
     def _on_override_changed(self, state):
         enabled = bool(state)
-        self._repo_name.setEnabled(enabled)
-        self._repo_email.setEnabled(enabled)
+        self.repoNameEdit.setEnabled(enabled)
+        self.repoEmailEdit.setEnabled(enabled)
         if not enabled:
-            self._repo_name.clear()
-            self._repo_email.clear()
+            self.repoNameEdit.clear()
+            self.repoEmailEdit.clear()
 
     def _fill_from_account(self):
-        acc = self._account_combo.currentData()
+        acc = self.accountCombo.currentData()
         if acc is None:
             return
         if acc.username:
-            self._global_name.setText(acc.username)
+            self.globalNameEdit.setText(acc.username)
         if acc.email:
-            self._global_email.setText(acc.email)
+            self.globalEmailEdit.setText(acc.email)
 
     def _save(self):
-        g_name  = self._global_name.text().strip()
-        g_email = self._global_email.text().strip()
+        g_name  = self.globalNameEdit.text().strip()
+        g_email = self.globalEmailEdit.text().strip()
 
         if not g_name or not g_email:
             QMessageBox.warning(self, t("identity.error.title"), t("identity.error.empty"))
@@ -171,10 +138,10 @@ class IdentityDialog(QDialog):
         except Exception as e:
             errors.append(t("identity.error.global_prefix", error=str(e)))
 
-        if self._repo is not None and hasattr(self, "_override_check"):
-            if self._override_check.isChecked():
-                r_name  = self._repo_name.text().strip()
-                r_email = self._repo_email.text().strip()
+        if self._repo is not None:
+            if self.overrideCheck.isChecked():
+                r_name  = self.repoNameEdit.text().strip()
+                r_email = self.repoEmailEdit.text().strip()
                 try:
                     self._repo.set_identity(r_name, r_email, global_=False)
                 except Exception as e:

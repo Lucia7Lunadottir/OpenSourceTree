@@ -336,5 +336,11 @@
     "sequencer.conflict_status": "Конфлікти — розв'яжіть їх у панелі Working Copy",
     "conflict.revert_ready": "✓ Усі конфлікти розв'язано — натисніть «Продовжити Revert»",
     "conflict.abort_revert": "Перервати Revert",
-    "conflict.continue_revert": "Продовжити Revert"
+    "conflict.continue_revert": "Продовжити Revert",
+    "coauthors.add_dialog.title": "Додати співавтора",
+    "coauthors.add_dialog.name_label": "Ім'я:",
+    "coauthors.add_dialog.name_placeholder": "Ім'я Прізвище",
+    "coauthors.add_dialog.email_label": "Email:",
+    "coauthors.add_dialog.email_placeholder": "email@example.com",
+    "coauthors.add_dialog.invalid": "Введіть ім'я та коректний email."
 }

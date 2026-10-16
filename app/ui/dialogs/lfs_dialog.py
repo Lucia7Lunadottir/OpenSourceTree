@@ -1,19 +1,23 @@
 import os
 import fnmatch as _fnmatch
+from pathlib import Path
 
+from PyQt6 import uic
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QTreeWidget, QTreeWidgetItem, QProgressBar, QPlainTextEdit,
-    QInputDialog, QMessageBox, QAbstractItemView, QFrame,
-    QListWidget, QListWidgetItem, QSplitter
+    QDialog, QPushButton, QTreeWidget, QTreeWidgetItem, QProgressBar,
+    QPlainTextEdit, QInputDialog, QMessageBox, QListWidget, QListWidgetItem,
+    QHeaderView
 )
 from PyQt6.QtCore import Qt, QThreadPool
-from PyQt6.QtGui import QFont, QColor
+from PyQt6.QtGui import QColor
 
 from app.i18n import t
 from app.git.repo import GitRepo
+from app.ui.ui_translator import UiTranslator
 from app.workers.git_worker import GitWorker
 from app.workers.streaming_worker import StreamingWorker
+
+_UI_FILE = Path(__file__).with_name("lfs_dialog.ui")
 
 LFS_ICON = "⬡"   # hollow hexagon — LFS badge
 
@@ -42,108 +46,62 @@ def matches_lfs(path: str, patterns: list[str]) -> bool:
 
 
 class LfsDialog(QDialog):
+    # widgets created by loadUi from lfs_dialog.ui
+    patternsList: QListWidget
+    trackButton: QPushButton
+    untrackButton: QPushButton
+    fileTree: QTreeWidget
+    downloadAllButton: QPushButton
+    pushObjectsButton: QPushButton
+    pruneButton: QPushButton
+    refreshButton: QPushButton
+    progressBar: QProgressBar
+    output: QPlainTextEdit
+
     def __init__(self, repo: GitRepo, parent=None):
         super().__init__(parent)
         self._repo = repo
-        self.setWindowTitle(t("lfs.title"))
-        self.setMinimumSize(640, 560)
+        uic.loadUi(_UI_FILE, self)
+        UiTranslator().apply(self)
         self._setup_ui()
         self._refresh()
 
     # ----------------------------------------------------------------- UI
 
     def _setup_ui(self):
-        layout = QVBoxLayout(self)
+        # Column header texts are i18n keys in the .ui; per-section resize
+        # modes can't be expressed in Designer.
+        header_item = self.fileTree.headerItem()
+        for col in range(self.fileTree.columnCount()):
+            header_item.setText(col, t(header_item.text(col)))
+        hdr = self.fileTree.header()
+        hdr.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        hdr.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        hdr.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
 
-        # ── Tracked patterns ──────────────────────────────────────────
-        layout.addWidget(QLabel(f"<b>{t('lfs.tracked')}</b>"))
+        # hidden until an operation runs
+        self.progressBar.setVisible(False)
+        self.output.setVisible(False)
 
-        self._patterns_list = QListWidget()
-        self._patterns_list.setMaximumHeight(90)
-        self._patterns_list.setAlternatingRowColors(True)
-        layout.addWidget(self._patterns_list)
-
-        pat_btn_row = QHBoxLayout()
-        self._track_btn   = QPushButton(t("lfs.track_btn"))
-        self._untrack_btn = QPushButton(t("lfs.untrack_btn"))
-        self._track_btn.setToolTip(t("lfs.track_tooltip"))
-        self._untrack_btn.setToolTip(t("lfs.untrack_tooltip"))
-        self._track_btn.clicked.connect(self._on_track)
-        self._untrack_btn.clicked.connect(self._on_untrack)
-        pat_btn_row.addWidget(self._track_btn)
-        pat_btn_row.addWidget(self._untrack_btn)
-        pat_btn_row.addStretch()
-        layout.addLayout(pat_btn_row)
-
-        sep = QFrame()
-        sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("color: #3c3c3c;")
-        layout.addWidget(sep)
-
-        # ── File table ────────────────────────────────────────────────
-        layout.addWidget(QLabel(f"<b>{t('lfs.files_title')}</b>"))
-
-        self._tree = QTreeWidget()
-        self._tree.setColumnCount(3)
-        self._tree.setHeaderLabels([
-            t("lfs.col_file"), t("lfs.col_size"), t("lfs.col_status")
-        ])
-        hdr = self._tree.header()
-        hdr.setStretchLastSection(False)
-        hdr.setSectionResizeMode(0, hdr.ResizeMode.Stretch)
-        hdr.setSectionResizeMode(1, hdr.ResizeMode.ResizeToContents)
-        hdr.setSectionResizeMode(2, hdr.ResizeMode.ResizeToContents)
-        self._tree.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self._tree.setAlternatingRowColors(True)
-        self._tree.setToolTip(t("lfs.tree_tooltip"))
-        self._tree.itemDoubleClicked.connect(self._on_file_dbl_click)
-        layout.addWidget(self._tree)
-
-        # ── Action buttons ────────────────────────────────────────────
-        action_row = QHBoxLayout()
-        self._dl_all_btn  = QPushButton(t("lfs.download_all"))
-        self._push_btn    = QPushButton(t("lfs.push_objs"))
-        self._prune_btn   = QPushButton(t("lfs.prune"))
-        self._refresh_btn = QPushButton(t("toolbar.refresh"))
-
-        self._dl_all_btn.setToolTip(t("lfs.download_all_tooltip"))
-        self._push_btn.setToolTip(t("lfs.push_objs_tooltip"))
-        self._prune_btn.setToolTip(t("lfs.prune_tooltip"))
-
-        for btn in (self._dl_all_btn, self._push_btn,
-                    self._prune_btn, self._refresh_btn):
-            action_row.addWidget(btn)
-        layout.addLayout(action_row)
-
-        self._dl_all_btn.clicked.connect(self._on_download_all)
-        self._push_btn.clicked.connect(self._on_push)
-        self._prune_btn.clicked.connect(self._on_prune)
-        self._refresh_btn.clicked.connect(self._refresh)
-
-        # ── Progress + output ─────────────────────────────────────────
-        self._progress = QProgressBar()
-        self._progress.setRange(0, 0)
-        self._progress.setVisible(False)
-        layout.addWidget(self._progress)
-
-        self._output = QPlainTextEdit()
-        self._output.setReadOnly(True)
-        self._output.setMaximumHeight(110)
-        self._output.setFont(QFont("Monospace", 9))
-        self._output.setVisible(False)
-        layout.addWidget(self._output)
+        self.trackButton.clicked.connect(self._on_track)
+        self.untrackButton.clicked.connect(self._on_untrack)
+        self.fileTree.itemDoubleClicked.connect(self._on_file_dbl_click)
+        self.downloadAllButton.clicked.connect(self._on_download_all)
+        self.pushObjectsButton.clicked.connect(self._on_push)
+        self.pruneButton.clicked.connect(self._on_prune)
+        self.refreshButton.clicked.connect(self._refresh)
 
     # ----------------------------------------------------------------- Data
 
     def _refresh(self):
         # Patterns list
         patterns = self._repo.lfs_tracked_patterns()
-        self._patterns_list.clear()
+        self.patternsList.clear()
         for pat in patterns:
-            self._patterns_list.addItem(QListWidgetItem(pat))
+            self.patternsList.addItem(QListWidgetItem(pat))
 
         # File tree
-        self._tree.clear()
+        self.fileTree.clear()
         entries = self._repo.lfs_list_files()
         for entry in entries:
             label = f"{LFS_ICON} {entry.path}"
@@ -155,7 +113,7 @@ class LfsDialog(QDialog):
                 item.setToolTip(0, t("lfs.pointer_tooltip"))
             else:
                 item.setForeground(2, QColor("#4ec9b0"))   # teal ok
-            self._tree.addTopLevelItem(item)
+            self.fileTree.addTopLevelItem(item)
 
     # ----------------------------------------------------------------- Slots
 
@@ -171,7 +129,7 @@ class LfsDialog(QDialog):
                 QMessageBox.critical(self, t("lfs.error"), str(e))
 
     def _on_untrack(self):
-        item = self._patterns_list.currentItem()
+        item = self.patternsList.currentItem()
         if not item:
             QMessageBox.information(self, t("lfs.untrack_btn"),
                                     t("lfs.untrack_select_hint"))
@@ -205,16 +163,16 @@ class LfsDialog(QDialog):
         QThreadPool.globalInstance().start(worker)
 
     def _on_prune_done(self, msg: str):
-        self._output.setVisible(True)
-        self._output.appendPlainText(msg)
+        self.output.setVisible(True)
+        self.output.appendPlainText(msg)
         self._set_busy(False)
         self._refresh()
 
     # ----------------------------------------------------------------- Helpers
 
     def _run_streaming(self, fn):
-        self._output.clear()
-        self._output.setVisible(True)
+        self.output.clear()
+        self.output.setVisible(True)
         self._set_busy(True)
         worker = StreamingWorker(fn)
         worker.signals.progress_text.connect(self._on_stream_line)
@@ -224,8 +182,8 @@ class LfsDialog(QDialog):
 
     def _on_stream_line(self, line: str):
         if line.strip():
-            self._output.appendPlainText(line)
-            sb = self._output.verticalScrollBar()
+            self.output.appendPlainText(line)
+            sb = self.output.verticalScrollBar()
             sb.setValue(sb.maximum())
 
     def _on_stream_done(self):
@@ -234,11 +192,11 @@ class LfsDialog(QDialog):
 
     def _on_stream_error(self, error: str):
         self._set_busy(False)
-        self._output.appendPlainText(f"[Error] {error}")
+        self.output.appendPlainText(f"[Error] {error}")
         QMessageBox.critical(self, t("lfs.error"), error)
 
     def _set_busy(self, busy: bool):
-        self._progress.setVisible(busy)
-        for btn in (self._dl_all_btn, self._push_btn, self._prune_btn,
-                    self._track_btn, self._untrack_btn, self._refresh_btn):
+        self.progressBar.setVisible(busy)
+        for btn in (self.downloadAllButton, self.pushObjectsButton, self.pruneButton,
+                    self.trackButton, self.untrackButton, self.refreshButton):
             btn.setEnabled(not busy)

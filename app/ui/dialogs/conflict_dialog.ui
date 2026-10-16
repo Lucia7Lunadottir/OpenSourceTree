@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ConflictDialog</class>
+ <widget class="QDialog" name="ConflictDialog">
+  <property name="minimumSize">
+   <size>
+    <width>700</width>
+    <height>500</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">conflict.title</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <item>
+    <widget class="QFrame" name="conflictInfo">
+     <layout class="QHBoxLayout" name="infoRow" stretch="0,1">
+      <property name="leftMargin">
+       <number>8</number>
+      </property>
+      <property name="topMargin">
+       <number>6</number>
+      </property>
+      <property name="rightMargin">
+       <number>8</number>
+      </property>
+      <property name="bottomMargin">
+       <number>6</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="warnIconLabel">
+        <property name="text">
+         <string notr="true">⚠</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="infoLabel">
+        <property name="styleSheet">
+         <string notr="true">color: #dcdcaa; font-weight: bold;</string>
+        </property>
+        <property name="text">
+         <string notr="true"/>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="hintLabel">
+     <property name="styleSheet">
+      <string notr="true">color: #9cdcfe; font-size: 11px;</string>
+     </property>
+     <property name="text">
+      <string notr="true">conflict.hint</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPlainTextEdit" name="editor">
+     <property name="font">
+      <font>
+       <family>Monospace</family>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="lineWrapMode">
+      <enum>QPlainTextEdit::LineWrapMode::NoWrap</enum>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="legendRow">
+     <item>
+      <widget class="QLabel" name="oursDot">
+       <property name="styleSheet">
+        <string notr="true">color: #ff8080;</string>
+       </property>
+       <property name="text">
+        <string notr="true">●</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="oursLegendLabel">
+       <property name="text">
+        <string notr="true">conflict.legend_ours</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="oursSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Policy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>12</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="sepDot">
+       <property name="styleSheet">
+        <string notr="true">color: #e0d060;</string>
+       </property>
+       <property name="text">
+        <string notr="true">●</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="sepLegendLabel">
+       <property name="text">
+        <string notr="true">conflict.legend_sep</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="sepSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Policy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>12</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="theirsDot">
+       <property name="styleSheet">
+        <string notr="true">color: #80cc80;</string>
+       </property>
+       <property name="text">
+        <string notr="true">●</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="theirsLegendLabel">
+       <property name="text">
+        <string notr="true">conflict.legend_theirs</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="theirsSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Policy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>12</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <spacer name="legendStretch">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QFrame" name="separator">
+     <property name="frameShape">
+      <enum>QFrame::Shape::HLine</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonRow">
+     <item>
+      <widget class="QPushButton" name="oursButton">
+       <property name="toolTip">
+        <string notr="true">conflict.accept_ours_tip</string>
+       </property>
+       <property name="text">
+        <string notr="true">conflict.accept_ours</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="theirsButton">
+       <property name="toolTip">
+        <string notr="true">conflict.accept_theirs_tip</string>
+       </property>
+       <property name="text">
+        <string notr="true">conflict.accept_theirs</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="editorButton">
+       <property name="toolTip">
+        <string notr="true">conflict.open_editor_tip</string>
+       </property>
+       <property name="text">
+        <string notr="true">conflict.open_editor</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="buttonSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="primaryButton">
+       <property name="toolTip">
+        <string notr="true">conflict.mark_resolved_tip</string>
+       </property>
+       <property name="text">
+        <string notr="true">conflict.mark_resolved</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="closeButton">
+       <property name="text">
+        <string notr="true">conflict.close</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>editor</tabstop>
+  <tabstop>oursButton</tabstop>
+  <tabstop>theirsButton</tabstop>
+  <tabstop>editorButton</tabstop>
+  <tabstop>primaryButton</tabstop>
+  <tabstop>closeButton</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

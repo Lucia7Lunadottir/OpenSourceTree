@@ -336,5 +336,11 @@
     "sequencer.conflict_status": "Konflikte — im Working-Copy-Panel lösen",
     "conflict.revert_ready": "✓ Alle Konflikte gelöst — „Revert fortsetzen“ klicken",
     "conflict.abort_revert": "Revert abbrechen",
-    "conflict.continue_revert": "Revert fortsetzen"
+    "conflict.continue_revert": "Revert fortsetzen",
+    "coauthors.add_dialog.title": "Co-Autor hinzufügen",
+    "coauthors.add_dialog.name_label": "Name:",
+    "coauthors.add_dialog.name_placeholder": "Vorname Nachname",
+    "coauthors.add_dialog.email_label": "E-Mail:",
+    "coauthors.add_dialog.email_placeholder": "email@example.com",
+    "coauthors.add_dialog.invalid": "Geben Sie einen Namen und eine gültige E-Mail-Adresse ein."
 }

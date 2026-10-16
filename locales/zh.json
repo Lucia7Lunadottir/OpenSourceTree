@@ -336,5 +336,11 @@
     "sequencer.conflict_status": "存在冲突 — 请在 Working Copy 面板中解决",
     "conflict.revert_ready": "✓ 所有冲突已解决 — 点击「继续 Revert」",
     "conflict.abort_revert": "中止 Revert",
-    "conflict.continue_revert": "继续 Revert"
+    "conflict.continue_revert": "继续 Revert",
+    "coauthors.add_dialog.title": "添加共同作者",
+    "coauthors.add_dialog.name_label": "姓名:",
+    "coauthors.add_dialog.name_placeholder": "姓名",
+    "coauthors.add_dialog.email_label": "邮箱:",
+    "coauthors.add_dialog.email_placeholder": "email@example.com",
+    "coauthors.add_dialog.invalid": "请输入姓名和有效的邮箱地址。"
 }
