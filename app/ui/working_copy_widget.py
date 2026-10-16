@@ -149,6 +149,9 @@ class FileListWidget(QListWidget):
 
 # ── Tree view ─────────────────────────────────────────────────────────────────
 
+_DIR_KEY_ROLE = Qt.ItemDataRole.UserRole + 1
+
+
 class FileTreeWidget(QTreeWidget):
     file_selected = pyqtSignal(str, bool)
 
@@ -174,10 +177,16 @@ class FileTreeWidget(QTreeWidget):
         self._filter_tree(text.strip().lower())
 
     def get_entries_under(self, item: QTreeWidgetItem) -> list[FileStatusEntry]:
-        """Recursively collect all file entries under a directory node."""
+        """Recursively collect file entries under a directory node.
+
+        Files hidden by the filter are skipped: acting on a folder must only
+        touch what the user can see in it.
+        """
         result = []
         for i in range(item.childCount()):
             child = item.child(i)
+            if child.isHidden():
+                continue
             entry = child.data(0, Qt.ItemDataRole.UserRole)
             if entry is not None:
                 result.append(entry)
@@ -186,11 +195,17 @@ class FileTreeWidget(QTreeWidget):
         return result
 
     def selected_entries(self) -> list[FileStatusEntry]:
-        return [
-            item.data(0, Qt.ItemDataRole.UserRole)
-            for item in self.selectedItems()
-            if item.data(0, Qt.ItemDataRole.UserRole) is not None
-        ]
+        """Selected files plus every visible file under each selected folder (no duplicates)."""
+        result: list[FileStatusEntry] = []
+        seen: set[str] = set()
+        for item in self.selectedItems():
+            entry = item.data(0, Qt.ItemDataRole.UserRole)
+            found = [entry] if entry is not None else self.get_entries_under(item)
+            for e in found:
+                if e.path not in seen:
+                    seen.add(e.path)
+                    result.append(e)
+        return result
 
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.RightButton:
@@ -204,6 +219,18 @@ class FileTreeWidget(QTreeWidget):
         cur = self.currentItem()
         cur_entry = cur.data(0, Qt.ItemDataRole.UserRole) if cur else None
         cur_path = cur_entry.path if cur_entry else None
+
+        # Remember which folders the user has open/closed so a refresh doesn't reset them
+        expanded_state: dict[str, bool] = {}
+        stack = [self.invisibleRootItem()]
+        while stack:
+            node = stack.pop()
+            for i in range(node.childCount()):
+                child = node.child(i)
+                key = child.data(0, _DIR_KEY_ROLE)
+                if key is not None:
+                    expanded_state[key] = child.isExpanded()
+                    stack.append(child)
 
         self.setUpdatesEnabled(False)
         self.blockSignals(True)
@@ -223,12 +250,8 @@ class FileTreeWidget(QTreeWidget):
                     node.setText(0, f"📁  {d}")
                     node.setForeground(0, QColor("#7a6e9e"))
                     node.setData(0, Qt.ItemDataRole.UserRole, None)
-                    node.setExpanded(True)
-                    # Dir nodes not selectable as files, but still receive right-click
-                    node.setFlags(
-                        (node.flags() & ~Qt.ItemFlag.ItemIsSelectable)
-                        | Qt.ItemFlag.ItemIsEnabled
-                    )
+                    node.setData(0, _DIR_KEY_ROLE, dir_key)
+                    node.setExpanded(expanded_state.get(dir_key, True))
                     dir_items[dir_key] = node
                 parent = dir_items[dir_key]
 
@@ -276,7 +299,7 @@ class FileTreeWidget(QTreeWidget):
             if self._filter_item(item.child(i), text):
                 any_vis = True
         item.setHidden(not any_vis)
-        if any_vis:
+        if any_vis and text:   # only an active search opens folders; an empty filter must keep the user's state
             item.setExpanded(True)
         return any_vis
 
@@ -611,6 +634,19 @@ class WorkingCopyWidget(QWidget):
                 self._continue_btn.setVisible(True)
                 self._continue_fn = self._repo.cherry_pick_continue
                 self._conflict_banner.setVisible(True)
+            elif self._repo.is_reverting():
+                self._banner_icon.setText("✓")
+                self._banner_icon.setStyleSheet("color: #4ec9b0; font-size: 14px;")
+                self._conflict_banner.setStyleSheet(
+                    "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);"
+                )
+                self._conflict_label.setText(t("conflict.revert_ready"))
+                self._abort_btn.setText(t("conflict.abort_revert"))
+                self._abort_fn = self._repo.abort_revert
+                self._continue_btn.setText(t("conflict.continue_revert"))
+                self._continue_btn.setVisible(True)
+                self._continue_fn = self._repo.revert_continue
+                self._conflict_banner.setVisible(True)
             else:
                 self._conflict_banner.setVisible(False)
                 self._abort_fn = None
@@ -628,25 +664,14 @@ class WorkingCopyWidget(QWidget):
             op, fn = t("conflict.abort_rebase"), self._repo.abort_rebase
         elif self._repo.is_cherry_picking():
             op, fn = t("conflict.abort_cherry_pick"), self._repo.abort_cherry_pick
+        elif self._repo.is_reverting():
+            op, fn = t("conflict.abort_revert"), self._repo.abort_revert
         else:
             op, fn = t("conflict.abort_merge"), self._repo.abort_merge
         self._abort_fn = fn
         self._conflict_label.setText(t("conflict.banner", n=len(conflicted)))
         self._abort_btn.setText(op)
         self._conflict_banner.setVisible(True)
-            elif self._repo.is_reverting():
-                self._banner_icon.setText("✓")
-                self._banner_icon.setStyleSheet("color: #4ec9b0; font-size: 14px;")
-                self._conflict_banner.setStyleSheet(
-                    "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);"
-                )
-                self._conflict_label.setText(t("conflict.revert_ready"))
-                self._abort_btn.setText(t("conflict.abort_revert"))
-                self._abort_fn = self._repo.abort_revert
-                self._continue_btn.setText(t("conflict.continue_revert"))
-                self._continue_btn.setVisible(True)
-                self._continue_fn = self._repo.revert_continue
-                self._conflict_banner.setVisible(True)
 
     def _maybe_fill_merge_msg(self):
         if not self._commit_edit.toPlainText().strip():
@@ -661,22 +686,6 @@ class WorkingCopyWidget(QWidget):
 
     def _staged_context_menu(self, pos: QPoint):
         sender_view = self.sender()
-
-        # Directory node in tree mode → offer to unstage the whole folder
-        if isinstance(sender_view, FileTreeWidget):
-        elif self._repo.is_reverting():
-            op, fn = t("conflict.abort_revert"), self._repo.abort_revert
-            item = sender_view.itemAt(pos)
-            if item and item.data(0, Qt.ItemDataRole.UserRole) is None:
-                entries = sender_view.get_entries_under(item)
-                if not entries:
-                    return
-                menu = QMenu(self)
-                act = menu.addAction(t("working_copy.unstage_folder", n=len(entries)))
-                if menu.exec(sender_view.mapToGlobal(pos)) == act:
-                    self._run_batch(self._repo.unstage_file,
-                                    [e.path for e in entries], "unstaging")
-                return
 
         entries = sender_view.selected_entries()
         if not entries:
@@ -697,20 +706,6 @@ class WorkingCopyWidget(QWidget):
 
     def _unstaged_context_menu(self, pos: QPoint):
         sender_view = self.sender()
-
-        # Directory node in tree mode → offer to stage the whole folder
-        if isinstance(sender_view, FileTreeWidget):
-            item = sender_view.itemAt(pos)
-            if item and item.data(0, Qt.ItemDataRole.UserRole) is None:
-                entries = sender_view.get_entries_under(item)
-                if not entries:
-                    return
-                menu = QMenu(self)
-                act = menu.addAction(t("working_copy.stage_folder", n=len(entries)))
-                if menu.exec(sender_view.mapToGlobal(pos)) == act:
-                    self._run_batch(self._repo.stage_file,
-                                    [e.path for e in entries], "staging")
-                return
 
         entries = sender_view.selected_entries()
         if not entries:
