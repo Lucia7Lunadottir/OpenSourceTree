@@ -178,6 +178,7 @@ class RepoTab(QWidget):
         self._commit_files_list.customContextMenuRequested.connect(
             self._commit_file_actions.show_menu)
         self._commit_file_actions.status_message.connect(self.status_message)
+        self._commit_file_actions.history_rewritten.connect(self._on_history_rewritten)
         self._commit_info_panel.parent_clicked.connect(self._commit_list.select_commit)
         self._branch_panel.refresh_requested.connect(self._refresh_all)
         self._branch_panel.branch_checked_out.connect(self._on_branch_checked_out)
@@ -277,6 +278,15 @@ class RepoTab(QWidget):
         if self._current_commit and self._current_commit.hash == hash:
             lines = [l for l in error.splitlines() if l.strip()]
             self._commit_info_panel.show_error(lines[-1] if lines else "Git error")
+
+    def _on_history_rewritten(self):
+        # Hashes changed: the selected commit no longer exists under its old id
+        self._current_commit = None
+        self._commit_file_actions.set_commit("")
+        self._commit_files_list.clear()
+        self._commit_info_panel.clear_info()
+        self._diff_controller.clear()
+        self._refresh_all()
 
     def _on_working_copy_selected(self):
         self._working_copy_widget.refresh()

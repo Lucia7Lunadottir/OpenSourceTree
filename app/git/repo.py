@@ -1229,6 +1229,78 @@ class GitRepo:
                 raise GitCommandError(["archive", hash], code, err)
         return written
 
+    # -------------------------------------------- Discard files from a commit
+
+    def discard_files_from_commit(self, sha: str, paths: list[str]) -> str:
+        """Rewrite history so that commit `sha` no longer touches `paths`.
+
+        The files take the state they had in the parent. Later commits are
+        replayed on top. If the commit ends up empty it is dropped. Uncommitted
+        work is auto-stashed and restored; on any failure HEAD goes back to
+        where it was. Returns "dropped" if the commit vanished, else "".
+        """
+        with self.runner.write_lock:
+            return self._discard_files_from_commit_locked(sha, paths)
+
+    def _stash_count(self) -> int:
+        return len([l for l in self.runner.run(["stash", "list"]).splitlines() if l.strip()])
+
+    def _discard_files_from_commit_locked(self, sha: str, paths: list[str]) -> str:
+        if self._is_root_commit(sha):
+            raise RuntimeError("Нельзя убрать файлы из корневого коммита.")
+        if self.is_merge_commit(sha):
+            raise RuntimeError("Нельзя убрать файлы из мерж-коммита.")
+        head_sha = self.runner.run(["rev-parse", "HEAD"]).strip()
+        after = [s for s in self.runner.run(
+            ["rev-list", "--parents", "--reverse", f"{sha}..HEAD"]).splitlines() if s.strip()]
+        if any(len(line.split()) > 2 for line in after):
+            raise RuntimeError("Между выбранным коммитом и HEAD есть мерж-коммит — история не будет переписана.")
+        after_shas = [line.split()[0] for line in after]
+
+        before = self._stash_count()
+        self.runner.run(["stash", "push", "-u", "-m", "discard_from_commit_autostash"])
+        stashed = self._stash_count() > before
+        dropped = False
+        try:
+            self.runner.run(["reset", "--hard", f"{sha}^"])
+            self.runner.run(["cherry-pick", "--no-commit", sha])
+            in_parent = set(self.runner.run(
+                ["ls-tree", "-r", "--name-only", "HEAD", "--"] + paths).splitlines())
+            for path in paths:
+                if path in in_parent:
+                    self.runner.run(["restore", "--source=HEAD", "--staged", "--worktree", "--", path])
+                else:
+                    self.runner.run(["rm", "-rf", "--quiet", "--", path])
+            try:
+                self.runner.run(["diff", "--cached", "--quiet"])
+                dropped = True  # nothing left in the commit
+            except GitCommandError:
+                self.runner.run(["commit", "-C", sha])
+            for after_sha in after_shas:
+                self.runner.run(["cherry-pick", "--allow-empty", after_sha])
+        except Exception as original_err:
+            for cmd in (["cherry-pick", "--abort"], ["reset", "--hard", head_sha]):
+                try:
+                    self.runner.run(cmd)
+                except Exception:
+                    pass
+            self._restore_autostash(stashed, "Операция не удалась", original_err)
+            raise
+        self._restore_autostash(stashed, "Файлы убраны из коммита, но", None)
+        return "dropped" if dropped else ""
+
+    def _restore_autostash(self, stashed: bool, prefix: str, original_err) -> None:
+        if not stashed:
+            return
+        try:
+            self.runner.run(["stash", "pop"])
+        except Exception as pop_err:
+            detail = f" (исходная ошибка: {original_err})" if original_err else ""
+            raise RuntimeError(
+                f"{prefix}: вернуть несохранённые изменения автоматически не удалось.\n"
+                f"Они в безопасности — выполните  git stash pop.{detail}"
+            ) from pop_err
+
     # ------------------------------------------------- Streaming remote ops
 
     def fetch_tags_silent(self) -> None:
