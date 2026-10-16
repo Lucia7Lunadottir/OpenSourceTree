@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>BookmarksPanel</class>
+ <widget class="QWidget" name="BookmarksPanel">
+  <layout class="QVBoxLayout" name="mainLayout" stretch="0,0">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QWidget" name="panelHeader">
+     <layout class="QHBoxLayout" name="headerLayout">
+      <property name="leftMargin">
+       <number>8</number>
+      </property>
+      <property name="topMargin">
+       <number>6</number>
+      </property>
+      <property name="rightMargin">
+       <number>4</number>
+      </property>
+      <property name="bottomMargin">
+       <number>6</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="titleLabel">
+        <property name="styleSheet">
+         <string notr="true">font-weight: bold; color: #d4d4d4;</string>
+        </property>
+        <property name="text">
+         <string notr="true">bookmarks.title</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="headerSpacer">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="iconBtn">
+        <property name="minimumSize">
+         <size>
+          <width>22</width>
+          <height>22</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>22</width>
+          <height>22</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string notr="true">bookmarks.add_tooltip</string>
+        </property>
+        <property name="text">
+         <string notr="true">+</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QListWidget" name="bookmarkList">
+     <property name="contextMenuPolicy">
+      <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>iconBtn</tabstop>
+  <tabstop>bookmarkList</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

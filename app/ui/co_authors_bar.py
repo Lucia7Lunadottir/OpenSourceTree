@@ -1,8 +1,14 @@
+from pathlib import Path
+
+from PyQt6 import uic
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QToolButton, QSizePolicy
 from PyQt6.QtCore import pyqtSignal
 
 from app.i18n import t
 from app.git.trailers import parse_co_authors
+from app.ui.ui_translator import UiTranslator
+
+_UI_FILE = Path(__file__).with_name("co_authors_bar.ui")
 
 
 class CoAuthorsBar(QWidget):
@@ -11,36 +17,37 @@ class CoAuthorsBar(QWidget):
     commit message text itself — callers apply add_requested/remove_requested
     to their own text buffer and call sync() with the result, keeping the
     message text as the single source of truth.
+
+    The static frame (add button + trailing spacer) lives in co_authors_bar.ui;
+    chips depend on the message and are built in code.
     """
 
     add_requested = pyqtSignal()
     remove_requested = pyqtSignal(str)  # email
 
+    # widgets created by loadUi from co_authors_bar.ui
+    chipsLayout: QHBoxLayout
+    smallBtn: QToolButton   # "+ Co-author"; objectName is a style.qss selector
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._layout = QHBoxLayout(self)
-        self._layout.setContentsMargins(0, 0, 0, 0)
-        self._layout.setSpacing(6)
-
-        self._add_btn = QToolButton()
-        self._add_btn.setText(t("coauthors.add_btn"))
-        self._add_btn.setObjectName("smallBtn")
-        self._add_btn.clicked.connect(self.add_requested)
-        self._layout.addWidget(self._add_btn)
-        self._layout.addStretch()
+        uic.loadUi(_UI_FILE, self)
+        UiTranslator().apply(self)
+        self.smallBtn.clicked.connect(self.add_requested)
 
         self._chip_widgets: list[QWidget] = []
 
     def sync(self, message: str) -> None:
         """Rebuild chips from the Co-authored-by trailers in `message`."""
         for w in self._chip_widgets:
-            self._layout.removeWidget(w)
+            self.chipsLayout.removeWidget(w)
             w.deleteLater()
         self._chip_widgets.clear()
 
         for name, email in parse_co_authors(message):
             chip = self._make_chip(name, email)
-            self._layout.insertWidget(self._layout.count() - 2, chip)
+            # chips go before the add button and the trailing spacer
+            self.chipsLayout.insertWidget(self.chipsLayout.count() - 2, chip)
             self._chip_widgets.append(chip)
 
     def _make_chip(self, name: str, email: str) -> QWidget:

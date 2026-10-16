@@ -1,9 +1,11 @@
+from pathlib import Path
+
+from PyQt6 import uic
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTableView, QLineEdit,
-    QPushButton, QAbstractItemView, QHeaderView, QLabel,
+    QWidget, QTableView, QLineEdit, QPushButton, QHeaderView, QLabel,
     QMenu, QApplication, QMessageBox, QInputDialog
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QModelIndex, QTimer, QPoint
+from PyQt6.QtCore import pyqtSignal, QModelIndex, QTimer, QPoint
 from PyQt6.QtGui import QAction
 
 from app.i18n import t
@@ -14,6 +16,9 @@ from PyQt6.QtCore import QThreadPool
 
 from .commit_table_model import CommitTableModel, COL_GRAPH, COL_HASH, COL_MESSAGE, COL_AUTHOR, COL_DATE
 from .commit_graph_delegate import CommitGraphDelegate, LANE_W, ROW_H
+from .ui_translator import UiTranslator
+
+_UI_FILE = Path(__file__).with_name("commit_list_view.ui")
 
 
 class CommitListView(QWidget):
@@ -22,6 +27,14 @@ class CommitListView(QWidget):
     refresh_requested    = pyqtSignal()          # emitted after context-menu ops
     status_message       = pyqtSignal(str)
 
+    # widgets created by loadUi from commit_list_view.ui
+    filterBar: QWidget          # objectName is a style.qss selector
+    filterIconLabel: QLabel
+    filterEdit: QLineEdit
+    smallBtn: QPushButton       # "Clear" filter; objectName is a style.qss selector
+    commitTable: QTableView
+    loadMoreButton: QPushButton
+
     def __init__(self, repo: GitRepo, parent=None):
         super().__init__(parent)
         self._repo = repo
@@ -29,70 +42,45 @@ class CommitListView(QWidget):
         self._connect_signals()
 
     def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        # Static layout (filter bar, table properties, "load more" button)
+        # lives in commit_list_view.ui and is editable in Qt Designer.
+        uic.loadUi(_UI_FILE, self)
+        UiTranslator().apply(self)
+        self._setup_table()
 
-        # Filter bar
-        filter_bar = QWidget()
-        filter_bar.setObjectName("filterBar")
-        fb_layout = QHBoxLayout(filter_bar)
-        fb_layout.setContentsMargins(4, 4, 4, 4)
-        fb_layout.setSpacing(4)
-        fb_layout.addWidget(QLabel("🔍"))
-        self._filter_edit = QLineEdit()
-        self._filter_edit.setPlaceholderText(t("commit_list.filter_placeholder"))
-        self._filter_edit.setClearButtonEnabled(True)
-        self._clear_btn = QPushButton(t("commit_list.clear"))
-        self._clear_btn.setObjectName("smallBtn")
-        self._clear_btn.setFixedWidth(70)
-        fb_layout.addWidget(self._filter_edit)
-        fb_layout.addWidget(self._clear_btn)
-        layout.addWidget(filter_bar)
-
-        # Commit table
-        self._model = CommitTableModel(self._repo)
-        self._view = QTableView()
-        self._view.setModel(self._model)
-        self._view.setItemDelegateForColumn(COL_GRAPH, CommitGraphDelegate(self._view))
-        self._view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self._view.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self._view.setShowGrid(False)
-        self._view.setWordWrap(False)
-        self._view.setAlternatingRowColors(False)
-        self._view.verticalHeader().setVisible(False)
-        self._view.verticalHeader().setDefaultSectionSize(ROW_H)
-        self._view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        self._view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-
-        header = self._view.horizontalHeader()
-        header.setSectionResizeMode(COL_GRAPH,   QHeaderView.ResizeMode.Interactive)
-        header.setSectionResizeMode(COL_HASH,    QHeaderView.ResizeMode.Fixed)
-        header.setSectionResizeMode(COL_MESSAGE, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(COL_AUTHOR,  QHeaderView.ResizeMode.Interactive)
-        header.setSectionResizeMode(COL_DATE,    QHeaderView.ResizeMode.Interactive)
-        self._view.setColumnWidth(COL_GRAPH,  LANE_W * 8)
-        self._view.setColumnWidth(COL_HASH,   70)
-        self._view.setColumnWidth(COL_AUTHOR, 140)
-        self._view.setColumnWidth(COL_DATE,   130)
-        layout.addWidget(self._view)
-
-        self._load_more_btn = QPushButton(t("commit_list.load_more"))
-        self._load_more_btn.setVisible(False)
-        layout.addWidget(self._load_more_btn)
+        self.loadMoreButton.setVisible(False)   # shown once the model can fetch more
 
         self._filter_timer = QTimer()
         self._filter_timer.setSingleShot(True)
         self._filter_timer.setInterval(300)
 
+    def _setup_table(self):
+        # Model, graph delegate, row height (tied to the delegate's painting) and
+        # per-section resize modes / widths can't be expressed in Designer.
+        self._model = CommitTableModel(self._repo)
+        self.commitTable.setModel(self._model)
+        self.commitTable.setItemDelegateForColumn(COL_GRAPH, CommitGraphDelegate(self.commitTable))
+        self.commitTable.verticalHeader().setDefaultSectionSize(ROW_H)
+
+        header = self.commitTable.horizontalHeader()
+        header.setSectionResizeMode(COL_GRAPH,   QHeaderView.ResizeMode.Interactive)
+        header.setSectionResizeMode(COL_HASH,    QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(COL_MESSAGE, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(COL_AUTHOR,  QHeaderView.ResizeMode.Interactive)
+        header.setSectionResizeMode(COL_DATE,    QHeaderView.ResizeMode.Interactive)
+        self.commitTable.setColumnWidth(COL_GRAPH,  LANE_W * 8)
+        self.commitTable.setColumnWidth(COL_HASH,   70)
+        self.commitTable.setColumnWidth(COL_AUTHOR, 140)
+        self.commitTable.setColumnWidth(COL_DATE,   130)
+
     def _connect_signals(self):
-        self._view.selectionModel().currentRowChanged.connect(self._on_row_changed)
-        self._view.customContextMenuRequested.connect(self._on_context_menu)
+        self.commitTable.selectionModel().currentRowChanged.connect(self._on_row_changed)
+        self.commitTable.customContextMenuRequested.connect(self._on_context_menu)
         self._model.loading_done.connect(self._on_loading_done)
-        self._filter_edit.textChanged.connect(lambda _: self._filter_timer.start())
-        self._clear_btn.clicked.connect(self._filter_edit.clear)
-        self._load_more_btn.clicked.connect(self._on_load_more)
-        self._filter_timer.timeout.connect(lambda: self._model.set_filter(self._filter_edit.text()))
+        self.filterEdit.textChanged.connect(lambda _: self._filter_timer.start())
+        self.smallBtn.clicked.connect(self.filterEdit.clear)
+        self.loadMoreButton.clicked.connect(self._on_load_more)
+        self._filter_timer.timeout.connect(lambda: self._model.set_filter(self.filterEdit.text()))
 
     # ── Public ────────────────────────────────────────────────────────────────
 
@@ -104,12 +92,12 @@ class CommitListView(QWidget):
 
     def refresh(self):
         saved = self._selected_hash()
-        self._model.load_initial(branch="", search=self._filter_edit.text())
+        self._model.load_initial(branch="", search=self.filterEdit.text())
         if saved:
             self._restore_selection(saved)
 
     def _selected_hash(self) -> str:
-        idx = self._view.selectionModel().currentIndex()
+        idx = self.commitTable.selectionModel().currentIndex()
         if not idx.isValid():
             return ""
         commit = self._model.get_commit(idx.row())
@@ -124,11 +112,11 @@ class CommitListView(QWidget):
             commit = self._model.get_commit(row)
             if commit and commit.hash == hash:
                 idx = self._model.index(row, 0)
-                self._view.selectionModel().setCurrentIndex(
-                    idx, self._view.selectionModel().SelectionFlag.ClearAndSelect |
-                         self._view.selectionModel().SelectionFlag.Rows
+                self.commitTable.selectionModel().setCurrentIndex(
+                    idx, self.commitTable.selectionModel().SelectionFlag.ClearAndSelect |
+                         self.commitTable.selectionModel().SelectionFlag.Rows
                 )
-                self._view.scrollTo(idx)
+                self.commitTable.scrollTo(idx)
                 break
 
     # ── Row selection ─────────────────────────────────────────────────────────
@@ -144,7 +132,7 @@ class CommitListView(QWidget):
             self.commit_selected.emit(commit)
 
     def _on_loading_done(self):
-        self._load_more_btn.setVisible(self._model.canFetchMore())
+        self.loadMoreButton.setVisible(self._model.canFetchMore())
 
     def _on_load_more(self):
         if self._model.canFetchMore():
@@ -153,7 +141,7 @@ class CommitListView(QWidget):
     # ── Context menu ──────────────────────────────────────────────────────────
 
     def _on_context_menu(self, pos: QPoint):
-        idx = self._view.indexAt(pos)
+        idx = self.commitTable.indexAt(pos)
         if not idx.isValid():
             return
         commit = self._model.get_commit(idx.row())
@@ -203,7 +191,7 @@ class CommitListView(QWidget):
         copy_ref_act    = copy_menu.addAction(f"Git ref: #commit={h}")
         copy_sha256_act = copy_menu.addAction("AUR: sha256sum архива (вычислить...)")
 
-        action = menu.exec(self._view.viewport().mapToGlobal(pos))
+        action = menu.exec(self.commitTable.viewport().mapToGlobal(pos))
         if action is None:
             return
 

@@ -1,12 +1,13 @@
 from datetime import datetime
+from pathlib import Path
 
-from PyQt6.QtWidgets import (
-    QDockWidget, QWidget, QVBoxLayout, QHBoxLayout, QPlainTextEdit, QPushButton,
-)
-from PyQt6.QtCore import Qt
+from PyQt6 import uic
+from PyQt6.QtWidgets import QDockWidget, QWidget, QPlainTextEdit, QPushButton
 from PyQt6.QtGui import QFont
 
-from app.i18n import t
+from app.ui.ui_translator import UiTranslator
+
+_UI_FILE = Path(__file__).with_name("log_panel.ui")
 
 
 class LogPanel(QDockWidget):
@@ -14,38 +15,31 @@ class LogPanel(QDockWidget):
 
     MAX_BLOCKS = 2000
 
+    # widgets created by loadUi from log_panel.ui
+    body: QWidget
+    logText: QPlainTextEdit
+    clearButton: QPushButton
+
     def __init__(self, parent=None):
-        super().__init__(t("log.title"), parent)
-        self.setObjectName("logPanel")
-        self.setAllowedAreas(Qt.DockWidgetArea.BottomDockWidgetArea)
-        self.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetClosable)
+        super().__init__(parent)
+        uic.loadUi(_UI_FILE, self)
+        UiTranslator().apply(self)
+        # setWidget() inside loadUi already measured the button row with the
+        # raw key text; re-activate so the nested layout drops that cached
+        # minimum and the dock's minimum size matches the translated text.
+        self.body.layout().activate()
 
-        body = QWidget()
-        layout = QVBoxLayout(body)
-        layout.setContentsMargins(4, 4, 4, 4)
-
-        self._text = QPlainTextEdit()
-        self._text.setReadOnly(True)
-        self._text.setMaximumBlockCount(self.MAX_BLOCKS)
-        font = QFont("Monospace", 10)
+        # Not expressible in .ui: the block limit comes from MAX_BLOCKS, and
+        # Designer's <font> has no style hint (TypeWriter = monospace fallback).
+        self.logText.setMaximumBlockCount(self.MAX_BLOCKS)
+        font = self.logText.font()
         font.setStyleHint(QFont.StyleHint.TypeWriter)
-        self._text.setFont(font)
-        self._text.setMinimumWidth(0)
-        layout.addWidget(self._text, 1)
+        self.logText.setFont(font)
 
-        row = QHBoxLayout()
-        row.addStretch()
-        clear_btn = QPushButton(t("log.clear"))
-        clear_btn.clicked.connect(self._text.clear)
-        row.addWidget(clear_btn)
-        layout.addLayout(row)
-
-        self.setWidget(body)
-        self.setMinimumWidth(0)
-        self.setMinimumHeight(90)
+        self.clearButton.clicked.connect(self.logText.clear)
 
     def append_message(self, message: str):
         stamp = datetime.now().strftime("%H:%M:%S")
-        self._text.appendPlainText(f"[{stamp}] {message.strip()}")
-        bar = self._text.verticalScrollBar()
+        self.logText.appendPlainText(f"[{stamp}] {message.strip()}")
+        bar = self.logText.verticalScrollBar()
         bar.setValue(bar.maximum())
