@@ -64,6 +64,8 @@
     "working_copy.discard_confirm_many": "Descartar alterações em {n} arquivos?\n\n{names}",
     "working_copy.view_list": "Lista",
     "working_copy.view_tree": "Árvore",
+    "working_copy.view_list_button": "☰  Lista",
+    "working_copy.view_tree_button": "🌲  Árvore",
     "working_copy.stage_folder": "Preparar {n} arquivos na pasta",
     "working_copy.unstage_folder": "Retirar {n} arquivos da pasta",
     "remote.all": "(todos)",
@@ -342,5 +344,6 @@
     "coauthors.add_dialog.name_placeholder": "Nome Sobrenome",
     "coauthors.add_dialog.email_label": "E-mail:",
     "coauthors.add_dialog.email_placeholder": "email@example.com",
-    "coauthors.add_dialog.invalid": "Informe um nome e um e-mail válido."
+    "coauthors.add_dialog.invalid": "Informe um nome e um e-mail válido.",
+    "toolbar.fix.tooltip": "Encerrar processos git travados e remover arquivos .lock\nUse quando as operações do git travarem ou informarem 'index.lock exists'"
 }

@@ -64,6 +64,8 @@
     "working_copy.discard_confirm_many": "{n} 個のファイルの変更を破棄しますか？\n\n{names}",
     "working_copy.view_list": "リスト",
     "working_copy.view_tree": "ツリー",
+    "working_copy.view_list_button": "☰  リスト",
+    "working_copy.view_tree_button": "🌲  ツリー",
     "working_copy.stage_folder": "フォルダ内の {n} 個のファイルをステージ",
     "working_copy.unstage_folder": "フォルダ内の {n} 個のファイルをステージ解除",
     "remote.all": "(すべて)",
@@ -342,5 +344,6 @@
     "coauthors.add_dialog.name_placeholder": "姓 名",
     "coauthors.add_dialog.email_label": "メール:",
     "coauthors.add_dialog.email_placeholder": "email@example.com",
-    "coauthors.add_dialog.invalid": "名前と有効なメールアドレスを入力してください。"
+    "coauthors.add_dialog.invalid": "名前と有効なメールアドレスを入力してください。",
+    "toolbar.fix.tooltip": "停止した git プロセスを終了し、.lock ファイルを削除します\ngit の操作が止まったり「index.lock exists」と表示されたりする場合に使用します"
 }

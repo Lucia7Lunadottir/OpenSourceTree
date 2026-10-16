@@ -1,11 +1,13 @@
 import os
+from pathlib import Path
+
+from PyQt6 import uic
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QHBoxLayout, QSplitter,
-    QTabWidget, QStatusBar, QToolBar, QLabel,
-    QApplication, QMessageBox, QFileDialog
+    QMainWindow, QWidget, QSplitter, QTabWidget, QStatusBar, QMenuBar, QMenu,
+    QLabel, QApplication, QMessageBox, QFileDialog
 )
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QIcon, QKeySequence, QAction
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QKeySequence, QAction
 
 from app.i18n import t
 
@@ -13,109 +15,101 @@ from .bookmarks_panel import BookmarksPanel
 from .repo_tab import RepoTab
 from .elided_label import ClickableElidedLabel
 from .log_panel import LogPanel
+from .ui_translator import UiTranslator
 from .dialogs.clone_dialog import CloneDialog
 from .dialogs.ssh_dialog import SSHSettingsDialog
 from .dialogs.accounts_dialog import AccountsDialog
 from .dialogs.identity_dialog import IdentityDialog
 from .dialogs.language_dialog import LanguageDialog
 
+_UI_FILE = Path(__file__).with_name("main_window.ui")
+
 
 class MainWindow(QMainWindow):
+    # widgets / actions created by loadUi from main_window.ui
+    # lower-case objectNames: "centralWidget" / "menuBar" / "statusBar" would
+    # shadow the QMainWindow methods of the same name
+    centralwidget: QWidget
+    mainSplitter: QSplitter
+    bookmarksPanel: BookmarksPanel  # promoted widget (no constructor arguments)
+    placeholderPage: QWidget
+    placeholderLabel: QLabel
+    repoTabs: QTabWidget
+    menubar: QMenuBar
+    menuFile: QMenu
+    menuSettings: QMenu
+    menuView: QMenu
+    menuHelp: QMenu
+    statusbar: QStatusBar
+    actionOpen: QAction
+    actionClone: QAction
+    actionQuit: QAction
+    actionAccounts: QAction
+    actionSsh: QAction
+    actionIdentity: QAction
+    actionLanguage: QAction
+    actionRefresh: QAction
+    actionAbout: QAction
+
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("OpenSourceTree")
-        self.resize(1280, 800)
         self._repo_tabs: dict[str, int] = {}  # path -> tab index
         self._setup_ui()
         self._setup_menu()
         self._setup_statusbar()
 
     def _setup_ui(self):
-        central = QWidget()
-        self.setCentralWidget(central)
-        layout = QHBoxLayout(central)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        # Static layout (splitter with bookmarks / placeholder / tabs, menu bar,
+        # status bar) lives in main_window.ui and is editable in Qt Designer.
+        uic.loadUi(_UI_FILE, self)
+        UiTranslator().apply(self)
 
-        # Main splitter: bookmarks | tabs
-        self._splitter = QSplitter(Qt.Orientation.Horizontal)
+        self._splitter = self.mainSplitter
+        self._bookmarks = self.bookmarksPanel
+        self._placeholder = self.placeholderPage
+        self._tabs = self.repoTabs
 
-        # Bookmarks panel
-        self._bookmarks = BookmarksPanel()
-        self._bookmarks.setMinimumWidth(160)
-        self._bookmarks.setMaximumWidth(260)
+        # Initially no repository is open: the tab widget waits outside the
+        # splitter and the placeholder takes its place (see _open_repo).
+        self._tabs.setParent(None)
+
         self._bookmarks.repo_selected.connect(self._open_repo)
-        self._splitter.addWidget(self._bookmarks)
-
-        # Repo tabs
-        self._tabs = QTabWidget()
-        self._tabs.setTabsClosable(True)
-        self._tabs.setMovable(True)
-        self._tabs.setDocumentMode(True)
         self._tabs.tabCloseRequested.connect(self._close_tab)
-        self._tabs.setTabPosition(QTabWidget.TabPosition.North)
-        # Placeholder when no tabs
-        self._placeholder = QWidget()
-        ph_layout = QHBoxLayout(self._placeholder)
-        ph_label = QLabel(t("main.placeholder"))
-        ph_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        ph_label.setStyleSheet("color: #666; font-size: 14px;")
-        ph_layout.addWidget(ph_label)
-        self._splitter.addWidget(self._placeholder)
 
-        self._splitter.setSizes([200, 1080])
-        layout.addWidget(self._splitter)
+        self._splitter.setSizes([200, 1080])   # not stored by Designer
 
     def _setup_menu(self):
-        menubar = self.menuBar()
+        # Designer stores shortcuts as fixed key strings; the platform's
+        # standard Open / Quit bindings can only be set from code.
+        self.actionOpen.setShortcut(QKeySequence.StandardKey.Open)
+        self.actionQuit.setShortcut(QKeySequence.StandardKey.Quit)
 
-        # File menu
-        file_menu = menubar.addMenu(t("menu.file"))
-        open_action = file_menu.addAction(t("menu.file.open"))
-        open_action.setShortcut(QKeySequence.StandardKey.Open)
-        open_action.triggered.connect(self._on_open)
-
-        clone_action = file_menu.addAction(t("menu.file.clone"))
-        clone_action.triggered.connect(self._on_clone)
-
-        file_menu.addSeparator()
-        quit_action = file_menu.addAction(t("menu.file.quit"))
-        quit_action.setShortcut(QKeySequence.StandardKey.Quit)
-        quit_action.triggered.connect(QApplication.instance().quit)
-
-        # Settings menu
-        settings_menu = menubar.addMenu(t("menu.settings"))
-        acc_action = settings_menu.addAction(t("menu.settings.accounts"))
-        acc_action.triggered.connect(self._on_accounts)
-        settings_menu.addSeparator()
-        ssh_action = settings_menu.addAction(t("menu.settings.ssh"))
-        ssh_action.triggered.connect(self._on_ssh_settings)
-        id_action = settings_menu.addAction(t("menu.settings.identity"))
-        id_action.triggered.connect(self._on_identity)
-        settings_menu.addSeparator()
-        lang_action = settings_menu.addAction(t("menu.settings.language"))
-        lang_action.triggered.connect(self._on_language)
-
-        # View menu
-        view_menu = menubar.addMenu(t("menu.view"))
-        refresh_action = view_menu.addAction(t("menu.view.refresh"))
-        refresh_action.setShortcut(QKeySequence("F5"))
-        refresh_action.triggered.connect(self._refresh_current)
-
-        # Help menu
-        help_menu = menubar.addMenu(t("menu.help"))
-        about_action = help_menu.addAction(t("menu.help.about"))
-        about_action.triggered.connect(self._show_about)
+        triggers = {
+            self.actionOpen: self._on_open,
+            self.actionClone: self._on_clone,
+            self.actionQuit: QApplication.instance().quit,
+            self.actionAccounts: self._on_accounts,
+            self.actionSsh: self._on_ssh_settings,
+            self.actionIdentity: self._on_identity,
+            self.actionLanguage: self._on_language,
+            self.actionRefresh: self._refresh_current,
+            self.actionAbout: self._show_about,
+        }
+        for action, slot in triggers.items():
+            action.triggered.connect(slot)
 
     def _setup_statusbar(self):
-        self._status = QStatusBar()
-        self.setStatusBar(self._status)
+        self._status = self.statusbar
         # Elided + clickable: a long message must not widen the window; a click
-        # opens the log panel with the full history.
+        # opens the log panel with the full history. Built in code: a promoted
+        # ClickableElidedLabel would get the parent as its `text` argument.
         self._status_label = ClickableElidedLabel(t("status.ready"))
         self._status_label.clicked.connect(self._toggle_log_panel)
         self._status.addWidget(self._status_label, 1)
 
+        # LogPanel is its own .ui form (a QDockWidget with a body widget);
+        # embedded in this .ui, Designer would add a contents widget that
+        # loadUi then sets over the panel's own body.
         self._log_panel = LogPanel(self)
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._log_panel)
         self._log_panel.hide()

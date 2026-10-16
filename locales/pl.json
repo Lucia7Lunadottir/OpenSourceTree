@@ -64,6 +64,8 @@
     "working_copy.discard_confirm_many": "Odrzucić zmiany w {n} plikach?\n\n{names}",
     "working_copy.view_list": "Lista",
     "working_copy.view_tree": "Drzewo",
+    "working_copy.view_list_button": "☰  Lista",
+    "working_copy.view_tree_button": "🌲  Drzewo",
     "working_copy.stage_folder": "Dodaj {n} plików z folderu",
     "working_copy.unstage_folder": "Wycofaj {n} plików z folderu",
     "remote.all": "(wszystkie)",
@@ -342,5 +344,6 @@
     "coauthors.add_dialog.name_placeholder": "Imię Nazwisko",
     "coauthors.add_dialog.email_label": "E-mail:",
     "coauthors.add_dialog.email_placeholder": "email@example.com",
-    "coauthors.add_dialog.invalid": "Podaj imię i nazwisko oraz prawidłowy adres e-mail."
+    "coauthors.add_dialog.invalid": "Podaj imię i nazwisko oraz prawidłowy adres e-mail.",
+    "toolbar.fix.tooltip": "Zakończ zawieszone procesy git i usuń pliki .lock\nUżyj, gdy operacje git się zawieszają lub zgłaszają „index.lock exists”"
 }

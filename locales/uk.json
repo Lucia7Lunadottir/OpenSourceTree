@@ -64,6 +64,8 @@
     "working_copy.discard_confirm_many": "Скасувати зміни в {n} файлах?\n\n{names}",
     "working_copy.view_list": "Список",
     "working_copy.view_tree": "Дерево",
+    "working_copy.view_list_button": "☰  Список",
+    "working_copy.view_tree_button": "🌲  Дерево",
     "working_copy.stage_folder": "Додати {n} файлів у папці",
     "working_copy.unstage_folder": "Прибрати {n} файлів у папці",
     "remote.all": "(всі)",
@@ -342,5 +344,6 @@
     "coauthors.add_dialog.name_placeholder": "Ім'я Прізвище",
     "coauthors.add_dialog.email_label": "Email:",
     "coauthors.add_dialog.email_placeholder": "email@example.com",
-    "coauthors.add_dialog.invalid": "Введіть ім'я та коректний email."
+    "coauthors.add_dialog.invalid": "Введіть ім'я та коректний email.",
+    "toolbar.fix.tooltip": "Завершити завислі процеси git і видалити файли .lock\nВикористовуйте, коли операції git зависають або повідомляють «index.lock exists»"
 }

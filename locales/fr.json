@@ -64,6 +64,8 @@
     "working_copy.discard_confirm_many": "Abandonner les modifications de {n} fichiers ?\n\n{names}",
     "working_copy.view_list": "Liste",
     "working_copy.view_tree": "Arborescence",
+    "working_copy.view_list_button": "☰  Liste",
+    "working_copy.view_tree_button": "🌲  Arborescence",
     "working_copy.stage_folder": "Indexer {n} fichiers du dossier",
     "working_copy.unstage_folder": "Désindexer {n} fichiers du dossier",
     "remote.all": "(tous)",
@@ -342,5 +344,6 @@
     "coauthors.add_dialog.name_placeholder": "Prénom Nom",
     "coauthors.add_dialog.email_label": "E-mail :",
     "coauthors.add_dialog.email_placeholder": "email@example.com",
-    "coauthors.add_dialog.invalid": "Saisissez un nom et une adresse e-mail valide."
+    "coauthors.add_dialog.invalid": "Saisissez un nom et une adresse e-mail valide.",
+    "toolbar.fix.tooltip": "Arrêter les processus git bloqués et supprimer les fichiers .lock\nÀ utiliser quand les opérations git se figent ou signalent « index.lock exists »"
 }

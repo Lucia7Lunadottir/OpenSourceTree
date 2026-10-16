@@ -1,11 +1,13 @@
 import os
+from pathlib import Path
+
+from PyQt6 import uic
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
-    QListWidget, QListWidgetItem, QLabel,
+    QWidget, QSplitter, QListWidget, QListWidgetItem,
     QToolBar, QToolButton, QMenu, QMessageBox
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QSize, QTimer, QFileSystemWatcher
-from PyQt6.QtGui import QIcon, QFont, QColor, QAction
+from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QFileSystemWatcher
+from PyQt6.QtGui import QColor, QAction
 
 from app.i18n import t
 from app.git.repo import GitRepo
@@ -30,6 +32,11 @@ from .dialogs.branch_dialog import BranchDialog
 from .dialogs.lfs_dialog import LfsDialog
 from .dialogs.remotes_dialog import RemotesDialog
 from .dialogs.coauthor_history_dialog import CoAuthorHistoryDialog
+from .ui_translator import UiTranslator
+
+_UI_FILE = Path(__file__).with_name("repo_tab.ui")
+
+_QWIDGETSIZE_MAX = 16777215
 
 
 STATUS_LABELS = {
@@ -38,9 +45,73 @@ STATUS_LABELS = {
 }
 
 
+class _SlotFiller:
+    """Puts a code-built widget in place of a placeholder widget of a .ui form.
+
+    The placeholder keeps the widget's position in Designer: its splitter index
+    or layout item (with that item's stretch), and any explicit minimum /
+    maximum width or height set on it, which are copied to the real widget.
+    """
+
+    @staticmethod
+    def fill(slot: QWidget, widget: QWidget) -> QWidget:
+        _SlotFiller._copy_size_limits(slot, widget)
+        parent = slot.parentWidget()
+        if isinstance(parent, QSplitter):
+            parent.replaceWidget(parent.indexOf(slot), widget)
+        else:
+            parent.layout().replaceWidget(slot, widget)
+        slot.setParent(None)
+        slot.deleteLater()
+        return widget
+
+    @staticmethod
+    def _copy_size_limits(slot: QWidget, widget: QWidget) -> None:
+        if slot.minimumWidth() > 0:
+            widget.setMinimumWidth(slot.minimumWidth())
+        if slot.minimumHeight() > 0:
+            widget.setMinimumHeight(slot.minimumHeight())
+        if slot.maximumWidth() < _QWIDGETSIZE_MAX:
+            widget.setMaximumWidth(slot.maximumWidth())
+        if slot.maximumHeight() < _QWIDGETSIZE_MAX:
+            widget.setMaximumHeight(slot.maximumHeight())
+
+
 class RepoTab(QWidget):
     status_message = pyqtSignal(str)
     title_changed = pyqtSignal(str)
+
+    # widgets / actions created by loadUi from repo_tab.ui
+    toolBar: QToolBar
+    mainSplitter: QSplitter
+    centerWidget: QWidget
+    rightSplitter: QSplitter
+    bottomSplitter: QSplitter
+    infoSplitter: QSplitter
+    commitFilesList: QListWidget
+    diffPane: QWidget
+    # placeholders, replaced in _create_panels() by widgets built in code
+    branchPanelSlot: QWidget
+    commitListSlot: QWidget
+    commitInfoSlot: QWidget
+    largeFileBannerSlot: QWidget
+    diffViewerSlot: QWidget
+    workingCopySlot: QWidget
+    actionFetch: QAction
+    actionPull: QAction
+    actionPush: QAction
+    actionBranch: QAction           # its menu is built in _setup_branch_menu()
+    actionCreateBranch: QAction
+    actionMerge: QAction
+    actionRebase: QAction
+    actionCoauthorHistory: QAction
+    actionStash: QAction
+    actionTag: QAction
+    actionLfs: QAction
+    actionRemotes: QAction
+    actionRefresh: QAction
+    actionTerminal: QAction
+    actionFix: QAction
 
     def __init__(self, repo_path: str, parent=None):
         super().__init__(parent)
@@ -55,121 +126,95 @@ class RepoTab(QWidget):
         self._refresh_all()
 
     def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        # Static layout (toolbar actions, splitter skeleton, commit-files list)
+        # lives in repo_tab.ui and is editable in Qt Designer.
+        uic.loadUi(_UI_FILE, self)
+        UiTranslator().apply(self)
+        self._setup_branch_menu()
+        self._create_panels()
 
-        # Toolbar
-        self._toolbar = self._build_toolbar()
-        layout.addWidget(self._toolbar)
+        # Splitter sizes are not stored by Designer
+        self.infoSplitter.setSizes([180, 120])
+        self.bottomSplitter.setSizes([360, 600])
+        self.rightSplitter.setSizes([400, 300])
+        self.mainSplitter.setSizes([200, 680, 360])
 
-        # Main splitter: branch panel | center | working copy
-        self._main_splitter = QSplitter(Qt.Orientation.Horizontal)
+    def _setup_branch_menu(self):
+        # Designer can't attach a QMenu to a toolbar action of a plain QWidget
+        # form; the menu's actions themselves are in the .ui.
+        branch_menu = QMenu(self)
+        branch_menu.addAction(self.actionCreateBranch)
+        branch_menu.addAction(self.actionMerge)
+        branch_menu.addAction(self.actionRebase)
+        branch_menu.addSeparator()
+        branch_menu.addAction(self.actionCoauthorHistory)
+        self.actionBranch.setMenu(branch_menu)
+        branch_button = self.toolBar.widgetForAction(self.actionBranch)
+        branch_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        # The toolbar makes its buttons NoFocus; the Branch menu button stays
+        # reachable with Tab, as it was when it was a separate QToolButton.
+        branch_button.setFocusPolicy(Qt.FocusPolicy.TabFocus)
 
-        # Branch panel
-        self._branch_panel = BranchPanel(self._repo)
-        self._branch_panel.setMinimumWidth(160)
-        self._branch_panel.setMaximumWidth(280)
-        self._main_splitter.addWidget(self._branch_panel)
+    def _create_panels(self):
+        # These widgets need the repository (or other arguments) in their
+        # constructors, which promoted widgets can't pass; they are built here
+        # and put in place of the placeholder widgets of the .ui.
+        self._branch_panel = _SlotFiller.fill(
+            self.branchPanelSlot, BranchPanel(self._repo))
+        self._commit_list = _SlotFiller.fill(
+            self.commitListSlot, CommitListView(self._repo))
 
-        # Center: commit list + file list + diff viewer
-        center_widget = QWidget()
-        center_layout = QVBoxLayout(center_widget)
-        center_layout.setContentsMargins(0, 0, 0, 0)
-        center_layout.setSpacing(0)
-
-        self._right_splitter = QSplitter(Qt.Orientation.Vertical)
-
-        # Commit list
-        self._commit_list = CommitListView(self._repo)
-        self._right_splitter.addWidget(self._commit_list)
-
-        # Bottom pane: commit file list + diff viewer
-        self._bottom_splitter = QSplitter(Qt.Orientation.Horizontal)
-
-        # Left column: full commit information above the changed-files list
-        self._commit_info_panel = CommitInfoPanel()
-        self._commit_files_list = QListWidget()
-        self._commit_files_list.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
-        self._commit_files_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        # Left column of the bottom pane: full commit information above the
+        # changed-files list (commitFilesList comes from the .ui)
+        self._commit_info_panel = _SlotFiller.fill(
+            self.commitInfoSlot, CommitInfoPanel())
+        self._commit_files_list = self.commitFilesList
         self._commit_file_actions = CommitFileActions(
             self._repo, self._commit_files_list, self)
-        self._info_splitter = QSplitter(Qt.Orientation.Vertical)
-        self._info_splitter.addWidget(self._commit_info_panel)
-        self._info_splitter.addWidget(self._commit_files_list)
-        self._info_splitter.setSizes([180, 120])
-        self._bottom_splitter.addWidget(self._info_splitter)
 
-        self._diff_viewer = DiffViewer()
-        self._large_file_banner = LargeFileBanner()
-        diff_pane = QWidget()
-        diff_layout = QVBoxLayout(diff_pane)
-        diff_layout.setContentsMargins(0, 0, 0, 0)
-        diff_layout.setSpacing(0)
-        diff_layout.addWidget(self._large_file_banner)
-        diff_layout.addWidget(self._diff_viewer, 1)
-        self._bottom_splitter.addWidget(diff_pane)
+        self._large_file_banner = _SlotFiller.fill(
+            self.largeFileBannerSlot, LargeFileBanner())
+        self._diff_viewer = _SlotFiller.fill(self.diffViewerSlot, DiffViewer())
         self._diff_controller = DiffController(
             self._repo, self._diff_viewer, self._large_file_banner, self)
-        self._bottom_splitter.setSizes([360, 600])
-
-        self._right_splitter.addWidget(self._bottom_splitter)
-        self._right_splitter.setSizes([400, 300])
-
-        center_layout.addWidget(self._right_splitter)
-        self._main_splitter.addWidget(center_widget)
 
         # Right panel: working copy (stage / unstage / commit)
-        self._working_copy_widget = WorkingCopyWidget(self._repo)
-        self._working_copy_widget.setMinimumWidth(260)
-        self._main_splitter.addWidget(self._working_copy_widget)
+        self._working_copy_widget = _SlotFiller.fill(
+            self.workingCopySlot, WorkingCopyWidget(self._repo))
+        self._restore_tab_order()
 
-        self._main_splitter.setSizes([200, 680, 360])
+    def _restore_tab_order(self):
+        # Widgets inserted after loadUi land at the end of the focus chain;
+        # put them back into visual order (toolbar, branches, commits, info,
+        # files, diff, working copy).
+        chain = [self.toolBar.widgetForAction(self.actionBranch), self._branch_panel, self._commit_list, self._commit_info_panel,
+                 self._commit_files_list, self._large_file_banner,
+                 self._diff_viewer, self._working_copy_widget]
+        for first, second in zip(chain, chain[1:]):
+            QWidget.setTabOrder(first, second)
 
-        layout.addWidget(self._main_splitter)
-
-    def _build_toolbar(self) -> QToolBar:
-        tb = QToolBar()
-        tb.setMovable(False)
-        tb.setIconSize(QSize(16, 16))
-        tb.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-
-        tb.addAction(t("toolbar.fetch"), self._on_fetch)
-        tb.addAction(t("toolbar.pull"), self._on_pull)
-        tb.addAction(t("toolbar.push"), self._on_push)
-        tb.addSeparator()
-
-        branch_btn = QToolButton()
-        branch_btn.setText(t("toolbar.branch"))
-        branch_btn.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
-        branch_menu = QMenu()
-        branch_menu.addAction(t("toolbar.branch.create"), self._on_create_branch)
-        branch_menu.addAction(t("toolbar.branch.merge"), self._on_merge)
-        branch_menu.addAction(t("toolbar.branch.rebase"), self._on_rebase)
-        branch_menu.addSeparator()
-        branch_menu.addAction(t("toolbar.branch.coauthor_history"), self._on_coauthor_history)
-        branch_btn.setMenu(branch_menu)
-        tb.addWidget(branch_btn)
-
-        tb.addAction(t("toolbar.stash"), self._on_stash)
-        tb.addAction(t("toolbar.tag"), self._on_tag)
-        tb.addAction(t("toolbar.lfs"), self._on_lfs)
-        tb.addAction(t("toolbar.remotes"), self._on_remotes)
-        tb.addSeparator()
-        tb.addAction(t("toolbar.refresh"), self._refresh_all)
-        tb.addSeparator()
-        terminal_action = tb.addAction(t("toolbar.terminal"), self._on_open_terminal)
-        terminal_action.setToolTip(t("toolbar.terminal.tooltip"))
-        tb.addSeparator()
-        fix_action = tb.addAction(t("toolbar.fix"), self._on_fix)
-        fix_action.setToolTip(
-            "Kill stuck git processes and remove .lock files\n"
-            "Use when git operations hang or report 'index.lock exists'"
-        )
-
-        return tb
+    def _connect_toolbar(self):
+        triggers = {
+            self.actionFetch: self._on_fetch,
+            self.actionPull: self._on_pull,
+            self.actionPush: self._on_push,
+            self.actionCreateBranch: self._on_create_branch,
+            self.actionMerge: self._on_merge,
+            self.actionRebase: self._on_rebase,
+            self.actionCoauthorHistory: self._on_coauthor_history,
+            self.actionStash: self._on_stash,
+            self.actionTag: self._on_tag,
+            self.actionLfs: self._on_lfs,
+            self.actionRemotes: self._on_remotes,
+            self.actionRefresh: self._refresh_all,
+            self.actionTerminal: self._on_open_terminal,
+            self.actionFix: self._on_fix,
+        }
+        for action, slot in triggers.items():
+            action.triggered.connect(slot)
 
     def _connect_signals(self):
+        self._connect_toolbar()
         self._commit_list.commit_selected.connect(self._on_commit_selected)
         self._commit_list.working_copy_selected.connect(self._on_working_copy_selected)
         self._commit_list.refresh_requested.connect(self._refresh_all)

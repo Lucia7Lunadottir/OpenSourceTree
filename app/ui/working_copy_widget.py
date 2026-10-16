@@ -1,17 +1,19 @@
 import os
 import fnmatch as _fnmatch
+from pathlib import Path
 
+from PyQt6 import uic
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
+    QWidget, QSplitter,
     QTreeWidget, QTreeWidgetItem, QTreeWidgetItemIterator,
     QListWidget, QListWidgetItem,
     QStackedWidget,
     QLabel, QTextEdit, QPushButton, QCheckBox,
     QMenu, QMessageBox, QAbstractItemView,
-    QProgressBar, QFrame, QLineEdit, QButtonGroup, QSizePolicy
+    QProgressBar, QFrame, QLineEdit, QButtonGroup
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QPoint, QThreadPool
-from PyQt6.QtGui import QColor, QFont, QMouseEvent
+from PyQt6.QtGui import QColor, QMouseEvent
 
 from app.i18n import t
 from app.git.repo import GitRepo
@@ -21,6 +23,9 @@ from app.constants import STATUS_COLORS
 from app.workers.git_worker import GitWorker
 from app.ui.co_authors_bar import CoAuthorsBar
 from app.ui.dialogs.add_coauthor_dialog import AddCoAuthorDialog
+from app.ui.ui_translator import UiTranslator
+
+_UI_FILE = Path(__file__).with_name("working_copy_widget.ui")
 
 LFS_ICON = "⬡"
 
@@ -150,6 +155,10 @@ class FileListWidget(QListWidget):
 # ── Tree view ─────────────────────────────────────────────────────────────────
 
 _DIR_KEY_ROLE = Qt.ItemDataRole.UserRole + 1
+
+# Indexes of the view toggle buttons and of the stack pages they show.
+_LIST_MODE = 0
+_TREE_MODE = 1
 
 
 class FileTreeWidget(QTreeWidget):
@@ -317,6 +326,33 @@ class WorkingCopyWidget(QWidget):
     file_selected  = pyqtSignal(str, bool)
     status_message = pyqtSignal(str)
 
+    # widgets created by loadUi from working_copy_widget.ui
+    conflictBanner: QFrame          # objectName is a style.qss selector
+    bannerIconLabel: QLabel
+    conflictLabel: QLabel
+    continueButton: QPushButton
+    abortButton: QPushButton
+    listViewButton: QPushButton     # objectName becomes "smallBtn" in _setup_ui
+    treeViewButton: QPushButton     # objectName becomes "smallBtn" in _setup_ui
+    sectionsSplitter: QSplitter
+    unstageAllButton: QPushButton
+    stagedFilterEdit: QLineEdit
+    stagedStack: QStackedWidget     # pages: stagedListPage / stagedTreePage
+    stagedListPage: QWidget
+    stagedTreePage: QWidget
+    stageAllButton: QPushButton
+    unstagedFilterEdit: QLineEdit
+    unstagedStack: QStackedWidget   # pages: unstagedListPage / unstagedTreePage
+    unstagedListPage: QWidget
+    unstagedTreePage: QWidget
+    progressBar: QProgressBar
+    progressLabel: QLabel
+    commitArea: QWidget             # objectName is a style.qss selector
+    commitEdit: QTextEdit
+    coAuthorsBar: CoAuthorsBar
+    amendCheck: QCheckBox
+    primaryButton: QPushButton      # "Commit"; objectName is a style.qss selector
+
     def __init__(self, repo: GitRepo, parent=None):
         super().__init__(parent)
         self._repo = repo
@@ -328,170 +364,72 @@ class WorkingCopyWidget(QWidget):
         self.refresh()
 
     # Active-view helpers
+    # The stacks hold container pages, so the active view is picked by index.
     @property
     def _staged_list(self) -> FileListWidget | FileTreeWidget:
-        return self._staged_stack.currentWidget()
+        return (self._staged_flat, self._staged_tree)[self.stagedStack.currentIndex()]
 
     @property
     def _unstaged_list(self) -> FileListWidget | FileTreeWidget:
-        return self._unstaged_stack.currentWidget()
+        return (self._unstaged_flat, self._unstaged_tree)[self.unstagedStack.currentIndex()]
 
     # ------------------------------------------------------------------ UI
 
     def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        # Static layout (banner, view toggle, staged/unstaged sections, progress
+        # row, commit area) lives in working_copy_widget.ui and is editable in
+        # Qt Designer. File views take a constructor argument, so they are built
+        # here and put into the empty stack pages of the form.
+        uic.loadUi(_UI_FILE, self)
 
-        # ── Conflict banner ───────────────────────────────────────────
-        self._conflict_banner = QFrame()
-        self._conflict_banner.setObjectName("conflictBanner")
-        banner_row = QHBoxLayout(self._conflict_banner)
-        banner_row.setContentsMargins(8, 5, 8, 5)
-        self._conflict_label = QLabel("")
-        self._continue_btn = QPushButton("")
-        self._continue_btn.setFixedHeight(22)
-        self._continue_btn.setVisible(False)
-        self._continue_btn.clicked.connect(self._on_continue)
-        self._abort_btn = QPushButton("")
-        self._abort_btn.setFixedHeight(22)
-        self._abort_btn.clicked.connect(self._on_abort)
-        self._banner_icon = QLabel("⚠")
-        banner_row.addWidget(self._banner_icon)
-        banner_row.addWidget(self._conflict_label, 1)
-        banner_row.addWidget(self._continue_btn)
-        banner_row.addWidget(self._abort_btn)
-        self._conflict_banner.setVisible(False)
-        layout.addWidget(self._conflict_banner)
-
-        # ── View toggle ───────────────────────────────────────────────
-        toggle_row = QHBoxLayout()
-        toggle_row.setContentsMargins(4, 2, 4, 2)
-        self._list_btn = QPushButton("☰  " + t("working_copy.view_list"))
-        self._tree_btn = QPushButton("🌲  " + t("working_copy.view_tree"))
-        for btn in (self._list_btn, self._tree_btn):
-            btn.setCheckable(True)
-            btn.setFixedHeight(20)
+        # Both toggle buttons share the style.qss selector #smallBtn; a form
+        # can't hold two widgets with one objectName, so it is assigned here
+        # (and the style re-applied, since it is matched by objectName).
+        for btn in (self.listViewButton, self.treeViewButton):
             btn.setObjectName("smallBtn")
-        self._list_btn.setChecked(True)
+            btn.style().unpolish(btn)
+            btn.style().polish(btn)
+        UiTranslator().apply(self)
+
         self._view_group = QButtonGroup(self)
-        self._view_group.addButton(self._list_btn, 0)
-        self._view_group.addButton(self._tree_btn, 1)
+        self._view_group.addButton(self.listViewButton, _LIST_MODE)
+        self._view_group.addButton(self.treeViewButton, _TREE_MODE)
         self._view_group.setExclusive(True)
-        self._view_group.idClicked.connect(self._set_tree_mode)
-        toggle_row.addStretch()
-        toggle_row.addWidget(self._list_btn)
-        toggle_row.addWidget(self._tree_btn)
-        layout.addLayout(toggle_row)
 
-        splitter = QSplitter(Qt.Orientation.Vertical)
-
-        # ── Staged section ────────────────────────────────────────────
-        staged_widget = QWidget()
-        sl = QVBoxLayout(staged_widget)
-        sl.setContentsMargins(4, 4, 4, 0)
-        sl.setSpacing(2)
-
-        staged_header = QHBoxLayout()
-        staged_lbl = QLabel(t("working_copy.staged"))
-        staged_lbl.setStyleSheet("color: #4ec9b0; font-weight: bold;")
-        self._unstage_all_btn = QPushButton(t("working_copy.unstage_all"))
-        self._unstage_all_btn.setFixedHeight(22)
-        staged_header.addWidget(staged_lbl)
-        staged_header.addStretch()
-        staged_header.addWidget(self._unstage_all_btn)
-        sl.addLayout(staged_header)
-
-        self._staged_filter = QLineEdit()
-        self._staged_filter.setPlaceholderText(t("working_copy.filter_placeholder"))
-        self._staged_filter.setClearButtonEnabled(True)
-        self._staged_filter.setFixedHeight(24)
-        sl.addWidget(self._staged_filter)
-
-        self._staged_stack = QStackedWidget()
         self._staged_flat = FileListWidget(staged=True)
         self._staged_tree = FileTreeWidget(staged=True)
-        self._staged_stack.addWidget(self._staged_flat)   # index 0
-        self._staged_stack.addWidget(self._staged_tree)   # index 1
-        sl.addWidget(self._staged_stack)
-
-        # ── Unstaged section ──────────────────────────────────────────
-        unstaged_widget = QWidget()
-        ul = QVBoxLayout(unstaged_widget)
-        ul.setContentsMargins(4, 4, 4, 0)
-        ul.setSpacing(2)
-
-        unstaged_header = QHBoxLayout()
-        unstaged_lbl = QLabel(t("working_copy.unstaged"))
-        unstaged_lbl.setStyleSheet("color: #dcdcaa; font-weight: bold;")
-        self._stage_all_btn = QPushButton(t("working_copy.stage_all"))
-        self._stage_all_btn.setFixedHeight(22)
-        unstaged_header.addWidget(unstaged_lbl)
-        unstaged_header.addStretch()
-        unstaged_header.addWidget(self._stage_all_btn)
-        ul.addLayout(unstaged_header)
-
-        self._unstaged_filter = QLineEdit()
-        self._unstaged_filter.setPlaceholderText(t("working_copy.filter_placeholder"))
-        self._unstaged_filter.setClearButtonEnabled(True)
-        self._unstaged_filter.setFixedHeight(24)
-        ul.addWidget(self._unstaged_filter)
-
-        self._unstaged_stack = QStackedWidget()
         self._unstaged_flat = FileListWidget(staged=False)
         self._unstaged_tree = FileTreeWidget(staged=False)
-        self._unstaged_stack.addWidget(self._unstaged_flat)
-        self._unstaged_stack.addWidget(self._unstaged_tree)
-        ul.addWidget(self._unstaged_stack)
+        self.stagedListPage.layout().addWidget(self._staged_flat)
+        self.stagedTreePage.layout().addWidget(self._staged_tree)
+        self.unstagedListPage.layout().addWidget(self._unstaged_flat)
+        self.unstagedTreePage.layout().addWidget(self._unstaged_tree)
+        self.stagedStack.setCurrentIndex(_LIST_MODE)
+        self.unstagedStack.setCurrentIndex(_LIST_MODE)
 
-        splitter.addWidget(staged_widget)
-        splitter.addWidget(unstaged_widget)
-        splitter.setSizes([200, 200])
-        layout.addWidget(splitter, 1)
+        # Each file view sits right after its section's filter in the tab chain.
+        QWidget.setTabOrder(self.stagedFilterEdit, self._staged_flat)
+        QWidget.setTabOrder(self._staged_flat, self._staged_tree)
+        QWidget.setTabOrder(self._staged_tree, self.stageAllButton)
+        QWidget.setTabOrder(self.unstagedFilterEdit, self._unstaged_flat)
+        QWidget.setTabOrder(self._unstaged_flat, self._unstaged_tree)
+        QWidget.setTabOrder(self._unstaged_tree, self.commitEdit)
+        # The co-author bar's "+" button comes between the message and "Amend".
+        QWidget.setTabOrder(self.commitEdit, self.coAuthorsBar.smallBtn)
+        QWidget.setTabOrder(self.coAuthorsBar.smallBtn, self.amendCheck)
 
-        # ── Progress bar ──────────────────────────────────────────────
-        progress_row = QHBoxLayout()
-        progress_row.setContentsMargins(4, 2, 4, 0)
-        self._progress_bar = QProgressBar()
-        self._progress_bar.setFixedHeight(14)
-        self._progress_bar.setTextVisible(False)
-        self._progress_label = QLabel("")
-        self._progress_label.setStyleSheet("color: #9cdcfe; font-size: 11px;")
-        progress_row.addWidget(self._progress_bar)
-        progress_row.addWidget(self._progress_label)
-        self._progress_bar.setVisible(False)
-        self._progress_label.setVisible(False)
-        layout.addLayout(progress_row)
-
-        # ── Commit area ───────────────────────────────────────────────
-        commit_area = QWidget()
-        commit_area.setObjectName("commitArea")
-        commit_layout = QVBoxLayout(commit_area)
-        commit_layout.setContentsMargins(4, 4, 4, 4)
-        commit_layout.setSpacing(4)
-
-        self._commit_edit = QTextEdit()
-        self._commit_edit.setPlaceholderText(t("working_copy.commit_placeholder"))
-        self._commit_edit.setFixedHeight(80)
-        self._commit_edit.setFont(QFont("Monospace", 11))
-        commit_layout.addWidget(self._commit_edit)
-
-        self._co_authors_bar = CoAuthorsBar()
-        commit_layout.addWidget(self._co_authors_bar)
-
-        btn_row = QHBoxLayout()
-        self._amend_check = QCheckBox(t("working_copy.amend"))
-        self._commit_btn = QPushButton(t("working_copy.commit_btn"))
-        self._commit_btn.setObjectName("primaryButton")
-        self._commit_btn.setFixedHeight(28)
-        btn_row.addWidget(self._amend_check)
-        btn_row.addStretch()
-        btn_row.addWidget(self._commit_btn)
-        commit_layout.addLayout(btn_row)
-        commit_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        layout.addWidget(commit_area)
+        # Splitter sizes and initial visibility aren't stored in the form.
+        self.sectionsSplitter.setSizes([200, 200])
+        self.conflictBanner.setVisible(False)
+        self.continueButton.setVisible(False)
+        self.progressBar.setVisible(False)
+        self.progressLabel.setVisible(False)
 
     def _connect_signals(self):
+        self.continueButton.clicked.connect(self._on_continue)
+        self.abortButton.clicked.connect(self._on_abort)
+        self._view_group.idClicked.connect(self._set_tree_mode)
+
         for view in (self._staged_flat, self._staged_tree):
             view.file_selected.connect(self.file_selected)
             view.customContextMenuRequested.connect(self._staged_context_menu)
@@ -500,64 +438,64 @@ class WorkingCopyWidget(QWidget):
             view.customContextMenuRequested.connect(self._unstaged_context_menu)
 
         # Filter applies to the currently active view (evaluated at call time)
-        self._staged_filter.textChanged.connect(
+        self.stagedFilterEdit.textChanged.connect(
             lambda text: self._staged_list.apply_filter(text)
         )
-        self._unstaged_filter.textChanged.connect(
+        self.unstagedFilterEdit.textChanged.connect(
             lambda text: self._unstaged_list.apply_filter(text)
         )
 
-        self._stage_all_btn.clicked.connect(self._on_stage_all)
-        self._unstage_all_btn.clicked.connect(self._on_unstage_all)
-        self._commit_btn.clicked.connect(self._on_commit)
-        self._amend_check.toggled.connect(self._on_amend_toggled)
-        self._commit_edit.textChanged.connect(self._on_commit_text_changed)
-        self._co_authors_bar.add_requested.connect(self._on_add_co_author)
-        self._co_authors_bar.remove_requested.connect(self._on_remove_co_author)
+        self.stageAllButton.clicked.connect(self._on_stage_all)
+        self.unstageAllButton.clicked.connect(self._on_unstage_all)
+        self.primaryButton.clicked.connect(self._on_commit)
+        self.amendCheck.toggled.connect(self._on_amend_toggled)
+        self.commitEdit.textChanged.connect(self._on_commit_text_changed)
+        self.coAuthorsBar.add_requested.connect(self._on_add_co_author)
+        self.coAuthorsBar.remove_requested.connect(self._on_remove_co_author)
 
     # ------------------------------------------------------------------ Slots
 
     def _set_tree_mode(self, mode_id: int):
         """0 = flat list, 1 = tree."""
-        self._staged_stack.setCurrentIndex(mode_id)
-        self._unstaged_stack.setCurrentIndex(mode_id)
+        self.stagedStack.setCurrentIndex(mode_id)
+        self.unstagedStack.setCurrentIndex(mode_id)
         # Flush pending data into the newly visible views
         for view in (self._staged_list, self._unstaged_list):
             if view._pending_files is not None:
                 view.set_files(*view._pending_files)
                 # _pending_files cleared inside set_files
-        self._staged_list.apply_filter(self._staged_filter.text())
-        self._unstaged_list.apply_filter(self._unstaged_filter.text())
+        self._staged_list.apply_filter(self.stagedFilterEdit.text())
+        self._unstaged_list.apply_filter(self.unstagedFilterEdit.text())
 
     def _on_amend_toggled(self, checked: bool):
         if checked:
-            self._pre_amend_text = self._commit_edit.toPlainText()
+            self._pre_amend_text = self.commitEdit.toPlainText()
             try:
                 msg = self._repo.get_last_commit_message()
             except Exception:
                 msg = ""
             self._replace_commit_text_keep_cursor_at_end(msg)
         else:
-            self._commit_edit.setPlainText(self._pre_amend_text)
+            self.commitEdit.setPlainText(self._pre_amend_text)
 
     def _on_commit_text_changed(self):
-        self._co_authors_bar.sync(self._commit_edit.toPlainText())
+        self.coAuthorsBar.sync(self.commitEdit.toPlainText())
 
     def _on_add_co_author(self):
         dlg = AddCoAuthorDialog(self)
         if dlg.exec():
-            new_text = add_co_author(self._commit_edit.toPlainText(), dlg.name, dlg.email)
+            new_text = add_co_author(self.commitEdit.toPlainText(), dlg.name, dlg.email)
             self._replace_commit_text_keep_cursor_at_end(new_text)
 
     def _on_remove_co_author(self, email: str):
-        new_text = remove_co_author(self._commit_edit.toPlainText(), email)
+        new_text = remove_co_author(self.commitEdit.toPlainText(), email)
         self._replace_commit_text_keep_cursor_at_end(new_text)
 
     def _replace_commit_text_keep_cursor_at_end(self, text: str):
-        self._commit_edit.setPlainText(text)
-        cursor = self._commit_edit.textCursor()
+        self.commitEdit.setPlainText(text)
+        cursor = self.commitEdit.textCursor()
         cursor.movePosition(cursor.MoveOperation.End)
-        self._commit_edit.setTextCursor(cursor)
+        self.commitEdit.setTextCursor(cursor)
 
     def refresh(self):
         try:
@@ -579,8 +517,8 @@ class WorkingCopyWidget(QWidget):
                 if view is not active_unstaged:
                     view._pending_files = (unstaged, lfs_patterns)
 
-            active_staged.apply_filter(self._staged_filter.text())
-            active_unstaged.apply_filter(self._unstaged_filter.text())
+            active_staged.apply_filter(self.stagedFilterEdit.text())
+            active_unstaged.apply_filter(self.unstagedFilterEdit.text())
             self._update_conflict_banner(staged, unstaged)
         except Exception as e:
             self.status_message.emit(f"Error refreshing status: {e}")
@@ -595,69 +533,69 @@ class WorkingCopyWidget(QWidget):
         if not conflicted:
             if self._repo.is_merging():
                 # All conflicts resolved — waiting for merge commit
-                self._banner_icon.setText("✓")
-                self._banner_icon.setStyleSheet("color: #4ec9b0; font-size: 14px;")
-                self._conflict_banner.setStyleSheet(
+                self.bannerIconLabel.setText("✓")
+                self.bannerIconLabel.setStyleSheet("color: #4ec9b0; font-size: 14px;")
+                self.conflictBanner.setStyleSheet(
                     "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);"
                 )
-                self._conflict_label.setText(t("conflict.merge_ready"))
-                self._abort_btn.setText(t("conflict.merge_ready_abort"))
+                self.conflictLabel.setText(t("conflict.merge_ready"))
+                self.abortButton.setText(t("conflict.merge_ready_abort"))
                 self._abort_fn = self._repo.abort_merge
-                self._continue_btn.setVisible(False)
-                self._conflict_banner.setVisible(True)
+                self.continueButton.setVisible(False)
+                self.conflictBanner.setVisible(True)
                 self._maybe_fill_merge_msg()
             elif self._repo.is_rebasing():
                 # All conflicts resolved — user must run rebase --continue
-                self._banner_icon.setText("✓")
-                self._banner_icon.setStyleSheet("color: #4ec9b0; font-size: 14px;")
-                self._conflict_banner.setStyleSheet(
+                self.bannerIconLabel.setText("✓")
+                self.bannerIconLabel.setStyleSheet("color: #4ec9b0; font-size: 14px;")
+                self.conflictBanner.setStyleSheet(
                     "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);"
                 )
-                self._conflict_label.setText(t("conflict.rebase_ready"))
-                self._abort_btn.setText(t("conflict.abort_rebase"))
+                self.conflictLabel.setText(t("conflict.rebase_ready"))
+                self.abortButton.setText(t("conflict.abort_rebase"))
                 self._abort_fn = self._repo.abort_rebase
-                self._continue_btn.setText(t("conflict.continue_rebase"))
-                self._continue_btn.setVisible(True)
+                self.continueButton.setText(t("conflict.continue_rebase"))
+                self.continueButton.setVisible(True)
                 self._continue_fn = self._repo.rebase_continue
-                self._conflict_banner.setVisible(True)
+                self.conflictBanner.setVisible(True)
             elif self._repo.is_cherry_picking():
                 # All conflicts resolved — user must run cherry-pick --continue
-                self._banner_icon.setText("✓")
-                self._banner_icon.setStyleSheet("color: #4ec9b0; font-size: 14px;")
-                self._conflict_banner.setStyleSheet(
+                self.bannerIconLabel.setText("✓")
+                self.bannerIconLabel.setStyleSheet("color: #4ec9b0; font-size: 14px;")
+                self.conflictBanner.setStyleSheet(
                     "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);"
                 )
-                self._conflict_label.setText(t("conflict.cherry_pick_ready"))
-                self._abort_btn.setText(t("conflict.abort_cherry_pick"))
+                self.conflictLabel.setText(t("conflict.cherry_pick_ready"))
+                self.abortButton.setText(t("conflict.abort_cherry_pick"))
                 self._abort_fn = self._repo.abort_cherry_pick
-                self._continue_btn.setText(t("conflict.continue_cherry_pick"))
-                self._continue_btn.setVisible(True)
+                self.continueButton.setText(t("conflict.continue_cherry_pick"))
+                self.continueButton.setVisible(True)
                 self._continue_fn = self._repo.cherry_pick_continue
-                self._conflict_banner.setVisible(True)
+                self.conflictBanner.setVisible(True)
             elif self._repo.is_reverting():
-                self._banner_icon.setText("✓")
-                self._banner_icon.setStyleSheet("color: #4ec9b0; font-size: 14px;")
-                self._conflict_banner.setStyleSheet(
+                self.bannerIconLabel.setText("✓")
+                self.bannerIconLabel.setStyleSheet("color: #4ec9b0; font-size: 14px;")
+                self.conflictBanner.setStyleSheet(
                     "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);"
                 )
-                self._conflict_label.setText(t("conflict.revert_ready"))
-                self._abort_btn.setText(t("conflict.abort_revert"))
+                self.conflictLabel.setText(t("conflict.revert_ready"))
+                self.abortButton.setText(t("conflict.abort_revert"))
                 self._abort_fn = self._repo.abort_revert
-                self._continue_btn.setText(t("conflict.continue_revert"))
-                self._continue_btn.setVisible(True)
+                self.continueButton.setText(t("conflict.continue_revert"))
+                self.continueButton.setVisible(True)
                 self._continue_fn = self._repo.revert_continue
-                self._conflict_banner.setVisible(True)
+                self.conflictBanner.setVisible(True)
             else:
-                self._conflict_banner.setVisible(False)
+                self.conflictBanner.setVisible(False)
                 self._abort_fn = None
-                self._continue_btn.setVisible(False)
+                self.continueButton.setVisible(False)
             return
 
         # Reset banner style to conflict/warning style
-        self._banner_icon.setText("⚠")
-        self._banner_icon.setStyleSheet("")
-        self._conflict_banner.setStyleSheet("")
-        self._continue_btn.setVisible(False)
+        self.bannerIconLabel.setText("⚠")
+        self.bannerIconLabel.setStyleSheet("")
+        self.conflictBanner.setStyleSheet("")
+        self.continueButton.setVisible(False)
         if self._repo.is_merging():
             op, fn = t("conflict.abort_merge"), self._repo.abort_merge
         elif self._repo.is_rebasing():
@@ -669,16 +607,16 @@ class WorkingCopyWidget(QWidget):
         else:
             op, fn = t("conflict.abort_merge"), self._repo.abort_merge
         self._abort_fn = fn
-        self._conflict_label.setText(t("conflict.banner", n=len(conflicted)))
-        self._abort_btn.setText(op)
-        self._conflict_banner.setVisible(True)
+        self.conflictLabel.setText(t("conflict.banner", n=len(conflicted)))
+        self.abortButton.setText(op)
+        self.conflictBanner.setVisible(True)
 
     def _maybe_fill_merge_msg(self):
-        if not self._commit_edit.toPlainText().strip():
+        if not self.commitEdit.toPlainText().strip():
             try:
                 msg = self._repo.get_merge_msg()
                 if msg:
-                    self._commit_edit.setPlainText(msg)
+                    self.commitEdit.setPlainText(msg)
             except Exception:
                 pass
 
@@ -809,8 +747,8 @@ class WorkingCopyWidget(QWidget):
         self._run_op(self._repo.unstage_all)
 
     def _on_commit(self):
-        message = self._commit_edit.toPlainText().strip()
-        if not message and not self._amend_check.isChecked():
+        message = self.commitEdit.toPlainText().strip()
+        if not message and not self.amendCheck.isChecked():
             QMessageBox.warning(self, t("working_copy.commit_btn"),
                                 t("error.no_commit_message"))
             return
@@ -844,14 +782,14 @@ class WorkingCopyWidget(QWidget):
                 if ret == QMessageBox.StandardButton.Cancel:
                     return
 
-        worker = GitWorker(self._repo.commit, message, self._amend_check.isChecked())
+        worker = GitWorker(self._repo.commit, message, self.amendCheck.isChecked())
         worker.signals.result.connect(lambda _: self._on_committed())
         worker.signals.error.connect(self._on_error)
         QThreadPool.globalInstance().start(worker)
 
     def _on_committed(self):
-        self._commit_edit.clear()
-        self._amend_check.setChecked(False)
+        self.commitEdit.clear()
+        self.amendCheck.setChecked(False)
         self.refresh()
         self.committed.emit()
         self.status_message.emit(t("status.committed"))
@@ -875,13 +813,13 @@ class WorkingCopyWidget(QWidget):
         QThreadPool.globalInstance().start(worker)
 
     def _on_batch_done(self):
-        self._progress_bar.setVisible(False)
-        self._progress_label.setVisible(False)
+        self.progressBar.setVisible(False)
+        self.progressLabel.setVisible(False)
         self.refresh()
 
     def _on_error(self, error_msg: str):
-        self._progress_bar.setVisible(False)
-        self._progress_label.setVisible(False)
+        self.progressBar.setVisible(False)
+        self.progressLabel.setVisible(False)
         lines = [l for l in error_msg.splitlines() if l.strip()]
         self.status_message.emit(lines[-1] if lines else "Git error occurred")
         self.refresh()

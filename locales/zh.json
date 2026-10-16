@@ -64,6 +64,8 @@
     "working_copy.discard_confirm_many": "放弃对 {n} 个文件的更改？\n\n{names}",
     "working_copy.view_list": "列表",
     "working_copy.view_tree": "树状",
+    "working_copy.view_list_button": "☰  列表",
+    "working_copy.view_tree_button": "🌲  树状",
     "working_copy.stage_folder": "暂存文件夹中的 {n} 个文件",
     "working_copy.unstage_folder": "取消暂存文件夹中的 {n} 个文件",
     "remote.all": "(全部)",
@@ -342,5 +344,6 @@
     "coauthors.add_dialog.name_placeholder": "姓名",
     "coauthors.add_dialog.email_label": "邮箱:",
     "coauthors.add_dialog.email_placeholder": "email@example.com",
-    "coauthors.add_dialog.invalid": "请输入姓名和有效的邮箱地址。"
+    "coauthors.add_dialog.invalid": "请输入姓名和有效的邮箱地址。",
+    "toolbar.fix.tooltip": "结束卡住的 git 进程并删除 .lock 文件\n当 git 操作挂起或提示“index.lock exists”时使用"
 }

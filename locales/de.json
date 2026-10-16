@@ -64,6 +64,8 @@
     "working_copy.discard_confirm_many": "Änderungen an {n} Dateien verwerfen?\n\n{names}",
     "working_copy.view_list": "Liste",
     "working_copy.view_tree": "Baumstruktur",
+    "working_copy.view_list_button": "☰  Liste",
+    "working_copy.view_tree_button": "🌲  Baumstruktur",
     "working_copy.stage_folder": "{n} Dateien in Ordner bereitstellen",
     "working_copy.unstage_folder": "{n} Dateien in Ordner zurücknehmen",
     "remote.all": "(alle)",
@@ -342,5 +344,6 @@
     "coauthors.add_dialog.name_placeholder": "Vorname Nachname",
     "coauthors.add_dialog.email_label": "E-Mail:",
     "coauthors.add_dialog.email_placeholder": "email@example.com",
-    "coauthors.add_dialog.invalid": "Geben Sie einen Namen und eine gültige E-Mail-Adresse ein."
+    "coauthors.add_dialog.invalid": "Geben Sie einen Namen und eine gültige E-Mail-Adresse ein.",
+    "toolbar.fix.tooltip": "Hängende Git-Prozesse beenden und .lock-Dateien entfernen\nVerwenden, wenn Git-Vorgänge hängen oder „index.lock exists“ melden"
 }

@@ -64,6 +64,8 @@
     "working_copy.discard_confirm_many": "¿Descartar cambios en {n} archivos?\n\n{names}",
     "working_copy.view_list": "Lista",
     "working_copy.view_tree": "Árbol",
+    "working_copy.view_list_button": "☰  Lista",
+    "working_copy.view_tree_button": "🌲  Árbol",
     "working_copy.stage_folder": "Preparar {n} archivos en la carpeta",
     "working_copy.unstage_folder": "Quitar {n} archivos de la carpeta",
     "remote.all": "(todos)",
@@ -342,5 +344,6 @@
     "coauthors.add_dialog.name_placeholder": "Nombre Apellido",
     "coauthors.add_dialog.email_label": "Correo:",
     "coauthors.add_dialog.email_placeholder": "email@example.com",
-    "coauthors.add_dialog.invalid": "Introduce un nombre y un correo electrónico válido."
+    "coauthors.add_dialog.invalid": "Introduce un nombre y un correo electrónico válido.",
+    "toolbar.fix.tooltip": "Terminar procesos de git bloqueados y eliminar archivos .lock\nÚsalo cuando las operaciones de git se cuelguen o indiquen «index.lock exists»"
 }

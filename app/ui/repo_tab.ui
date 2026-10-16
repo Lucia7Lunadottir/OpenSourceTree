@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>RepoTab</class>
+ <widget class="QWidget" name="RepoTab">
+  <layout class="QVBoxLayout" name="rootLayout">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QToolBar" name="toolBar">
+     <property name="movable">
+      <bool>false</bool>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>16</width>
+       <height>16</height>
+      </size>
+     </property>
+     <property name="toolButtonStyle">
+      <enum>Qt::ToolButtonStyle::ToolButtonTextBesideIcon</enum>
+     </property>
+     <addaction name="actionFetch"/>
+     <addaction name="actionPull"/>
+     <addaction name="actionPush"/>
+     <addaction name="separator"/>
+     <addaction name="actionBranch"/>
+     <addaction name="actionStash"/>
+     <addaction name="actionTag"/>
+     <addaction name="actionLfs"/>
+     <addaction name="actionRemotes"/>
+     <addaction name="separator"/>
+     <addaction name="actionRefresh"/>
+     <addaction name="separator"/>
+     <addaction name="actionTerminal"/>
+     <addaction name="separator"/>
+     <addaction name="actionFix"/>
+    </widget>
+   </item>
+   <item>
+    <widget class="QSplitter" name="mainSplitter">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <widget class="QWidget" name="branchPanelSlot" native="true">
+      <property name="minimumSize">
+       <size>
+        <width>160</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>280</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="toolTip">
+       <string notr="true">BranchPanel is created in code (needs the repository)</string>
+      </property>
+     </widget>
+     <widget class="QWidget" name="centerWidget" native="true">
+      <layout class="QVBoxLayout" name="centerLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QSplitter" name="rightSplitter">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <widget class="QWidget" name="commitListSlot" native="true">
+          <property name="toolTip">
+           <string notr="true">CommitListView is created in code (needs the repository)</string>
+          </property>
+         </widget>
+         <widget class="QSplitter" name="bottomSplitter">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+          <widget class="QSplitter" name="infoSplitter">
+           <property name="orientation">
+            <enum>Qt::Orientation::Vertical</enum>
+           </property>
+           <widget class="QWidget" name="commitInfoSlot" native="true">
+            <property name="toolTip">
+             <string notr="true">CommitInfoPanel is created in code</string>
+            </property>
+           </widget>
+           <widget class="QListWidget" name="commitFilesList">
+            <property name="contextMenuPolicy">
+             <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
+            </property>
+           </widget>
+          </widget>
+          <widget class="QWidget" name="diffPane" native="true">
+           <layout class="QVBoxLayout" name="diffLayout" stretch="0,1">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QWidget" name="largeFileBannerSlot" native="true">
+              <property name="toolTip">
+               <string notr="true">LargeFileBanner is created in code</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="diffViewerSlot" native="true">
+              <property name="toolTip">
+               <string notr="true">DiffViewer is created in code</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="workingCopySlot" native="true">
+      <property name="minimumSize">
+       <size>
+        <width>260</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="toolTip">
+       <string notr="true">WorkingCopyWidget is created in code (needs the repository)</string>
+      </property>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+  <action name="actionFetch">
+   <property name="text">
+    <string notr="true">toolbar.fetch</string>
+   </property>
+  </action>
+  <action name="actionPull">
+   <property name="text">
+    <string notr="true">toolbar.pull</string>
+   </property>
+  </action>
+  <action name="actionPush">
+   <property name="text">
+    <string notr="true">toolbar.push</string>
+   </property>
+  </action>
+  <action name="actionBranch">
+   <property name="text">
+    <string notr="true">toolbar.branch</string>
+   </property>
+  </action>
+  <action name="actionCreateBranch">
+   <property name="text">
+    <string notr="true">toolbar.branch.create</string>
+   </property>
+  </action>
+  <action name="actionMerge">
+   <property name="text">
+    <string notr="true">toolbar.branch.merge</string>
+   </property>
+  </action>
+  <action name="actionRebase">
+   <property name="text">
+    <string notr="true">toolbar.branch.rebase</string>
+   </property>
+  </action>
+  <action name="actionCoauthorHistory">
+   <property name="text">
+    <string notr="true">toolbar.branch.coauthor_history</string>
+   </property>
+  </action>
+  <action name="actionStash">
+   <property name="text">
+    <string notr="true">toolbar.stash</string>
+   </property>
+  </action>
+  <action name="actionTag">
+   <property name="text">
+    <string notr="true">toolbar.tag</string>
+   </property>
+  </action>
+  <action name="actionLfs">
+   <property name="text">
+    <string notr="true">toolbar.lfs</string>
+   </property>
+  </action>
+  <action name="actionRemotes">
+   <property name="text">
+    <string notr="true">toolbar.remotes</string>
+   </property>
+  </action>
+  <action name="actionRefresh">
+   <property name="text">
+    <string notr="true">toolbar.refresh</string>
+   </property>
+  </action>
+  <action name="actionTerminal">
+   <property name="text">
+    <string notr="true">toolbar.terminal</string>
+   </property>
+   <property name="toolTip">
+    <string notr="true">toolbar.terminal.tooltip</string>
+   </property>
+  </action>
+  <action name="actionFix">
+   <property name="text">
+    <string notr="true">toolbar.fix</string>
+   </property>
+   <property name="toolTip">
+    <string notr="true">toolbar.fix.tooltip</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

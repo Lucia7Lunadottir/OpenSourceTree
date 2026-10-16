@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1280</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string notr="true">OpenSourceTree</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="centralLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QSplitter" name="mainSplitter">
+      <property name="orientation">
+       <enum>Qt::Orientation::Horizontal</enum>
+      </property>
+      <widget class="BookmarksPanel" name="bookmarksPanel" native="true">
+       <property name="minimumSize">
+        <size>
+         <width>160</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>260</width>
+         <height>16777215</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QWidget" name="placeholderPage" native="true">
+       <layout class="QHBoxLayout" name="placeholderLayout">
+        <property name="leftMargin">
+         <number>9</number>
+        </property>
+        <property name="topMargin">
+         <number>9</number>
+        </property>
+        <property name="rightMargin">
+         <number>9</number>
+        </property>
+        <property name="bottomMargin">
+         <number>9</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="placeholderLabel">
+          <property name="styleSheet">
+           <string notr="true">color: #666; font-size: 14px;</string>
+          </property>
+          <property name="text">
+           <string notr="true">main.placeholder</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QTabWidget" name="repoTabs">
+       <property name="tabPosition">
+        <enum>QTabWidget::TabPosition::North</enum>
+       </property>
+       <property name="currentIndex">
+        <number>-1</number>
+       </property>
+       <property name="documentMode">
+        <bool>true</bool>
+       </property>
+       <property name="tabsClosable">
+        <bool>true</bool>
+       </property>
+       <property name="movable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string notr="true">menu.file</string>
+    </property>
+    <addaction name="actionOpen"/>
+    <addaction name="actionClone"/>
+    <addaction name="separator"/>
+    <addaction name="actionQuit"/>
+   </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string notr="true">menu.settings</string>
+    </property>
+    <addaction name="actionAccounts"/>
+    <addaction name="separator"/>
+    <addaction name="actionSsh"/>
+    <addaction name="actionIdentity"/>
+    <addaction name="separator"/>
+    <addaction name="actionLanguage"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string notr="true">menu.view</string>
+    </property>
+    <addaction name="actionRefresh"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string notr="true">menu.help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuSettings"/>
+   <addaction name="menuView"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionOpen">
+   <property name="text">
+    <string notr="true">menu.file.open</string>
+   </property>
+  </action>
+  <action name="actionClone">
+   <property name="text">
+    <string notr="true">menu.file.clone</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string notr="true">menu.file.quit</string>
+   </property>
+  </action>
+  <action name="actionAccounts">
+   <property name="text">
+    <string notr="true">menu.settings.accounts</string>
+   </property>
+  </action>
+  <action name="actionSsh">
+   <property name="text">
+    <string notr="true">menu.settings.ssh</string>
+   </property>
+  </action>
+  <action name="actionIdentity">
+   <property name="text">
+    <string notr="true">menu.settings.identity</string>
+   </property>
+  </action>
+  <action name="actionLanguage">
+   <property name="text">
+    <string notr="true">menu.settings.language</string>
+   </property>
+  </action>
+  <action name="actionRefresh">
+   <property name="text">
+    <string notr="true">menu.view.refresh</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">F5</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string notr="true">menu.help.about</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>BookmarksPanel</class>
+   <extends>QWidget</extends>
+   <header>app.ui.bookmarks_panel</header>
+   <container>0</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
