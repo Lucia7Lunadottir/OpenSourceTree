@@ -149,6 +149,18 @@ class GitRunner:
             )
         return result.stdout
 
+    def open_binary_stream(self, args: list[str]) -> subprocess.Popen:
+        """Start git and hand back the process with a readable binary stdout.
+
+        For commands whose output can be huge (e.g. `git archive`) and must be
+        consumed incrementally instead of being buffered in memory. The caller
+        owns the process: read stdout, then call `wait()`.
+        """
+        return subprocess.Popen(
+            self._base_cmd(args), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            env=self._build_env(),
+        )
+
     def run_streaming(self, args: list[str]) -> Iterator[str]:
         import re
         cmd = self._base_cmd(args)

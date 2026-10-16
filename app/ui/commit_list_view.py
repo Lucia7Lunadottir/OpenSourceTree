@@ -190,6 +190,7 @@ class CommitListView(QWidget):
         menu.addSeparator()
         cherrypick_act  = menu.addAction("Cherry-pick")
         revert_act      = menu.addAction("Revert (создать отменяющий коммит)")
+        browse_act      = menu.addAction(t("extract.menu_browse"))
         menu.addSeparator()
 
         # ── Copy SHA submenu ──
@@ -231,6 +232,9 @@ class CommitListView(QWidget):
             self._apply_sequencer_op(self._repo.cherry_pick, commit, f"Cherry-pick {sh} выполнен")
         elif action == revert_act:
             self._apply_sequencer_op(self._repo.revert_commit, commit, f"Revert {sh} выполнен")
+        elif action == browse_act:
+            from app.ui.dialogs.commit_tree_dialog import CommitTreeDialog
+            CommitTreeDialog(self._repo, h, parent=self).exec()
         elif action == copy_short_act:
             clipboard.setText(sh)
         elif action == copy_full_act:

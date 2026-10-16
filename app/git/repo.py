@@ -1188,6 +1188,47 @@ class GitRepo:
                     "Your work is safe — run  git stash pop  to restore it."
                 ) from pop_err
 
+    # ------------------------------------------------ Extract from a commit
+
+    def list_commit_tree(self, hash: str) -> list[str]:
+        """All file paths that exist in the snapshot of `hash`."""
+        raw = self.runner.run_bytes(["ls-tree", "-r", "-z", "--name-only", hash])
+        return [p.decode("utf-8", errors="replace") for p in raw.split(b"\0") if p]
+
+    def extract_paths(self, hash: str, paths: list[str], dest: str) -> int:
+        """Write files/folders as they are in commit `hash` into `dest`.
+
+        Folders are taken whole; the repo-relative layout is kept under `dest`.
+        Paths missing from the snapshot (e.g. files deleted by the commit) are
+        skipped. Returns the number of files written.
+        """
+        import tarfile
+        tree = self.list_commit_tree(hash)
+        tree_set = set(tree)
+        wanted: list[str] = []
+        for path in paths:
+            path = path.rstrip("/")
+            if path in tree_set or any(f.startswith(path + "/") for f in tree):
+                wanted.append(path)
+        os.makedirs(dest, exist_ok=True)
+        written = 0
+        for i in range(0, len(wanted), 500):  # keep argv well under ARG_MAX
+            proc = self.runner.open_binary_stream(
+                ["archive", "--format=tar", hash, "--"] + wanted[i:i + 500])
+            try:
+                with tarfile.open(fileobj=proc.stdout, mode="r|") as tar:
+                    for member in tar:
+                        tar.extract(member, dest, filter="tar")
+                        written += member.isfile()
+            finally:
+                proc.stdout.close()
+                err = proc.stderr.read().decode("utf-8", errors="replace")
+                proc.stderr.close()
+                code = proc.wait()
+            if code != 0:
+                raise GitCommandError(["archive", hash], code, err)
+        return written
+
     # ------------------------------------------------- Streaming remote ops
 
     def fetch_tags_silent(self) -> None:

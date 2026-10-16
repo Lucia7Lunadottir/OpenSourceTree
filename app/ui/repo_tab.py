@@ -22,6 +22,7 @@ from .diff_viewer import DiffViewer
 from .diff_controller import DiffController
 from .large_file_banner import LargeFileBanner
 from .commit_info_panel import CommitInfoPanel
+from .commit_file_actions import CommitFileActions
 from .dialogs.remote_dialog import RemoteDialog
 from .dialogs.stash_dialog import StashDialog
 from .dialogs.tag_dialog import TagDialog
@@ -89,6 +90,10 @@ class RepoTab(QWidget):
         # Left column: full commit information above the changed-files list
         self._commit_info_panel = CommitInfoPanel()
         self._commit_files_list = QListWidget()
+        self._commit_files_list.setSelectionMode(QListWidget.SelectionMode.ExtendedSelection)
+        self._commit_files_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._commit_file_actions = CommitFileActions(
+            self._repo, self._commit_files_list, self)
         self._info_splitter = QSplitter(Qt.Orientation.Vertical)
         self._info_splitter.addWidget(self._commit_info_panel)
         self._info_splitter.addWidget(self._commit_files_list)
@@ -170,6 +175,9 @@ class RepoTab(QWidget):
         self._commit_list.refresh_requested.connect(self._refresh_all)
         self._commit_list.status_message.connect(self.status_message)
         self._commit_files_list.currentItemChanged.connect(self._on_commit_file_selected)
+        self._commit_files_list.customContextMenuRequested.connect(
+            self._commit_file_actions.show_menu)
+        self._commit_file_actions.status_message.connect(self.status_message)
         self._commit_info_panel.parent_clicked.connect(self._commit_list.select_commit)
         self._branch_panel.refresh_requested.connect(self._refresh_all)
         self._branch_panel.branch_checked_out.connect(self._on_branch_checked_out)
@@ -245,6 +253,7 @@ class RepoTab(QWidget):
 
     def _on_commit_selected(self, commit: CommitRecord):
         self._current_commit = commit
+        self._commit_file_actions.set_commit(commit.hash if commit else "")
         if commit is None:
             self._commit_info_panel.clear_info()
             return
