@@ -7,9 +7,10 @@ from PyQt6.QtWidgets import (
     QLabel, QApplication, QMessageBox, QFileDialog
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QKeySequence, QAction
+from PyQt6.QtGui import QKeySequence, QAction, QActionGroup
 
 from app.i18n import t
+from app.ui import theme
 
 from .bookmarks_panel import BookmarksPanel
 from .repo_tab import RepoTab
@@ -97,6 +98,49 @@ class MainWindow(QMainWindow):
         }
         for action, slot in triggers.items():
             action.triggered.connect(slot)
+
+        self._theme_menu = self.menuSettings.addMenu(t("menu.settings.theme"))
+        self._theme_menu.aboutToShow.connect(self._fill_theme_menu)
+        self._fill_theme_menu()
+
+    def _fill_theme_menu(self) -> None:
+        """Base, follow-the-system and every Equestria theme; rebuilt on open
+        because themes can be added in the character switcher at any time."""
+        controller = theme.controller()
+        current = controller.choice if controller else theme.BASE
+        menu = self._theme_menu
+        menu.clear()
+        if getattr(self, "_theme_group", None) is not None:
+            self._theme_group.deleteLater()
+        group = self._theme_group = QActionGroup(menu)
+        self._theme_actions = {}
+
+        def add(choice: str, text: str, enabled: bool = True) -> None:
+            action = QAction(text, menu, checkable=True)
+            action.setEnabled(enabled)
+            action.setChecked(choice == current)
+            action.triggered.connect(lambda _checked=False, c=choice: self._set_theme(c))
+            group.addAction(action)
+            menu.addAction(action)
+            self._theme_actions[choice] = action
+
+        add(theme.BASE, t("theme.base"))
+        system = t("theme.system")
+        if controller and controller.system_name:
+            system = f"{system} — {controller.system_name}"
+        add(theme.SYSTEM, system, theme.KIT_AVAILABLE)
+        names = controller.theme_names() if controller else []
+        if names:
+            menu.addSeparator()
+            for name in names:
+                add(name, name)
+
+    def _set_theme(self, choice: str) -> None:
+        try:
+            theme.controller().set_choice(choice)
+        except OSError as error:
+            QMessageBox.warning(self, t("menu.settings.theme"), str(error))
+        self._fill_theme_menu()
 
     def _setup_statusbar(self):
         self._status = self.statusbar

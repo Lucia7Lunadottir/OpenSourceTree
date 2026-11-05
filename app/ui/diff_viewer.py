@@ -1,3 +1,4 @@
+from app.ui.theme import ThemedTextBrowser
 from PyQt6.QtWidgets import QTextBrowser
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
@@ -32,7 +33,7 @@ pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; }
 """
 
 
-class DiffViewer(QTextBrowser):
+class DiffViewer(ThemedTextBrowser):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setOpenLinks(False)

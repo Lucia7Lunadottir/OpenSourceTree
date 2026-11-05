@@ -1,3 +1,4 @@
+from app.ui import theme
 import os
 import subprocess
 import shutil
@@ -245,7 +246,7 @@ class ProfileItem(QListWidgetItem):
         agent_mark = " 🔓" if self.in_agent else ""
         self.setText(f"{name}{agent_mark}\n{host}")
         color = QColor(203, 166, 247) if self.profile.key_path else QColor(140, 120, 180)
-        self.setForeground(color)
+        theme.foreground(self, color)
 
 
 # ── Main Dialog ────────────────────────────────────────────────────────────────
@@ -339,13 +340,13 @@ class SSHSettingsDialog(QDialog):
         self._agent_keys = keys
         if not _ssh_agent_running():
             self.agentStatusLabel.setText(t("ssh.agent_status_not_running"))
-            self.agentStatusLabel.setStyleSheet("font-size: 11px; color: rgb(255,150,100);")
+            theme.style(self.agentStatusLabel, "font-size: 11px; color: rgb(255,150,100);")
         elif not keys:
             self.agentStatusLabel.setText(t("ssh.agent_status_no_keys"))
-            self.agentStatusLabel.setStyleSheet("font-size: 11px; color: rgb(140,120,180);")
+            theme.style(self.agentStatusLabel, "font-size: 11px; color: rgb(140,120,180);")
         else:
             self.agentStatusLabel.setText(t("ssh.agent_status_keys", n=len(keys)))
-            self.agentStatusLabel.setStyleSheet("font-size: 11px; color: rgb(160,220,130);")
+            theme.style(self.agentStatusLabel, "font-size: 11px; color: rgb(160,220,130);")
 
         # Populate keys list
         self.agentKeysList.clear()

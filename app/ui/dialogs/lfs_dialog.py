@@ -1,3 +1,4 @@
+from app.ui import theme
 import os
 import fnmatch as _fnmatch
 from pathlib import Path
@@ -109,10 +110,10 @@ class LfsDialog(QDialog):
             item = QTreeWidgetItem([label, _fmt_size(entry.size), status_text])
             item.setData(0, Qt.ItemDataRole.UserRole, entry)
             if not entry.downloaded:
-                item.setForeground(2, QColor("#dcdcaa"))   # yellow warning
+                theme.foreground(item, 2, QColor("#dcdcaa"))   # yellow warning
                 item.setToolTip(0, t("lfs.pointer_tooltip"))
             else:
-                item.setForeground(2, QColor("#4ec9b0"))   # teal ok
+                theme.foreground(item, 2, QColor("#4ec9b0"))   # teal ok
             self.fileTree.addTopLevelItem(item)
 
     # ----------------------------------------------------------------- Slots

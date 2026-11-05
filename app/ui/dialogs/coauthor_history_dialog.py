@@ -1,3 +1,4 @@
+from app.ui import theme
 from pathlib import Path
 
 from PyQt6 import uic
@@ -78,7 +79,7 @@ class CoAuthorHistoryDialog(QDialog):
                 remotes = []
             if remotes:
                 pushed_count += 1
-                item.setForeground(QColor(230, 170, 90))
+                theme.foreground(item, QColor(230, 170, 90))
                 item.setToolTip(t("coauthor_history.already_pushed", remotes=", ".join(remotes)))
 
             self.commitList.addItem(item)

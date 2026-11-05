@@ -2,7 +2,7 @@ import sys
 import os
 
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtGui import QPalette, QColor, QIcon
+from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 
 from app.config import get_language, _ensure_config_dir
@@ -22,53 +22,12 @@ except Exception:
     # Never let a broken ~/.config stop the app from launching at all —
     # worst case, settings/bookmarks/SSH just won't persist this session.
     pass
-def apply_dark_palette(app: QApplication) -> None:
-    """Equestria OS purple Fusion palette."""
-    app.setStyle("Fusion")
-    palette = QPalette()
-
-    bg       = QColor(26,  24,  41)   # root background
-    panel    = QColor(30,  28,  48)   # panels
-    input_bg = QColor(40,  36,  62)   # input fields
-    text     = QColor(220, 215, 245)  # main text
-    dim_text = QColor(100,  90, 130)  # disabled text
-    accent   = QColor(120,  90, 180)  # accent / highlight
-    sel_text = QColor(255, 255, 255)  # selected text
-    link     = QColor(203, 166, 247)  # lavender links
-
-    palette.setColor(QPalette.ColorRole.Window,          bg)
-    palette.setColor(QPalette.ColorRole.WindowText,      text)
-    palette.setColor(QPalette.ColorRole.Base,            bg)
-    palette.setColor(QPalette.ColorRole.AlternateBase,   panel)
-    palette.setColor(QPalette.ColorRole.ToolTipBase,     panel)
-    palette.setColor(QPalette.ColorRole.ToolTipText,     text)
-    palette.setColor(QPalette.ColorRole.Text,            text)
-    palette.setColor(QPalette.ColorRole.Button,          panel)
-    palette.setColor(QPalette.ColorRole.ButtonText,      text)
-    palette.setColor(QPalette.ColorRole.BrightText,      QColor(255, 255, 255))
-    palette.setColor(QPalette.ColorRole.Link,            link)
-    palette.setColor(QPalette.ColorRole.Highlight,       accent)
-    palette.setColor(QPalette.ColorRole.HighlightedText, sel_text)
-    palette.setColor(QPalette.ColorRole.PlaceholderText, QColor(100, 90, 130))
-
-    g = QPalette.ColorGroup.Disabled
-    palette.setColor(g, QPalette.ColorRole.Text,       dim_text)
-    palette.setColor(g, QPalette.ColorRole.ButtonText, dim_text)
-    palette.setColor(g, QPalette.ColorRole.WindowText, dim_text)
-
-    app.setPalette(palette)
-
-
 def load_stylesheet(app: QApplication) -> None:
+    from app.ui.theme import initialize
     base = os.path.dirname(os.path.abspath(__file__))
-    qss_path = os.path.join(base, "style.qss")
-    # Make url() paths in QSS resolve relative to project root
+    # Preserve relative asset paths from the original application stylesheet.
     os.chdir(base)
-    try:
-        with open(qss_path, "r") as f:
-            app.setStyleSheet(f.read())
-    except FileNotFoundError:
-        pass
+    initialize(app, os.path.join(base, "style.qss"))
 
 
 def main():
@@ -85,7 +44,6 @@ def main():
     app.setWindowIcon(QIcon.fromTheme("opensourcetree", QIcon(icon_path)))
 
     load_language(get_language())
-    apply_dark_palette(app)
     load_stylesheet(app)
 
     window = MainWindow()

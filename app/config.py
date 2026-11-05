@@ -81,6 +81,31 @@ def set_language(code: str) -> None:
     APP_CONFIG_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
+# Theme choice is local to OpenSourceTree; it never changes the shared theme.
+# "base", "system" (follow Equestria OS) or the name of one Equestria theme.
+def get_theme_mode() -> str:
+    try:
+        data = json.loads(APP_CONFIG_FILE.read_text(encoding="utf-8"))
+        mode = data.get("theme_mode", "system") if isinstance(data, dict) else "system"
+        return mode if isinstance(mode, str) and mode else "system"
+    except (OSError, ValueError):
+        return "system"
+
+
+def set_theme_mode(mode: str) -> None:
+    _ensure_config_dir()
+    try:
+        data = json.loads(APP_CONFIG_FILE.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            data = {}
+    except (OSError, ValueError):
+        data = {}
+    data["theme_mode"] = mode
+    temporary = APP_CONFIG_FILE.with_suffix(".tmp")
+    temporary.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    temporary.replace(APP_CONFIG_FILE)
+
+
 # ── Bookmarks ────────────────────────────────────────────────────────────────
 
 def load_bookmarks() -> list[str]:

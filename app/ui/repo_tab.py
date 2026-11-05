@@ -1,3 +1,4 @@
+from app.ui import theme
 import os
 from pathlib import Path
 
@@ -361,7 +362,7 @@ class RepoTab(QWidget):
                 next((s for s in STATUS_COLORS if s.value == entry.status), None),
                 QColor("#d4d4d4")
             )
-            item.setForeground(color)
+            theme.foreground(item, color)
             self._commit_files_list.addItem(item)
         self._commit_files_list.blockSignals(False)
 

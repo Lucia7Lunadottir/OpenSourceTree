@@ -1,3 +1,4 @@
+from app.ui.theme import ThemedTextBrowser
 from PyQt6.QtWidgets import QTextBrowser
 from PyQt6.QtCore import Qt, pyqtSignal
 from html import escape
@@ -10,7 +11,7 @@ def _person(name: str, email: str) -> str:
     return f"{escape(name)} &lt;{escape(email)}&gt;"
 
 
-class CommitInfoPanel(QTextBrowser):
+class CommitInfoPanel(ThemedTextBrowser):
     """Full information about the selected commit.
 
     Pure view: it renders a CommitInfo and knows nothing about git.

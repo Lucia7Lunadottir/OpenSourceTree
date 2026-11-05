@@ -1,3 +1,4 @@
+from app.ui import theme
 from PyQt6.QtWidgets import (
     QTreeWidget, QTreeWidgetItem, QTreeWidgetItemIterator, QMenu, QMessageBox, QInputDialog,
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QDialogButtonBox, QAbstractItemView
@@ -78,7 +79,7 @@ class BranchPanel(QTreeWidget):
                     font = item.font(0)
                     font.setBold(True)
                     item.setFont(0, font)
-                    item.setForeground(0, QColor("#4ec9b0"))
+                    theme.foreground(item, 0, QColor("#4ec9b0"))
                 local_root.addChild(item)
 
         # REMOTE BRANCHES
@@ -87,7 +88,7 @@ class BranchPanel(QTreeWidget):
             if b.is_remote:
                 item = QTreeWidgetItem([b.name])
                 item.setData(0, Qt.ItemDataRole.UserRole, ("branch", b))
-                item.setForeground(0, QColor("#9cdcfe"))
+                theme.foreground(item, 0, QColor("#9cdcfe"))
                 remote_root.addChild(item)
 
         # TAGS
@@ -95,7 +96,7 @@ class BranchPanel(QTreeWidget):
         for tag in tags:
             item = QTreeWidgetItem([tag.name])
             item.setData(0, Qt.ItemDataRole.UserRole, ("tag", tag))
-            item.setForeground(0, QColor("#dcdcaa"))
+            theme.foreground(item, 0, QColor("#dcdcaa"))
             tags_root.addChild(item)
 
         # STASHES
@@ -104,7 +105,7 @@ class BranchPanel(QTreeWidget):
             label = f"{s.name}: {s.message}" if s.message else s.name
             item = QTreeWidgetItem([label])
             item.setData(0, Qt.ItemDataRole.UserRole, ("stash", s))
-            item.setForeground(0, QColor("#ce9178"))
+            theme.foreground(item, 0, QColor("#ce9178"))
             stash_root.addChild(item)
 
         # Restore expansion state or expand all if first load
@@ -141,7 +142,7 @@ class BranchPanel(QTreeWidget):
         font = item.font(0)
         font.setBold(True)
         item.setFont(0, font)
-        item.setForeground(0, QColor("#888888"))
+        theme.foreground(item, 0, QColor("#888888"))
         return item
 
     def _on_double_click(self, item: QTreeWidgetItem, column: int):
@@ -296,12 +297,12 @@ class BranchPanel(QTreeWidget):
         vbox.setSpacing(10)
 
         lbl_title = QLabel(t("tag.delete.text", name=name))
-        lbl_title.setStyleSheet("font-weight: bold;")
+        theme.style(lbl_title, "font-weight: bold;")
         vbox.addWidget(lbl_title)
 
         lbl_info = QLabel(t("tag.delete.info"))
         lbl_info.setWordWrap(True)
-        lbl_info.setStyleSheet("color: #aaa; font-size: 11px;")
+        theme.style(lbl_info, "color: #aaa; font-size: 11px;")
         vbox.addWidget(lbl_info)
 
         vbox.addSpacing(4)
@@ -311,7 +312,7 @@ class BranchPanel(QTreeWidget):
         cancel_box.rejected.connect(dlg.reject)
         local_btn  = QPushButton(t("tag.delete.local_only"))
         remote_btn = QPushButton(t("tag.delete.local_and_remote"))
-        remote_btn.setStyleSheet("color: #f44747;")
+        theme.style(remote_btn, "color: #f44747;")
         hbox.addWidget(cancel_box)
         hbox.addStretch()
         hbox.addWidget(local_btn)

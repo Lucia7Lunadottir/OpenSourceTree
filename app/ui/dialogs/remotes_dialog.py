@@ -1,3 +1,4 @@
+from app.ui import theme
 import re
 from pathlib import Path
 
@@ -84,7 +85,7 @@ class RemotesDialog(QDialog):
         https = _is_https(url)
         type_item = QTableWidgetItem("HTTPS ⚠" if https else "SSH ✓")
         type_item.setFlags(type_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-        type_item.setForeground(QColor("#f5a623") if https else QColor("#4ec9b0"))
+        theme.foreground(type_item, QColor("#f5a623") if https else QColor("#4ec9b0"))
         self.table.setItem(row, 2, type_item)
 
         action_widget = self._make_action_cell(row, name, url)
@@ -103,21 +104,21 @@ class RemotesDialog(QDialog):
 
         if _is_https(url):
             ssh_btn = QPushButton("→ SSH")
-            ssh_btn.setStyleSheet(self._SSH_STYLE)
+            theme.style(ssh_btn, self._SSH_STYLE)
             ssh_btn.setToolTip(t("remotes.switch_ssh_tip") + f"\n→ {_https_to_ssh(url)}")
             ssh_btn.clicked.connect(lambda _, n=name, u=url: self._on_switch_ssh(n, u))
             w.addWidget(ssh_btn)
 
         save_btn = QPushButton("✓")
         save_btn.setFixedWidth(30)
-        save_btn.setStyleSheet(self._ICON_BTN)
+        theme.style(save_btn, self._ICON_BTN)
         save_btn.setToolTip(t("remotes.save_url_tip"))
         save_btn.clicked.connect(lambda _, r=row, n=name: self._on_save_url(r, n))
         w.addWidget(save_btn)
 
         del_btn = QPushButton("✕")
         del_btn.setFixedWidth(30)
-        del_btn.setStyleSheet(self._DEL_STYLE)
+        theme.style(del_btn, self._DEL_STYLE)
         del_btn.setToolTip(t("remotes.remove_tip"))
         del_btn.clicked.connect(lambda _, n=name: self._on_remove(n))
         w.addWidget(del_btn)

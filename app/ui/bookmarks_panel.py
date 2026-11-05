@@ -1,3 +1,4 @@
+from app.ui import theme
 import os
 from pathlib import Path
 
@@ -51,7 +52,7 @@ class BookmarksPanel(QWidget):
         item = QListWidgetItem(name)
         item.setData(Qt.ItemDataRole.UserRole, path)
         item.setToolTip(path)
-        item.setForeground(QColor("#d4d4d4"))
+        theme.foreground(item, QColor("#d4d4d4"))
         self.bookmarkList.addItem(item)
 
     def _on_add(self):

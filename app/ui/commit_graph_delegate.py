@@ -1,3 +1,4 @@
+from app.ui import theme
 from PyQt6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem, QStyle
 from PyQt6.QtGui import QPainter, QPainterPath, QColor, QPen, QBrush, QFont
 from PyQt6.QtCore import Qt, QRect, QPoint, QModelIndex
@@ -36,7 +37,7 @@ class CommitGraphDelegate(QStyledItemDelegate):
         painter.save()
 
         selected = bool(option.state & QStyle.StateFlag.State_Selected)
-        painter.fillRect(option.rect, BG_SELECTED if selected else BG_NORMAL)
+        painter.fillRect(option.rect, theme.legacy(BG_SELECTED if selected else BG_NORMAL))
 
         lane_data = index.data(GraphRole)
         commit = index.data(CommitRole)
@@ -58,14 +59,14 @@ class CommitGraphDelegate(QStyledItemDelegate):
         for lane in lane_data.active_lanes:
             if lane == lane_data.node_lane:
                 continue
-            color = LANE_COLORS[lane % len(LANE_COLORS)]
+            color = theme.lane_color(LANE_COLORS[lane % len(LANE_COLORS)])
             painter.setPen(QPen(color, 2))
             lx = lane_x(lane)
             painter.drawLine(lx, rect.top(), lx, rect.bottom())
 
         # Connections in (from above to this node)
         for from_lane, to_lane in lane_data.connections_in:
-            color = LANE_COLORS[from_lane % len(LANE_COLORS)]
+            color = theme.lane_color(LANE_COLORS[from_lane % len(LANE_COLORS)])
             painter.setPen(QPen(color, 2))
             fx, tx = lane_x(from_lane), lane_x(to_lane)
             path = QPainterPath()
@@ -75,7 +76,7 @@ class CommitGraphDelegate(QStyledItemDelegate):
 
         # Node lane vertical segments
         my_lane = lane_data.node_lane
-        color = LANE_COLORS[my_lane % len(LANE_COLORS)]
+        color = theme.lane_color(LANE_COLORS[my_lane % len(LANE_COLORS)])
         painter.setPen(QPen(color, 2))
         lx = lane_x(my_lane)
         if index.row() > 0:
@@ -85,7 +86,7 @@ class CommitGraphDelegate(QStyledItemDelegate):
 
         # Connections out (from node to below)
         for from_lane, to_lane in lane_data.connections_out:
-            color = LANE_COLORS[from_lane % len(LANE_COLORS)]
+            color = theme.lane_color(LANE_COLORS[from_lane % len(LANE_COLORS)])
             painter.setPen(QPen(color, 2))
             fx, tx = lane_x(from_lane), lane_x(to_lane)
             path = QPainterPath()
@@ -94,7 +95,7 @@ class CommitGraphDelegate(QStyledItemDelegate):
             painter.drawPath(path)
 
         # Node circle
-        node_color = LANE_COLORS[my_lane % len(LANE_COLORS)]
+        node_color = theme.lane_color(LANE_COLORS[my_lane % len(LANE_COLORS)])
         painter.setPen(QPen(node_color.darker(130), 1))
         painter.setBrush(QBrush(node_color))
         painter.drawEllipse(QPoint(lx, cy), NODE_R, NODE_R)
@@ -111,11 +112,14 @@ class CommitGraphDelegate(QStyledItemDelegate):
                 display = ref[8:] if ref.startswith("HEAD -> ") else ref
                 text_w = fm.horizontalAdvance(display) + 8
                 badge_rect = QRect(badge_x, cy - 9, text_w, 18)
-                bg = _ref_color(ref)
+                original = _ref_color(ref)
+                bg = theme.legacy(original)
                 painter.setBrush(QBrush(bg))
                 painter.setPen(QPen(bg.darker(130), 1))
                 painter.drawRoundedRect(badge_rect, 3, 3)
-                painter.setPen(QPen(QColor("#ffffff"), 1))
+                # Only the purple local badge follows the theme; the others keep white.
+                text = theme.legacy("#ffffff") if original == REF_LOCAL_COLOR else QColor("#ffffff")
+                painter.setPen(QPen(text, 1))
                 painter.drawText(badge_rect, Qt.AlignmentFlag.AlignCenter, display)
                 badge_x += text_w + 4
 

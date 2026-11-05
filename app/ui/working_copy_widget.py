@@ -1,3 +1,4 @@
+from app.ui import theme
 import os
 import fnmatch as _fnmatch
 from pathlib import Path
@@ -100,7 +101,7 @@ class FileListWidget(QListWidget):
             item = QListWidgetItem(f"{badge}  {entry.path}{lfs_mark}{conflict}")
             item.setData(Qt.ItemDataRole.UserRole, entry)
             color = _COLOR_BY_CHAR.get(sc, _DEFAULT_COLOR)
-            item.setForeground(color)
+            theme.foreground(item, color)
             if sc == "U":
                 item.setToolTip("⚠ Merge conflict — right-click to resolve")
             elif lfs_mark:
@@ -257,7 +258,7 @@ class FileTreeWidget(QTreeWidget):
                 if dir_key not in dir_items:
                     node = QTreeWidgetItem(parent)
                     node.setText(0, f"📁  {d}")
-                    node.setForeground(0, QColor("#7a6e9e"))
+                    theme.foreground(node, 0, QColor("#7a6e9e"))
                     node.setData(0, Qt.ItemDataRole.UserRole, None)
                     node.setData(0, _DIR_KEY_ROLE, dir_key)
                     node.setExpanded(expanded_state.get(dir_key, True))
@@ -273,7 +274,7 @@ class FileTreeWidget(QTreeWidget):
             item.setText(0, f"{badge}  {filename}{lfs_mark}{conflict}")
             item.setData(0, Qt.ItemDataRole.UserRole, entry)
             color = _COLOR_BY_CHAR.get(sc, _DEFAULT_COLOR)
-            item.setForeground(0, color)
+            theme.foreground(item, 0, color)
             if sc == "U":
                 item.setToolTip(0, "⚠ Merge conflict — right-click to resolve")
             elif lfs_mark:
@@ -534,10 +535,8 @@ class WorkingCopyWidget(QWidget):
             if self._repo.is_merging():
                 # All conflicts resolved — waiting for merge commit
                 self.bannerIconLabel.setText("✓")
-                self.bannerIconLabel.setStyleSheet("color: #4ec9b0; font-size: 14px;")
-                self.conflictBanner.setStyleSheet(
-                    "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);"
-                )
+                theme.style(self.bannerIconLabel, "color: #4ec9b0; font-size: 14px;")
+                theme.style(self.conflictBanner, "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);")
                 self.conflictLabel.setText(t("conflict.merge_ready"))
                 self.abortButton.setText(t("conflict.merge_ready_abort"))
                 self._abort_fn = self._repo.abort_merge
@@ -547,10 +546,8 @@ class WorkingCopyWidget(QWidget):
             elif self._repo.is_rebasing():
                 # All conflicts resolved — user must run rebase --continue
                 self.bannerIconLabel.setText("✓")
-                self.bannerIconLabel.setStyleSheet("color: #4ec9b0; font-size: 14px;")
-                self.conflictBanner.setStyleSheet(
-                    "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);"
-                )
+                theme.style(self.bannerIconLabel, "color: #4ec9b0; font-size: 14px;")
+                theme.style(self.conflictBanner, "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);")
                 self.conflictLabel.setText(t("conflict.rebase_ready"))
                 self.abortButton.setText(t("conflict.abort_rebase"))
                 self._abort_fn = self._repo.abort_rebase
@@ -561,10 +558,8 @@ class WorkingCopyWidget(QWidget):
             elif self._repo.is_cherry_picking():
                 # All conflicts resolved — user must run cherry-pick --continue
                 self.bannerIconLabel.setText("✓")
-                self.bannerIconLabel.setStyleSheet("color: #4ec9b0; font-size: 14px;")
-                self.conflictBanner.setStyleSheet(
-                    "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);"
-                )
+                theme.style(self.bannerIconLabel, "color: #4ec9b0; font-size: 14px;")
+                theme.style(self.conflictBanner, "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);")
                 self.conflictLabel.setText(t("conflict.cherry_pick_ready"))
                 self.abortButton.setText(t("conflict.abort_cherry_pick"))
                 self._abort_fn = self._repo.abort_cherry_pick
@@ -574,10 +569,8 @@ class WorkingCopyWidget(QWidget):
                 self.conflictBanner.setVisible(True)
             elif self._repo.is_reverting():
                 self.bannerIconLabel.setText("✓")
-                self.bannerIconLabel.setStyleSheet("color: #4ec9b0; font-size: 14px;")
-                self.conflictBanner.setStyleSheet(
-                    "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);"
-                )
+                theme.style(self.bannerIconLabel, "color: #4ec9b0; font-size: 14px;")
+                theme.style(self.conflictBanner, "background: rgba(78,201,176,20); border-bottom: 1px solid rgba(78,201,176,60);")
                 self.conflictLabel.setText(t("conflict.revert_ready"))
                 self.abortButton.setText(t("conflict.abort_revert"))
                 self._abort_fn = self._repo.abort_revert
@@ -593,8 +586,8 @@ class WorkingCopyWidget(QWidget):
 
         # Reset banner style to conflict/warning style
         self.bannerIconLabel.setText("⚠")
-        self.bannerIconLabel.setStyleSheet("")
-        self.conflictBanner.setStyleSheet("")
+        theme.style(self.bannerIconLabel, "")
+        theme.style(self.conflictBanner, "")
         self.continueButton.setVisible(False)
         if self._repo.is_merging():
             op, fn = t("conflict.abort_merge"), self._repo.abort_merge

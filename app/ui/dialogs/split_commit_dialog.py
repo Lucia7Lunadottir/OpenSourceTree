@@ -1,3 +1,4 @@
+from app.ui import theme
 from pathlib import Path
 
 from PyQt6 import uic
@@ -174,10 +175,10 @@ class SplitCommitDialog(QDialog):
             for path in batch:
                 sz = size_map.get(path, 0)
                 item = QTreeWidgetItem([path, _fmt_size(sz)])
-                item.setForeground(0, QColor("#d4d4d4"))
-                item.setForeground(1, QColor("#9cdcfe"))
+                theme.foreground(item, 0, QColor("#d4d4d4"))
+                theme.foreground(item, 1, QColor("#9cdcfe"))
                 if sz > GITHUB_FILE_MAX:
-                    item.setForeground(0, QColor("#ce9178"))
+                    theme.foreground(item, 0, QColor("#ce9178"))
                 tree.addTopLevelItem(item)
 
             # Adjust height to content

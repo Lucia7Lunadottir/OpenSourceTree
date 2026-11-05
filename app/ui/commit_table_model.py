@@ -1,3 +1,4 @@
+from app.ui import theme
 from PyQt6.QtCore import (
     QAbstractTableModel, Qt, QModelIndex, pyqtSignal
 )
@@ -96,11 +97,11 @@ class CommitTableModel(QAbstractTableModel):
 
         if role == Qt.ItemDataRole.ForegroundRole:
             if col == COL_HASH:
-                return QColor("#9cdcfe")
+                return theme.legacy("#9cdcfe")
             elif col == COL_AUTHOR:
-                return QColor("#ce9178")
+                return theme.legacy("#ce9178")
             elif col == COL_DATE:
-                return QColor("#888888")
+                return theme.legacy("#888888")
 
         if role == Qt.ItemDataRole.ToolTipRole and col == COL_MESSAGE:
             refs_str = ", ".join(commit.refs) if commit.refs else ""

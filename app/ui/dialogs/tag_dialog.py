@@ -1,3 +1,4 @@
+from app.ui import theme
 import os
 import subprocess
 from pathlib import Path
@@ -54,7 +55,7 @@ class TagDialog(QDialog):
         self.buttonBox.rejected.connect(self.reject)
 
     def _set_busy(self, text: str):
-        self.statusLabel.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
+        theme.style(self.statusLabel, "color: rgb(140,120,180); font-size: 11px;")
         self.statusLabel.setText(text)
         self._ok_btn.setEnabled(False)
 
@@ -117,17 +118,17 @@ class TagDialog(QDialog):
         if is_auth_error(error):
             self.agentButton.setVisible(True)
             self.terminalButton.setVisible(True)
-            self.statusLabel.setStyleSheet("color: rgb(255,100,100); font-size: 11px;")
+            theme.style(self.statusLabel, "color: rgb(255,100,100); font-size: 11px;")
             self.statusLabel.setText(t("remote.auth_required"))
         else:
             lines = [l for l in error.splitlines() if l.strip()]
             short = lines[-1] if lines else t("remote.error")
-            self.statusLabel.setStyleSheet("color: rgb(255,100,100); font-size: 11px;")
+            theme.style(self.statusLabel, "color: rgb(255,100,100); font-size: 11px;")
             self.statusLabel.setText(f"✗  {short}")
 
     def _on_create_error(self, error: str):
         self._ok_btn.setEnabled(True)
-        self.statusLabel.setStyleSheet("color: rgb(255,100,100); font-size: 11px;")
+        theme.style(self.statusLabel, "color: rgb(255,100,100); font-size: 11px;")
         self.statusLabel.setText("")
         QMessageBox.critical(self, t("tag.error"), error)
 
@@ -166,7 +167,7 @@ class TagDialog(QDialog):
 
         self.agentButton.setVisible(False)
         self.terminalButton.setVisible(False)
-        self.statusLabel.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
+        theme.style(self.statusLabel, "color: rgb(140,120,180); font-size: 11px;")
         self.statusLabel.setText(t("remote.opening_terminal"))
 
         cmd = (
@@ -195,7 +196,7 @@ class TagDialog(QDialog):
     def _retry_in_terminal(self):
         self.agentButton.setVisible(False)
         self.terminalButton.setVisible(False)
-        self.statusLabel.setStyleSheet("color: rgb(140,120,180); font-size: 11px;")
+        theme.style(self.statusLabel, "color: rgb(140,120,180); font-size: 11px;")
         self.statusLabel.setText(t("remote.opening_terminal"))
         try:
             self._repo.runner.run_in_terminal(

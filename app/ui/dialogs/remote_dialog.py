@@ -1,3 +1,4 @@
+from app.ui import theme
 import os
 import subprocess
 from pathlib import Path
@@ -243,7 +244,7 @@ class RemoteDialog(QDialog):
         if is_auth_error(error):
             self.agentButton.setVisible(True)
             self.terminalButton.setVisible(True)
-            self.statusLabel.setStyleSheet("color: rgb(255, 100, 100);")
+            theme.style(self.statusLabel, "color: rgb(255, 100, 100);")
             self.statusLabel.setText(t("remote.auth_required"))
         elif self._mode == "push" and "no upstream branch" in error.lower():
             # `git push <remote>` with no branch arg fails outright when the
@@ -252,14 +253,14 @@ class RemoteDialog(QDialog):
             # AUR git remote alongside origin). Offer to redo it with
             # --set-upstream instead of surfacing raw git jargon.
             self.upstreamButton.setVisible(True)
-            self.statusLabel.setStyleSheet("color: rgb(255, 100, 100);")
+            theme.style(self.statusLabel, "color: rgb(255, 100, 100);")
             self.statusLabel.setText(t("remote.no_upstream"))
         else:
             # Output is already visible in the QPlainTextEdit above;
             # show the last non-empty line as a compact status hint.
             lines = [l for l in error.splitlines() if l.strip()]
             short = lines[-1] if lines else t("remote.error")
-            self.statusLabel.setStyleSheet("color: rgb(255, 100, 100);")
+            theme.style(self.statusLabel, "color: rgb(255, 100, 100);")
             self.statusLabel.setText(f"✗  {short}")
 
     def _retry_in_terminal(self):
@@ -313,7 +314,7 @@ class RemoteDialog(QDialog):
 
         self.agentButton.setVisible(False)
         self.terminalButton.setVisible(False)
-        self.statusLabel.setStyleSheet("color: rgb(140, 120, 180);")
+        theme.style(self.statusLabel, "color: rgb(140, 120, 180);")
         self.statusLabel.setText(t("remote.opening_terminal"))
 
         cmd = (
@@ -339,6 +340,6 @@ class RemoteDialog(QDialog):
             return
 
         # Key is now in agent — retry the operation automatically
-        self.statusLabel.setStyleSheet("color: rgb(140, 120, 180);")
+        theme.style(self.statusLabel, "color: rgb(140, 120, 180);")
         self.output.clear()
         self._on_accept()

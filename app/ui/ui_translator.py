@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QWidget, QLabel, QAbstractButton, QGroupBox, QMenu
 from PyQt6.QtGui import QAction
 
 from app.i18n import t
+from app.ui import theme
 
 
 class UiTranslator:
@@ -22,6 +23,7 @@ class UiTranslator:
         self._format_args = format_args or {}
 
     def apply(self, root: QWidget) -> None:
+        theme.form_styles(root)
         self._translate(root, root.windowTitle, root.setWindowTitle)
         for w in root.findChildren(QWidget):
             if isinstance(w, (QLabel, QAbstractButton)):

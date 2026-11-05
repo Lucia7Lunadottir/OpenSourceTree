@@ -9,6 +9,7 @@ from PyQt6.QtGui import (
 )
 
 from app.i18n import t
+from app.ui import theme
 from app.git.repo import GitRepo
 from app.ui.ui_translator import UiTranslator
 
@@ -29,8 +30,8 @@ class _ConflictHighlighter(QSyntaxHighlighter):
 
         def fmt(bg, fg, bold=False):
             f = QTextCharFormat()
-            f.setBackground(QColor(bg))
-            f.setForeground(QColor(fg))
+            f.setBackground(theme.legacy(bg))
+            f.setForeground(theme.legacy(fg))
             if bold:
                 f.setFontWeight(QFont.Weight.Bold)
             return f

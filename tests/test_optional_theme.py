@@ -1,0 +1,8 @@
+"""Verify startup without the optional system-theme package in a fresh process."""
+import subprocess
+import sys
+from pathlib import Path
+
+
+def test_startup_without_kit():
+    subprocess.run([sys.executable, "-c", 'import sys, tempfile, os\nfrom pathlib import Path\nsandbox=tempfile.TemporaryDirectory(prefix=\'optional-kit-\')\nos.environ[\'HOME\']=sandbox.name\nos.environ[\'XDG_CONFIG_HOME\']=sandbox.name\nos.environ[\'QT_QPA_PLATFORM\']=\'offscreen\'\nclass BlockKit:\n    def find_spec(self, fullname, path=None, target=None):\n        if fullname == \'equestria_kit\' or fullname.startswith(\'equestria_kit.\'):\n            raise ModuleNotFoundError("No module named \'equestria_kit\'", name=\'equestria_kit\')\nsys.meta_path.insert(0,BlockKit())\nroot=Path(sys.argv[1]);sys.path.insert(0,str(root))\nfrom PyQt6.QtWidgets import QApplication\napp=QApplication([])\nif (root/\'app\').is_dir():\n    from app.ui import theme\n    theme.initialize(app,str(root/\'style.qss\'))\n    from app.ui.main_window import MainWindow\n    w=MainWindow()\n    assert theme.controller().choice==\'base\'\n    assert not w._theme_actions[\'system\'].isEnabled()\n    assert app.styleSheet()==(root/\'style.qss\').read_text()\nelse:\n    from lightimage.ui import theme\n    from lightimage.ui.main_window import MainWindow\n    w=MainWindow()\n    assert theme.current_theme()==\'dark\'\n    assert not w._theme_acts[\'system\'].isEnabled()\n    for name in (\'light\',\'custom\',\'dark\',\'system\'):\n        theme.set_theme(name)\n    assert theme.current_theme()==\'dark\'\nw.show();app.processEvents();w.close()\nprint(root.name, \'starts successfully without equestria_kit\')\n', str(Path(__file__).resolve().parents[1])], check=True, timeout=30)
