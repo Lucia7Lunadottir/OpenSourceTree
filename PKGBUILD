@@ -48,6 +48,7 @@ package() {
 
     install -Dm755 /dev/stdin "$pkgdir/usr/bin/opensourcetree" << 'EOF'
 #!/bin/bash
+export OPENSOURCETREE_CWD="$PWD"
 cd /usr/lib/opensourcetree/
 exec python3 main.py "$@"
 EOF

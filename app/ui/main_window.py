@@ -223,6 +223,11 @@ class MainWindow(QMainWindow):
             self._splitter.insertWidget(idx, self._placeholder)
             self._splitter.setSizes([200, 1080])
 
+    def open_path(self, path: str):
+        """Open a repository given from outside (the command line): bookmarked and shown in its tab,
+        exactly like File → Open. A folder inside a repository opens the whole repository."""
+        self._bookmarks.add_repo(path)
+
     def _on_open(self):
         path = QFileDialog.getExistingDirectory(
             self, "Open Repository", os.path.expanduser("~")

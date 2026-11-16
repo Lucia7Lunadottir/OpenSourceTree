@@ -7,6 +7,7 @@ from PyQt6.QtCore import Qt
 
 from app.config import get_language, _ensure_config_dir
 from app.i18n import load_language
+from app.launch_args import repositories_from_arguments
 from app.ui.main_window import MainWindow
 
 os.environ["GIT_OPTIONAL_LOCKS"] = "0"
@@ -35,6 +36,8 @@ def main():
     app.setApplicationName("OpenSourceTree")
     app.setApplicationVersion("0.1.0")
     app.setDesktopFileName("opensourcetree")
+    # Read before load_stylesheet() changes the working folder: relative paths depend on it.
+    repositories = repositories_from_arguments(app.arguments()[1:])
 
     # Определение пути к иконке (предполагается, что файл icon.png рядом)
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -48,6 +51,8 @@ def main():
 
     window = MainWindow()
     window.show()
+    for path in repositories:
+        window.open_path(path)
 
     sys.exit(app.exec())
 
