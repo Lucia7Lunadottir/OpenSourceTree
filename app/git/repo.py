@@ -471,6 +471,11 @@ class GitRepo:
         self.runner.run(["checkout", name])
 
     def create_branch(self, name: str, from_ref: str = "HEAD") -> None:
+        if from_ref == "HEAD" and not self._has_ref("HEAD"):
+            # Unborn branch (no commits yet): there is nothing to branch from,
+            # so just point HEAD at the new name; it becomes the first commit's branch.
+            self.runner.run(["symbolic-ref", "HEAD", f"refs/heads/{name}"])
+            return
         self.runner.run(["checkout", "-b", name, from_ref])
 
     def delete_branch(self, name: str, force: bool = False) -> None:
