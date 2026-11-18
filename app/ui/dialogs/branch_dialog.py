@@ -144,10 +144,7 @@ class BranchDialog(QDialog):
             checkout = self.checkoutCheck.isChecked()
 
             def do_create():
-                if checkout:
-                    self._repo.create_branch(name, from_ref)
-                else:
-                    self._repo.runner.run(["branch", name, from_ref])
+                self._repo.create_branch(name, from_ref, checkout)
 
             worker = GitWorker(do_create)
             self._set_running(True, t("branch_dialog.creating", name=name))

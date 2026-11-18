@@ -24,6 +24,8 @@ from .working_copy_widget import WorkingCopyWidget
 from .diff_viewer import DiffViewer
 from .diff_controller import DiffController
 from .large_file_banner import LargeFileBanner
+from .empty_repo_banner import EmptyRepoBanner
+from .empty_repo_controller import EmptyRepoController
 from .commit_info_panel import CommitInfoPanel
 from .commit_file_actions import CommitFileActions
 from .dialogs.remote_dialog import RemoteDialog
@@ -96,6 +98,7 @@ class RepoTab(QWidget):
     commitListSlot: QWidget
     commitInfoSlot: QWidget
     largeFileBannerSlot: QWidget
+    emptyRepoBannerSlot: QWidget
     diffViewerSlot: QWidget
     workingCopySlot: QWidget
     actionFetch: QAction
@@ -173,6 +176,11 @@ class RepoTab(QWidget):
         self._commit_file_actions = CommitFileActions(
             self._repo, self._commit_files_list, self)
 
+        self._empty_repo_banner = _SlotFiller.fill(
+            self.emptyRepoBannerSlot, EmptyRepoBanner())
+        self._empty_repo = EmptyRepoController(
+            self._repo, self._empty_repo_banner, self)
+
         self._large_file_banner = _SlotFiller.fill(
             self.largeFileBannerSlot, LargeFileBanner())
         self._diff_viewer = _SlotFiller.fill(self.diffViewerSlot, DiffViewer())
@@ -231,6 +239,9 @@ class RepoTab(QWidget):
         self._branch_panel.status_message.connect(self.status_message)
         self._branch_panel.error_occurred.connect(self._on_error)
         self._working_copy_widget.committed.connect(self._refresh_all)
+        self._empty_repo.changed.connect(self._refresh_all)
+        self._empty_repo.status_message.connect(self.status_message)
+        self._empty_repo.error_occurred.connect(self._on_error)
         self._working_copy_widget.file_selected.connect(self._on_working_file_selected)
         self._working_copy_widget.status_message.connect(self.status_message)
         self._setup_fs_watcher()
@@ -283,9 +294,11 @@ class RepoTab(QWidget):
         self._working_copy_widget.refresh()
         self._branch_panel.refresh()
         self._commit_list.load_commits()
+        self._empty_repo.refresh()
 
     def _refresh_all(self):
         self._commit_list.load_commits()
+        self._empty_repo.refresh()
         self._branch_panel.refresh()
         self._working_copy_widget.refresh()
         self.title_changed.emit(self._repo.get_repo_name())

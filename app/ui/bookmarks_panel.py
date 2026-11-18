@@ -14,6 +14,7 @@ from app import config
 from app.i18n import t
 from app.git.repo import GitRepo
 from app.ui.ui_translator import UiTranslator
+from app.ui.dialogs.init_dialog import InitDialog
 
 _UI_FILE = Path(__file__).with_name("bookmarks_panel.ui")
 
@@ -74,11 +75,17 @@ class BookmarksPanel(QWidget):
         try:
             resolved_path = GitRepo(path).path
         except Exception:
-            QMessageBox.warning(
+            # not a repository: offer to make it one instead of just refusing
+            ret = QMessageBox.question(
                 self,
                 t("bookmarks.not_git.title"),
-                t("bookmarks.not_git.text", path=path),
+                t("bookmarks.not_git.init_offer", path=path),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
+            if ret == QMessageBox.StandardButton.Yes and os.path.isdir(path):
+                dlg = InitDialog(path, self)
+                if dlg.exec():
+                    self.add_repo(dlg.result_path())
             return
         config.add_bookmark(resolved_path)
         self._load_bookmarks()

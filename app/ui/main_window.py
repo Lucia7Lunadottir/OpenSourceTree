@@ -18,6 +18,7 @@ from .elided_label import ClickableElidedLabel
 from .log_panel import LogPanel
 from .ui_translator import UiTranslator
 from .dialogs.clone_dialog import CloneDialog
+from .dialogs.init_dialog import InitDialog
 from .dialogs.ssh_dialog import SSHSettingsDialog
 from .dialogs.accounts_dialog import AccountsDialog
 from .dialogs.identity_dialog import IdentityDialog
@@ -88,6 +89,7 @@ class MainWindow(QMainWindow):
         triggers = {
             self.actionOpen: self._on_open,
             self.actionClone: self._on_clone,
+            self.actionInit: self._on_init,
             self.actionQuit: QApplication.instance().quit,
             self.actionAccounts: self._on_accounts,
             self.actionSsh: self._on_ssh_settings,
@@ -234,6 +236,11 @@ class MainWindow(QMainWindow):
         )
         if path:
             self._bookmarks.add_repo(path)
+
+    def _on_init(self):
+        dlg = InitDialog(parent=self)
+        if dlg.exec():
+            self._bookmarks.add_repo(dlg.result_path())
 
     def _on_clone(self):
         dlg = CloneDialog(self)

@@ -29,6 +29,16 @@ class GitRepo:
         self.path = self._resolve_toplevel()
         self.runner = GitRunner(self.path)
 
+    @classmethod
+    def init(cls, path: str, branch: str = "main") -> "GitRepo":
+        """Create a repository in an existing folder, HEAD on the unborn `branch`."""
+        GitRunner(path).run(["init", "-b", branch])
+        return cls(path)
+
+    def is_unborn(self) -> bool:
+        """True while the repository has no commit at all (HEAD points at nothing)."""
+        return not self._has_ref("HEAD")
+
     def _validate(self):
         self.runner.run(["rev-parse", "--git-dir"])
 
@@ -465,18 +475,44 @@ class GitRepo:
 
     def get_branches(self) -> list[BranchInfo]:
         raw = self.runner.run(["branch", "-vv", "-a"])
-        return parse_branches(raw)
+        branches = parse_branches(raw)
+        unborn = self._unborn_branch()
+        if unborn and not any(b.is_current for b in branches):
+            # `git branch` lists nothing until the first commit; show the branch
+            # HEAD already points at so a freshly created one is not invisible.
+            branches.insert(0, BranchInfo(name=unborn, is_current=True, is_remote=False))
+        return branches
+
+    def get_remote_branches(self, remote: str) -> list[str]:
+        """Remote-tracking branches fetched from `remote`, as `remote/name` (no `remote/HEAD`)."""
+        raw = self.runner.run(["for-each-ref", "--format=%(refname:short)", f"refs/remotes/{remote}/"])
+        return [r for r in raw.split() if r != f"{remote}/HEAD"]
+
+    def _unborn_branch(self) -> str:
+        """Name of the branch HEAD points at when it has no commit yet, else ''."""
+        if self._has_ref("HEAD"):
+            return ""
+        try:
+            ref = self.runner.run(["symbolic-ref", "-q", "HEAD"]).strip()
+        except GitCommandError:
+            return ""
+        return ref.removeprefix("refs/heads/")
 
     def checkout(self, name: str) -> None:
         self.runner.run(["checkout", name])
 
-    def create_branch(self, name: str, from_ref: str = "HEAD") -> None:
+    def create_branch(self, name: str, from_ref: str = "HEAD", checkout: bool = True) -> None:
         if from_ref == "HEAD" and not self._has_ref("HEAD"):
             # Unborn branch (no commits yet): there is nothing to branch from,
             # so just point HEAD at the new name; it becomes the first commit's branch.
+            # Without a commit the branch cannot exist apart from HEAD, so `checkout`
+            # has no effect here.
             self.runner.run(["symbolic-ref", "HEAD", f"refs/heads/{name}"])
             return
-        self.runner.run(["checkout", "-b", name, from_ref])
+        if checkout:
+            self.runner.run(["checkout", "-b", name, from_ref])
+        else:
+            self.runner.run(["branch", name, from_ref])
 
     def delete_branch(self, name: str, force: bool = False) -> None:
         flag = "-D" if force else "-d"
@@ -776,7 +812,7 @@ class GitRepo:
         try:
             return self.runner.run(["rev-parse", "--abbrev-ref", "HEAD"]).strip()
         except GitCommandError:
-            return "HEAD"
+            return self._unborn_branch() or "HEAD"
 
     def is_clean(self) -> bool:
         raw = self.runner.run(["status", "--porcelain"])
